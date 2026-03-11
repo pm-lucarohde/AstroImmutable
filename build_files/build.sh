@@ -48,10 +48,10 @@ dnf5 install -y \
 	spotify\
 	nautilus
 
-flatpak remote-delete fedora
+if flatpak --system remotes | awk '{print $1}' | grep -qx fedora; then
+    flatpak --system remote-delete fedora --force
+fi
 flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
-
-
 
 # Use a COPR Example:
 #
