@@ -72,4 +72,3 @@ ln -sf /usr/lib/systemd/user/astroimmutable-firstlogin.service \
 #### Example for enabling a System Unit File
 
 systemctl enable podman.socket
-systemctl enable astroimmutable-firstboot.service
