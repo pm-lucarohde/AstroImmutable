@@ -1,10 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-if [ -f /var/lib/astroimmutable-firstboot.done ]; then
-  exit 0
-fi
-
 if ! distrobox-list --root | awk -F'|' '{print $2}' | xargs -n1 | grep -qx ubuntu; then
   distrobox create --image ubuntu:25.10 --name ubuntu --yes
 fi
@@ -37,5 +33,3 @@ EOF
 chown lr:lr /home/lr/.local/share/applications/brave-ubuntu-distrobox.desktop
 chmod 644 /home/lr/.local/share/applications/brave-ubuntu-distrobox.desktop
 update-desktop-database /home/lr/.local/share/applications 2>/dev/null || true
-
-touch /var/lib/astroimmutable-firstboot.done
