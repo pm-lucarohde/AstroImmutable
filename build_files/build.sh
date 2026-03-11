@@ -55,8 +55,12 @@ fi
 flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
 
 mkdir -p /usr/libexec/astroimmutable
-install -m755 /ctx/firstboot-setup.sh /usr/libexec/astroimmutable/firstboot-setup.sh
-install -Dm644 /ctx/astroimmutable-firstboot.service /usr/lib/systemd/system/astroimmutable-firstboot.service
+install -m755 /ctx/firstlogin-setup.sh /usr/libexec/astroimmutable/firstlogin-setup.sh
+install -Dm644 /ctx/astroimmutable-firstlogin.service /usr/lib/systemd/user/astroimmutable-firstlogin.service
+
+mkdir -p /etc/systemd/user/default.target.wants
+ln -sf /usr/lib/systemd/user/astroimmutable-firstlogin.service \
+  /etc/systemd/user/default.target.wants/astroimmutable-firstlogin.service
 
 # Use a COPR Example:
 #

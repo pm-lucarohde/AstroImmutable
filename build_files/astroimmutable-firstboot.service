@@ -1,12 +1,11 @@
 [Unit]
-Description=AstroImmutable first boot setup
-After=network-online.target
-Wants=network-online.target
+Description=AstroImmutable first login setup
+ConditionPathExists=!%h/.local/state/astroimmutable/firstlogin.done
 
 [Service]
 Type=oneshot
-ExecStart=/usr/libexec/astroimmutable/firstboot-setup.sh
+ExecStart=/usr/libexec/astroimmutable/firstlogin-setup.sh
 RemainAfterExit=yes
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=default.target
