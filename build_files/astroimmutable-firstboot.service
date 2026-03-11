@@ -5,7 +5,7 @@ Wants=network-online.target
 
 [Service]
 Type=oneshot
-ExecStart=/usr/local/bin/firstboot-setup.sh
+ExecStart=/usr/libexec/astroimmutable/firstboot-setup.sh
 RemainAfterExit=yes
 
 [Install]

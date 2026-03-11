@@ -54,7 +54,8 @@ if flatpak --system remotes | awk '{print $1}' | grep -qx fedora; then
 fi
 flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
 
-install -Dm755 /ctx/firstboot-setup.sh /usr/local/bin/firstboot-setup.sh
+mkdir -p /usr/libexec/astroimmutable
+install -m755 /ctx/firstboot-setup.sh /usr/libexec/astroimmutable/firstboot-setup.sh
 install -Dm644 /ctx/astroimmutable-firstboot.service /usr/lib/systemd/system/astroimmutable-firstboot.service
 
 # Use a COPR Example:
