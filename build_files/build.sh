@@ -54,7 +54,9 @@ dnf5 install -y \
 	podman\
 	spotify\
 	nautilus\
-	gnome-software
+	gnome-software\
+	fastfetch\
+	wine
 
 if flatpak --system remotes | awk '{print $1}' | grep -qx fedora; then
     flatpak --system remote-delete fedora --force
