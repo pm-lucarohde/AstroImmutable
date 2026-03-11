@@ -10,7 +10,48 @@ set -ouex pipefail
 # https://mirrors.rpmfusion.org/mirrorlist?path=free/fedora/updates/43/x86_64/repoview/index.html&protocol=https&redirect=1
 
 # this installs a package from fedora repos
-dnf5 install -y tmux 
+
+dnf5 install \
+  https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm
+dnf5 install \
+  https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
+
+dnf5 config-manager addrepo --from-repofile=https://negativo17.org/repos/fedora-multimedia.repo
+dnf5 config-manager setopt fedora-multimedia.priority=1
+dnf5 config-manager addrepo --from-repofile=https://negativo17.org/repos/fedora-spotify.repo
+dnf5 config-manager setopt fedora-spotify.priority=1
+dnf config-manager addrepo --from-repofile=https://negativo17.org/repos/fedora-nvidia.repo
+dnf5 config-manager setopt fedora-nvidia.priority=5
+dnf config-manager addrepo --from-repofile=https://negativo17.org/repos/fedora-steam.repo
+dnf5 config-manager setopt fedora-steam.priority=10
+
+dnf5 remove plasma-discover
+dnf5 remove dolphin
+dnf5 remove firefox
+
+dnf5 install -y \
+	git\
+	vim\
+	tmux\
+	htop\
+	flatpak\
+	ffmpeg\
+	ffmpeg-libs\
+	fdk-aac\
+	libavcodec\
+	pipewire-libs-extra\
+	docker\
+	distrobox\
+	vlc\
+	7zip\
+	podman\
+	spotify\
+	nautilus
+
+flatpak remote-delete fedora
+flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+
+
 
 # Use a COPR Example:
 #
