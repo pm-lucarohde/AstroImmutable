@@ -11,23 +11,23 @@ set -ouex pipefail
 
 # this installs a package from fedora repos
 
-dnf5 install \
+dnf5 install -y \
   https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm
-dnf5 install \
+dnf5 install -y \
   https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
 
 dnf5 config-manager addrepo --from-repofile=https://negativo17.org/repos/fedora-multimedia.repo
 dnf5 config-manager setopt fedora-multimedia.priority=1
 dnf5 config-manager addrepo --from-repofile=https://negativo17.org/repos/fedora-spotify.repo
 dnf5 config-manager setopt fedora-spotify.priority=1
-dnf config-manager addrepo --from-repofile=https://negativo17.org/repos/fedora-nvidia.repo
+dnf5 config-manager addrepo --from-repofile=https://negativo17.org/repos/fedora-nvidia.repo
 dnf5 config-manager setopt fedora-nvidia.priority=5
-dnf config-manager addrepo --from-repofile=https://negativo17.org/repos/fedora-steam.repo
+dnf5 config-manager addrepo --from-repofile=https://negativo17.org/repos/fedora-steam.repo
 dnf5 config-manager setopt fedora-steam.priority=10
 
-dnf5 remove plasma-discover
-dnf5 remove dolphin
-dnf5 remove firefox
+dnf5 remove -y plasma-discover
+dnf5 remove -y dolphin
+dnf5 remove -y firefox
 
 dnf5 install -y \
 	git\
