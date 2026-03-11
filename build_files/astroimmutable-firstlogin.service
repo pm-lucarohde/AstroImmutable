@@ -1,6 +1,6 @@
 [Unit]
 Description=AstroImmutable first login setup
-ConditionPathExists=!%h/.local/state/astroimmutable/firstlogin.done
+After=default.target
 
 [Service]
 Type=oneshot
