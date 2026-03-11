@@ -16,13 +16,20 @@ dnf5 install -y \
 dnf5 install -y \
   https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
 
-dnf5 config-manager addrepo --from-repofile=https://negativo17.org/repos/fedora-multimedia.repo
+for repo_url in \
+    "https://negativo17.org/repos/fedora-multimedia.repo" \
+    "https://negativo17.org/repos/fedora-spotify.repo" \
+    "https://negativo17.org/repos/fedora-nvidia.repo" \
+    "https://negativo17.org/repos/fedora-steam.repo"; do
+    repo_id=$(basename "$repo_url" .repo | sed 's/fedora-//')
+    if ! dnf5 repolist | grep -q "$repo_id"; then
+        dnf5 config-manager addrepo --from-repofile="$repo_url"
+    fi
+done
+
 dnf5 config-manager setopt fedora-multimedia.priority=1
-dnf5 config-manager addrepo --from-repofile=https://negativo17.org/repos/fedora-spotify.repo
 dnf5 config-manager setopt fedora-spotify.priority=1
-dnf5 config-manager addrepo --from-repofile=https://negativo17.org/repos/fedora-nvidia.repo
 dnf5 config-manager setopt fedora-nvidia.priority=5
-dnf5 config-manager addrepo --from-repofile=https://negativo17.org/repos/fedora-steam.repo
 dnf5 config-manager setopt fedora-steam.priority=10
 
 dnf5 remove -y plasma-discover
