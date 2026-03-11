@@ -21,7 +21,7 @@ for repo_url in \
     "https://negativo17.org/repos/fedora-spotify.repo" \
     "https://negativo17.org/repos/fedora-nvidia.repo" \
     "https://negativo17.org/repos/fedora-steam.repo"; do
-    repo_id=$(basename "$repo_url" .repo | sed 's/fedora-//')
+    repo_id=$(basename "$repo_url" .repo)
     if ! dnf5 repolist | grep -q "$repo_id"; then
         dnf5 config-manager addrepo --from-repofile="$repo_url"
     fi
