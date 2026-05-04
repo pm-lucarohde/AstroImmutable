@@ -70,11 +70,11 @@ fi
 flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
 
 flatpak install -y \
-	spotify\
-	bazaar\
-	whatsie\
-	vesktop\
-	thunderbird\
+	com.spotify.Client\
+	io.github.kolunmi.Bazaar\
+	com.ktechpit.whatsie\
+	dev.vencord.Vesktop\
+	org.mozilla.Thunderbird\
 	com.github.dail8859.NotepadNext
 
 kwriteconfig6 --file kdeglobals --group General --key TerminalService com.mitchellh.ghostty.desktop
