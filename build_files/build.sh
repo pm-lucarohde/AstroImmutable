@@ -31,6 +31,8 @@ dnf copr enable -y scottames/ghostty
 dnf5 config-manager setopt fedora-multimedia.priority=1
 dnf5 config-manager setopt fedora-steam.priority=10
 
+mkdir -p /opt/brave.com
+
 dnf5 remove -y plasma-discover
 dnf5 remove -y dolphin
 dnf5 remove -y firefox
