@@ -17,15 +17,16 @@ dnf5 install -y \
   https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
 
 for repo_url in \
+	"https://brave-browser-rpm-release.s3.brave.com/brave-browser.repo" \
     "https://negativo17.org/repos/fedora-multimedia.repo" \
-    "https://negativo17.org/repos/fedora-spotify.repo" \
-    "https://negativo17.org/repos/fedora-nvidia.repo" \
     "https://negativo17.org/repos/fedora-steam.repo"; do
     repo_id=$(basename "$repo_url" .repo)
     if ! ls /etc/yum.repos.d/ | grep -q "$repo_id"; then
         dnf5 config-manager addrepo --from-repofile="$repo_url"
     fi
 done
+
+dnf copr enable scottames/ghostty
 
 dnf5 config-manager setopt fedora-multimedia.priority=1
 dnf5 config-manager setopt fedora-spotify.priority=1
@@ -35,11 +36,12 @@ dnf5 config-manager setopt fedora-steam.priority=10
 dnf5 remove -y plasma-discover
 dnf5 remove -y dolphin
 dnf5 remove -y firefox
+dnf5 remove -y kwrite
+dnf5 remove -y kate
+dnf5 remove -y konsole
 
 dnf5 install -y \
 	git\
-	vim\
-	tmux\
 	htop\
 	flatpak\
 	ffmpeg\
@@ -52,24 +54,29 @@ dnf5 install -y \
 	vlc\
 	7zip\
 	podman\
-	spotify\
 	nautilus\
-	gnome-software\
 	fastfetch\
-	wine
+	wine\
+	brave-browser\
+	steam\
+	gwenview\
+	ghostty\
+	nautilus-python
 
 if flatpak --system remotes | awk '{print $1}' | grep -qx fedora; then
     flatpak --system remote-delete fedora --force
 fi
 flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
 
-mkdir -p /usr/libexec/astroimmutable
-install -m755 /ctx/firstlogin-setup.sh /usr/libexec/astroimmutable/firstlogin-setup.sh
-install -Dm644 /ctx/astroimmutable-firstlogin.service /usr/lib/systemd/user/astroimmutable-firstlogin.service
+flatpak install -y \
+	spotify\
+	bazaar\
+	whatsie\
+	vesktop\
+	thunderbird\
+	com.github.dail8859.NotepadNext
 
-mkdir -p /etc/systemd/user/default.target.wants
-ln -sf /usr/lib/systemd/user/astroimmutable-firstlogin.service \
-  /etc/systemd/user/default.target.wants/astroimmutable-firstlogin.service
+kwriteconfig6 --file kdeglobals --group General --key TerminalService com.mitchellh.ghostty.desktop
 
 # Use a COPR Example:
 #
