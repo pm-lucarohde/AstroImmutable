@@ -67,17 +67,17 @@ dnf5 install -y \
 if flatpak --system remotes | awk '{print $1}' | grep -qx fedora; then
     flatpak --system remote-delete fedora --force
 fi
+
 flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
-
-flatpak install -y \
-	com.spotify.Client\
-	io.github.kolunmi.Bazaar\
-	com.ktechpit.whatsie\
-	dev.vencord.Vesktop\
-	org.mozilla.Thunderbird\
-	com.github.dail8859.NotepadNext
-
 kwriteconfig6 --file kdeglobals --group General --key TerminalService com.mitchellh.ghostty.desktop
+
+mkdir -p /usr/libexec/astroimmutable
+install -m755 /ctx/firstlogin-setup.sh /usr/libexec/astroimmutable/firstlogin-setup.sh
+install -Dm644 /ctx/astroimmutable-firstlogin.service /usr/lib/systemd/user/astroimmutable-firstlogin.service
+
+mkdir -p /etc/systemd/user/default.target.wants
+ln -sf /usr/lib/systemd/user/astroimmutable-firstlogin.service \
+  /etc/systemd/user/default.target.wants/astroimmutable-firstlogin.service
 
 # Use a COPR Example:
 #

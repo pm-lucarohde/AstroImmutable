@@ -5,37 +5,10 @@ STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/astroimmutable"
 
 mkdir -p "${STATE_DIR}"
 
-if ! distrobox list | awk -F'|' '{gsub(/^[ \t]+|[ \t]+$/, "", $2); print $2}' | grep -qx ubuntu; then
-  distrobox create --image docker.io/library/ubuntu:25.10 --name ubuntu --yes
-fi
-
-distrobox enter ubuntu -- bash -lc '
-  set -euo pipefail
-
-  sudo apt update
-  sudo apt install -y curl
-
-  sudo curl -fsSLo /usr/share/keyrings/brave-browser-archive-keyring.gpg \
-    https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg
-
-  sudo curl -fsSLo /etc/apt/sources.list.d/brave-browser-release.sources \
-    https://brave-browser-apt-release.s3.brave.com/brave-browser.sources
-
-  sudo apt update
-  sudo apt install -y brave-browser
-
-  DESKTOP_FILE=""
-  if [ -f /usr/share/applications/brave-browser.desktop ]; then
-    DESKTOP_FILE="/usr/share/applications/brave-browser.desktop"
-  else
-    DESKTOP_FILE="$(find /usr/share/applications -maxdepth 1 -type f -iname "*brave*.desktop" | head -n1)"
-  fi
-
-  if [ -z "${DESKTOP_FILE}" ] || [ ! -f "${DESKTOP_FILE}" ]; then
-    echo "Keine Brave-.desktop-Datei im Container gefunden"
-    exit 1
-  fi
-
-  distrobox-export --app "${DESKTOP_FILE}" --export-label none
-'
-
+flatpak install -y \
+	com.spotify.Client\
+	io.github.kolunmi.Bazaar\
+	com.ktechpit.whatsie\
+	dev.vencord.Vesktop\
+	org.mozilla.Thunderbird\
+	com.github.dail8859.NotepadNext
