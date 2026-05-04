@@ -26,11 +26,9 @@ for repo_url in \
     fi
 done
 
-dnf copr enable scottames/ghostty
+dnf copr enable -y scottames/ghostty
 
 dnf5 config-manager setopt fedora-multimedia.priority=1
-dnf5 config-manager setopt fedora-spotify.priority=1
-dnf5 config-manager setopt fedora-nvidia.priority=5
 dnf5 config-manager setopt fedora-steam.priority=10
 
 dnf5 remove -y plasma-discover
