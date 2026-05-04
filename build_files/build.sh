@@ -32,7 +32,7 @@ dnf5 config-manager setopt fedora-multimedia.priority=1
 dnf5 config-manager setopt fedora-steam.priority=10
 
 rm -rf /opt/brave.com
-mkdir -p /opt/brave.com
+mkdir -p "$(readlink -f /opt)/brave.com"
 
 dnf5 remove -y plasma-discover
 dnf5 remove -y dolphin
