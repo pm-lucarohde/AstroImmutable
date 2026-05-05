@@ -26,7 +26,6 @@ for repo_url in \
 done
 
 dnf copr enable -y scottames/ghostty
-dnf copr enable -y imput/helium
 
 dnf5 config-manager setopt fedora-multimedia.priority=1
 dnf5 config-manager setopt fedora-steam.priority=10
@@ -57,7 +56,6 @@ dnf5 install -y \
 	steam\
 	gwenview\
 	ghostty\
-	helium-bin\
 	nautilus-python
 
 if flatpak --system remotes | awk '{print $1}' | grep -qx fedora; then
@@ -76,7 +74,7 @@ ln -sf /usr/lib/systemd/user/astroimmutable-firstlogin.service \
   
 NOTEPAD_NEXT_URL=$(curl -s https://api.github.com/repos/dail8859/NotepadNext/releases/latest | grep "browser_download_url.*AppImage" | cut -d '"' -f 4)
 curl -L "$NOTEPAD_NEXT_URL" -o /usr/bin/notepadnext
-chmod +x /usr/bin/notepadnex
+chmod +x /usr/bin/notepadnext
 
 mkdir -p /usr/share/icons/hicolor/scalable/apps
 curl -L https://raw.githubusercontent.com/dail8859/NotepadNext/master/src/NotepadNext/resources/images/NotepadNext.svg -o /usr/share/icons/hicolor/scalable/apps/notepadnext.svg
@@ -89,6 +87,23 @@ Icon=notepadnext
 Type=Application
 Categories=Development;TextEditor;
 Comment=A cross-platform reimplementation of Notepad++
+Terminal=false
+EOF
+
+HELIUM_URL=$(curl -s https://api.github.com/repos/imputnet/helium-linux/releases/latest | grep "browser_download_url.*AppImage" | cut -d '"' -f 4)
+curl -L "$HELIUM_URL" -o /usr/bin/helium
+chmod +x /usr/bin/helium
+
+curl -L https://raw.githubusercontent.com/imputnet/helium-linux/main/src-tauri/icons/icon.png -o /usr/share/icons/hicolor/scalable/apps/helium.png
+
+cat <<EOF > /usr/share/applications/helium.desktop
+[Desktop Entry]
+Name=Helium
+Exec=/usr/bin/helium
+Icon=helium
+Type=Application
+Categories=Network;WebBrowser;
+Comment=A floating browser window
 Terminal=false
 EOF
 
