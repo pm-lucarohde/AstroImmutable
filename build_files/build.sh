@@ -17,7 +17,6 @@ dnf5 install -y \
   https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
 
 for repo_url in \
-	"https://brave-browser-rpm-release.s3.brave.com/brave-browser.repo" \
     "https://negativo17.org/repos/fedora-multimedia.repo" \
     "https://negativo17.org/repos/fedora-steam.repo"; do
     repo_id=$(basename "$repo_url" .repo)
@@ -27,14 +26,11 @@ for repo_url in \
 done
 
 dnf copr enable -y scottames/ghostty
+dnf copr enable -y imput/helium
 
 dnf5 config-manager setopt fedora-multimedia.priority=1
 dnf5 config-manager setopt fedora-steam.priority=10
 
-rm -rf /opt/brave.com
-mkdir -p "$(readlink -f /opt)/brave.com"
-
-dnf5 remove -y plasma-discover
 dnf5 remove -y dolphin
 dnf5 remove -y firefox
 dnf5 remove -y kwrite
@@ -58,10 +54,10 @@ dnf5 install -y \
 	nautilus\
 	fastfetch\
 	wine\
-	brave-browser\
 	steam\
 	gwenview\
 	ghostty\
+	helium-bin\
 	nautilus-python
 
 if flatpak --system remotes | awk '{print $1}' | grep -qx fedora; then
@@ -69,7 +65,6 @@ if flatpak --system remotes | awk '{print $1}' | grep -qx fedora; then
 fi
 
 flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
-kwriteconfig6 --file kdeglobals --group General --key TerminalService com.mitchellh.ghostty.desktop
 
 mkdir -p /usr/libexec/astroimmutable
 install -m755 /ctx/firstlogin-setup.sh /usr/libexec/astroimmutable/firstlogin-setup.sh
@@ -78,6 +73,24 @@ install -Dm644 /ctx/astroimmutable-firstlogin.service /usr/lib/systemd/user/astr
 mkdir -p /etc/systemd/user/default.target.wants
 ln -sf /usr/lib/systemd/user/astroimmutable-firstlogin.service \
   /etc/systemd/user/default.target.wants/astroimmutable-firstlogin.service
+  
+NOTEPAD_NEXT_URL=$(curl -s https://api.github.com/repos/dail8859/NotepadNext/releases/latest | grep "browser_download_url.*AppImage" | cut -d '"' -f 4)
+curl -L "$NOTEPAD_NEXT_URL" -o /usr/bin/notepadnext
+chmod +x /usr/bin/notepadnex
+
+mkdir -p /usr/share/icons/hicolor/scalable/apps
+curl -L https://raw.githubusercontent.com/dail8859/NotepadNext/master/src/NotepadNext/resources/images/NotepadNext.svg -o /usr/share/icons/hicolor/scalable/apps/notepadnext.svg
+
+cat <<EOF > /usr/share/applications/notepadnext.desktop
+[Desktop Entry]
+Name=NotepadNext
+Exec=/usr/bin/notepadnext
+Icon=notepadnext
+Type=Application
+Categories=Development;TextEditor;
+Comment=A cross-platform reimplementation of Notepad++
+Terminal=false
+EOF
 
 # Use a COPR Example:
 #

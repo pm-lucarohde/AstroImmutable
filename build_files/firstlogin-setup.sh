@@ -7,8 +7,9 @@ mkdir -p "${STATE_DIR}"
 
 flatpak install -y \
 	com.spotify.Client\
-	io.github.kolunmi.Bazaar\
 	com.ktechpit.whatsie\
 	dev.vencord.Vesktop\
 	org.mozilla.Thunderbird\
 	com.github.dail8859.NotepadNext
+
+kwriteconfig6 --file kdeglobals --group General --key TerminalService com.mitchellh.ghostty.desktop
