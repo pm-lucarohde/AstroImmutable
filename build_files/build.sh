@@ -90,7 +90,7 @@ Comment=A cross-platform reimplementation of Notepad++
 Terminal=false
 EOF
 
-HELIUM_URL=$(curl -s https://api.github.com/repos/imputnet/helium-linux/releases/latest | grep "browser_download_url.*AppImage" | cut -d '"' -f 4)
+HELIUM_URL=$(curl -s https://api.github.com/repos/imputnet/helium-linux/releases/latest | grep "browser_download_url.*x86_64\.AppImage" | head -n 1 | cut -d '"' -f 4)
 curl -L "$HELIUM_URL" -o /usr/bin/helium
 chmod +x /usr/bin/helium
 
