@@ -26,6 +26,9 @@ for repo_url in \
 done
 
 dnf copr enable -y scottames/ghostty
+dnf copr enable -y bieszczaders/kernel-cachyos
+
+setsebool -P domain_kernel_load_modules on
 
 dnf5 config-manager setopt fedora-multimedia.priority=1
 dnf5 config-manager setopt fedora-steam.priority=10
@@ -56,7 +59,20 @@ dnf5 install -y \
 	steam\
 	gwenview\
 	ghostty\
-	nautilus-python
+	nautilus-python\
+	kernel-cachyos-lts\
+	kernel-cachyos-lts-devel-matched
+	
+mkdir -p /etc/kernel/postinst.d
+cat <<EOF > /etc/kernel/postinst.d/99-default
+#!/bin/sh
+set -e
+grubby --set-default=/boot/\$(ls /boot | grep vmlinuz.*cachy | sort -V | tail -1)
+EOF
+
+# Rechte anpassen
+chown root:root /etc/kernel/postinst.d/99-default
+chmod +x /etc/kernel/postinst.d/99-default
 
 if flatpak --system remotes | awk '{print $1}' | grep -qx fedora; then
     flatpak --system remote-delete fedora --force
