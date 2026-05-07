@@ -2,15 +2,25 @@
 set -euo pipefail
 
 STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/astroimmutable"
+STATE_FILE="${STATE_DIR}/setup_done"
+
+# Prüfen, ob das Skript schon mal lief
+if [ -f "$STATE_FILE" ]; then
+    exit 0
+fi
 
 mkdir -p "${STATE_DIR}"
 
+# KDE Standard-Terminal setzen
 kwriteconfig6 --file kdeglobals --group General --key TerminalService com.mitchellh.ghostty.desktop
 
+# Flatpaks installieren
 flatpak install -y \
-	com.spotify.Client\
-	com.ktechpit.whatsie\
-	dev.vencord.Vesktop\
-	org.mozilla.Thunderbird\
-	org.mozilla.firefox
-	
+        com.spotify.Client\
+        com.ktechpit.whatsie\
+        dev.vencord.Vesktop\
+        org.mozilla.Thunderbird\
+        org.mozilla.firefox
+
+# Status-Datei anlegen, damit es beim nächsten Login übersprungen wird
+touch "$STATE_FILE"

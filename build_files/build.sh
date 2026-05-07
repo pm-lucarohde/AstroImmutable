@@ -68,8 +68,9 @@ NOTEPAD_NEXT_URL=$(curl -s https://api.github.com/repos/dail8859/NotepadNext/rel
 curl -L "$NOTEPAD_NEXT_URL" -o /usr/bin/notepadnext
 chmod +x /usr/bin/notepadnext
 
-mkdir -p /usr/share/icons/hicolor/scalable/apps
-curl -L https://raw.githubusercontent.com/dail8859/NotepadNext/master/src/NotepadNext/resources/images/NotepadNext.svg -o /usr/share/icons/hicolor/scalable/apps/notepadnext.svg
+mkdir -p /usr/share/icons/hicolor/512x512/apps
+curl -fL "https://raw.githubusercontent.com/dail8859/NotepadNext/master/src/icons/NotepadNext.png" -o /usr/share/icons/hicolor/512x512/apps/notepadnext.png
+gtk-update-icon-cache /usr/share/icons/hicolor
 
 cat <<EOF > /usr/share/applications/notepadnext.desktop
 [Desktop Entry]
