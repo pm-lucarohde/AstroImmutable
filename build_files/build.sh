@@ -27,8 +27,6 @@ done
 
 dnf copr enable -y scottames/ghostty
 
-setsebool -P domain_kernel_load_modules on
-
 dnf5 config-manager setopt fedora-multimedia.priority=1
 dnf5 config-manager setopt fedora-steam.priority=10
 
@@ -60,24 +58,12 @@ dnf5 install -y \
 	ghostty\
 	nautilus-python
 
-# Rechte anpassen
-chown root:root /etc/kernel/postinst.d/99-default
-chmod +x /etc/kernel/postinst.d/99-default
-
 if flatpak --system remotes | awk '{print $1}' | grep -qx fedora; then
     flatpak --system remote-delete fedora --force
 fi
 
 flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
 
-mkdir -p /usr/libexec/astroimmutable
-install -m755 /ctx/firstlogin-setup.sh /usr/libexec/astroimmutable/firstlogin-setup.sh
-install -Dm644 /ctx/astroimmutable-firstlogin.service /usr/lib/systemd/user/astroimmutable-firstlogin.service
-
-mkdir -p /etc/systemd/user/default.target.wants
-ln -sf /usr/lib/systemd/user/astroimmutable-firstlogin.service \
-  /etc/systemd/user/default.target.wants/astroimmutable-firstlogin.service
-  
 NOTEPAD_NEXT_URL=$(curl -s https://api.github.com/repos/dail8859/NotepadNext/releases/latest | grep "browser_download_url.*AppImage" | cut -d '"' -f 4)
 curl -L "$NOTEPAD_NEXT_URL" -o /usr/bin/notepadnext
 chmod +x /usr/bin/notepadnext
@@ -95,6 +81,14 @@ Categories=Development;TextEditor;
 Comment=A cross-platform reimplementation of Notepad++
 Terminal=false
 EOF
+
+mkdir -p /usr/libexec/astroimmutable
+install -m755 /ctx/firstlogin-setup.sh /usr/libexec/astroimmutable/firstlogin-setup.sh
+install -Dm644 /ctx/astroimmutable-firstlogin.service /usr/lib/systemd/user/astroimmutable-firstlogin.service
+
+mkdir -p /etc/systemd/user/default.target.wants
+ln -sf /usr/lib/systemd/user/astroimmutable-firstlogin.service \
+  /etc/systemd/user/default.target.wants/astroimmutable-firstlogin.service
 
 # Use a COPR Example:
 #
