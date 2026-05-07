@@ -35,6 +35,7 @@ dnf5 remove -y firefox
 dnf5 remove -y kwrite
 dnf5 remove -y kate
 dnf5 remove -y konsole
+dnf5 remove -y plasma-discover
 
 dnf5 install -y \
 	git\
@@ -56,7 +57,9 @@ dnf5 install -y \
 	steam\
 	gwenview\
 	ghostty\
-	nautilus-python
+	nautilus-python\
+	xdg-desktop-portal-kde\
+	xdg-desktop-portal-gtk
 
 if flatpak --system remotes | awk '{print $1}' | grep -qx fedora; then
     flatpak --system remote-delete fedora --force
@@ -82,6 +85,11 @@ Categories=Development;TextEditor;
 Comment=A cross-platform reimplementation of Notepad++
 Terminal=false
 EOF
+
+# Ändert den Hauptnamen
+sed -i 's/^Name=.*/Name=Terminal/' /usr/share/applications/com.mitchellh.ghostty.desktop
+# Entfernt alle übersetzten Namen (z.B. Name[de], Name[fr]), damit nur noch "Terminal" übrig bleibt
+sed -i '/^Name\[/d' /usr/share/applications/com.mitchellh.ghostty.desktop
 
 mkdir -p /usr/libexec/astroimmutable
 install -m755 /ctx/firstlogin-setup.sh /usr/libexec/astroimmutable/firstlogin-setup.sh

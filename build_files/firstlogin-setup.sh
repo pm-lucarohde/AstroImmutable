@@ -14,13 +14,20 @@ mkdir -p "${STATE_DIR}"
 # KDE Standard-Terminal setzen
 kwriteconfig6 --file kdeglobals --group General --key TerminalService com.mitchellh.ghostty.desktop
 
+flatpak override --user --env=GTK_THEME=Breeze
+
 # Flatpaks installieren
 flatpak install -y \
+		org.gtk.Gtk3theme.Breeze\
+		org.kde.KStyle.Adwaita\
+		io.github.kolunmi.Bazaar\
         com.spotify.Client\
         com.ktechpit.whatsie\
         dev.vencord.Vesktop\
         org.mozilla.Thunderbird\
-        org.mozilla.firefox
+        org.mozilla.firefox\
+		it.mijorus.gearlever
+
 
 # Status-Datei anlegen, damit es beim nächsten Login übersprungen wird
 touch "$STATE_FILE"
