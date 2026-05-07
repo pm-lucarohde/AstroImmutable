@@ -26,7 +26,6 @@ for repo_url in \
 done
 
 dnf copr enable -y scottames/ghostty
-dnf copr enable -y bieszczaders/kernel-cachyos
 
 setsebool -P domain_kernel_load_modules on
 
@@ -59,16 +58,7 @@ dnf5 install -y \
 	steam\
 	gwenview\
 	ghostty\
-	nautilus-python\
-	kernel-cachyos-lts\
-	kernel-cachyos-lts-devel-matched
-	
-mkdir -p /etc/kernel/postinst.d
-cat <<EOF > /etc/kernel/postinst.d/99-default
-#!/bin/sh
-set -e
-grubby --set-default=/boot/\$(ls /boot | grep vmlinuz.*cachy | sort -V | tail -1)
-EOF
+	nautilus-python
 
 # Rechte anpassen
 chown root:root /etc/kernel/postinst.d/99-default
@@ -103,23 +93,6 @@ Icon=notepadnext
 Type=Application
 Categories=Development;TextEditor;
 Comment=A cross-platform reimplementation of Notepad++
-Terminal=false
-EOF
-
-HELIUM_URL=$(curl -s https://api.github.com/repos/imputnet/helium-linux/releases/latest | grep "browser_download_url.*x86_64\.AppImage" | head -n 1 | cut -d '"' -f 4)
-curl -L "$HELIUM_URL" -o /usr/bin/helium
-chmod +x /usr/bin/helium
-
-curl -L https://raw.githubusercontent.com/imputnet/helium-linux/main/src-tauri/icons/icon.png -o /usr/share/icons/hicolor/scalable/apps/helium.png
-
-cat <<EOF > /usr/share/applications/helium.desktop
-[Desktop Entry]
-Name=Helium
-Exec=/usr/bin/helium
-Icon=helium
-Type=Application
-Categories=Network;WebBrowser;
-Comment=A floating browser window
 Terminal=false
 EOF
 
