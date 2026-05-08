@@ -27,7 +27,17 @@ done
 
 dnf5 copr enable -y scottames/ghostty
 dnf5 copr enable -y copr.fedorainfracloud.org/ublue-os/packages
-dnf5 copr enable -y ublue-os/staging
+
+# uBlue Staging manuell (enthält den libadwaita-Patch für Fedora 43)
+cat <<EOF > /etc/yum.repos.d/_copr_ublue_staging.repo
+[copr:copr.fedorainfracloud.org:ublue-os:staging]
+name=Copr repo for staging owned by ublue-os
+baseurl=https://download.copr.fedorainfracloud.org/results/ublue-os/staging/fedora-43-\$basearch/
+type=rpm-md
+enabled=1
+gpgcheck=1
+gpgkey=https://download.copr.fedorainfracloud.org/results/ublue-os/staging/pubkey.gpg
+EOF
 
 # Libadwaita Patch Repo
 cat <<EOF > /etc/yum.repos.d/_copr_libadwaita.repo

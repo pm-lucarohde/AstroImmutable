@@ -14,6 +14,8 @@ mkdir -p "${STATE_DIR}"
 # KDE Standard-Terminal setzen
 kwriteconfig6 --file kdeglobals --group General --key TerminalService com.mitchellh.ghostty.desktop
 
+curl -fL "https://launcher.hytale.com/builds/release/linux/amd64/hytale-launcher-latest.flatpak" -o /tmp/hytale.flatpak
+
 # Flatpaks installieren
 flatpak install -y \
         com.spotify.Client\
@@ -21,7 +23,10 @@ flatpak install -y \
         dev.vencord.Vesktop\
         org.mozilla.Thunderbird\
         org.mozilla.firefox\
-		it.mijorus.gearlever
+		it.mijorus.gearlever\
+		/tmp/hytale.flatpak
+
+rm -rf "/tmp/hytale.flatpak"
 
 # Status-Datei anlegen, damit es beim nächsten Login übersprungen wird
 touch "$STATE_FILE"
