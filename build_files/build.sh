@@ -96,6 +96,7 @@ sed -i '/^Name\[/d' /usr/share/applications/com.mitchellh.ghostty.desktop
 
 dnf5 swap -y libadwaita libadwaita-without-adwaita
 dnf5 install -y bazaar
+dnf5 install -y libadwaita-without-adwaita --allowerasing
 
 mkdir -p /usr/libexec/astroimmutable
 install -m755 /ctx/firstlogin-setup.sh /usr/libexec/astroimmutable/firstlogin-setup.sh
