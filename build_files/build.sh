@@ -29,6 +29,7 @@ dnf5 copr enable -y scottames/ghostty
 dnf5 copr enable -y copr.fedorainfracloud.org/ublue-os/packages
 dnf5 copr enable -y ublue-os/staging
 
+# Libadwaita Patch Repo
 cat <<EOF > /etc/yum.repos.d/_copr_libadwaita.repo
 [copr:copr.fedorainfracloud.org:madoka241:libadwaita-without-adwaita]
 name=Copr repo for libadwaita-without-adwaita owned by madoka241
@@ -42,7 +43,21 @@ enabled=1
 enabled_metadata=1
 EOF
 
-dnf5 install -y bazaar-store krunner-bazaar --allowerasing
+# uBlue Packages Repo (enthält Bazaar)
+cat <<EOF > /etc/yum.repos.d/_copr_ublue_packages.repo
+[copr:copr.fedorainfracloud.org:ublue-os:packages]
+name=Copr repo for packages owned by ublue-os
+baseurl=https://download.copr.fedorainfracloud.org/results/ublue-os/packages/fedora-43-\$basearch/
+type=rpm-md
+skip_if_unavailable=True
+gpgcheck=1
+gpgkey=https://download.copr.fedorainfracloud.org/results/ublue-os/packages/pubkey.gpg
+repo_gpgcheck=0
+enabled=1
+enabled_metadata=1
+EOF
+
+dnf5 install -y libadwaita-without-adwaita bazaar krunner-bazaar --allowerasing
 
 dnf5 config-manager setopt fedora-multimedia.priority=1
 dnf5 config-manager setopt fedora-steam.priority=10
