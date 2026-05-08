@@ -23,8 +23,9 @@ flatpak install --system -y\
         dev.vencord.Vesktop\
         org.mozilla.Thunderbird\
         org.mozilla.firefox\
-		it.mijorus.gearlever\
-		/tmp/hytale.flatpak
+		it.mijorus.gearlever
+
+flatpak install --system -y "/tmp/hytale.flatpak"
 
 rm -rf /tmp/hytale.flatpak
 
