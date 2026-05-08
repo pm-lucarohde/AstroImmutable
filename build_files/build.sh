@@ -25,10 +25,9 @@ for repo_url in \
     fi
 done
 
-dnf copr enable -y scottames/ghostty
-dnf copr enable copr.fedorainfracloud.org/ublue-os/packages
-dnf copr enable -y madoka241/libadwaita-without-adwaita
-dnf copr enable -y ublue-os/staging
+dnf5 copr enable -y scottames/ghostty
+dnf5 copr enable -y copr.fedorainfracloud.org/ublue-os/packages
+dnf5 config-manager addrepo --from-repofile="https://copr.fedorainfracloud.org/coprs/madoka241/libadwaita-without-adwaita/repo/fedora-43/madoka241-libadwaita-without-adwaita-fedora-43.repo"
 
 dnf5 config-manager setopt fedora-multimedia.priority=1
 dnf5 config-manager setopt fedora-steam.priority=10
