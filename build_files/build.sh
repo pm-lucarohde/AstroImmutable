@@ -26,6 +26,9 @@ for repo_url in \
 done
 
 dnf copr enable -y scottames/ghostty
+dnf copr enable copr.fedorainfracloud.org/ublue-os/packages
+dnf copr enable -y madoka241/libadwaita-without-adwaita
+dnf copr enable -y ublue-os/staging
 
 dnf5 config-manager setopt fedora-multimedia.priority=1
 dnf5 config-manager setopt fedora-steam.priority=10
@@ -58,10 +61,9 @@ dnf5 install -y \
 	gwenview\
 	ghostty\
 	nautilus-python\
+	krunner-bazaar\
 	xdg-desktop-portal-kde\
-	xdg-desktop-portal-gtk\
-	kde-gtk-config\
-    breeze-gtk
+	xdg-desktop-portal-gtk
 
 if flatpak --system remotes | awk '{print $1}' | grep -qx fedora; then
     flatpak --system remote-delete fedora --force
@@ -92,6 +94,9 @@ EOF
 sed -i 's/^Name=.*/Name=Terminal/' /usr/share/applications/com.mitchellh.ghostty.desktop
 # Entfernt alle übersetzten Namen (z.B. Name[de], Name[fr]), damit nur noch "Terminal" übrig bleibt
 sed -i '/^Name\[/d' /usr/share/applications/com.mitchellh.ghostty.desktop
+
+dnf5 swap -y libadwaita libadwaita-without-adwaita
+dnf5 install -y bazaar
 
 mkdir -p /usr/libexec/astroimmutable
 install -m755 /ctx/firstlogin-setup.sh /usr/libexec/astroimmutable/firstlogin-setup.sh

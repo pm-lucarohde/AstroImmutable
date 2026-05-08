@@ -16,18 +16,12 @@ kwriteconfig6 --file kdeglobals --group General --key TerminalService com.mitche
 
 # Flatpaks installieren
 flatpak install -y \
-		org.kde.KStyle.Adwaita\
-		org.gtk.Gtk3theme.Breeze\
-		io.github.kolunmi.Bazaar\
         com.spotify.Client\
         com.ktechpit.whatsie\
         dev.vencord.Vesktop\
         org.mozilla.Thunderbird\
         org.mozilla.firefox\
 		it.mijorus.gearlever
-
-flatpak override --user --env=GTK_THEME=Breeze
-flatpak override --user --filesystem=xdg-config/gtk-4.0:ro io.github.kolunmi.Bazaar
 
 # Status-Datei anlegen, damit es beim nächsten Login übersprungen wird
 touch "$STATE_FILE"
