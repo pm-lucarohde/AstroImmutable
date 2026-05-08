@@ -59,7 +59,9 @@ dnf5 install -y \
 	ghostty\
 	nautilus-python\
 	xdg-desktop-portal-kde\
-	xdg-desktop-portal-gtk
+	xdg-desktop-portal-gtk\
+	kde-gtk-config\
+    breeze-gtk
 
 if flatpak --system remotes | awk '{print $1}' | grep -qx fedora; then
     flatpak --system remote-delete fedora --force
