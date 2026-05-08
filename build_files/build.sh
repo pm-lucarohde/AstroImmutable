@@ -57,7 +57,8 @@ enabled=1
 enabled_metadata=1
 EOF
 
-dnf5 install -y libadwaita-without-adwaita bazaar krunner-bazaar --allowerasing
+dnf5 swap -y libadwaita libadwaita --from-repo=copr:copr.fedorainfracloud.org:ublue-os:staging --allowerasing
+dnf5 install -y bazaar
 
 dnf5 config-manager setopt fedora-multimedia.priority=1
 dnf5 config-manager setopt fedora-steam.priority=10
