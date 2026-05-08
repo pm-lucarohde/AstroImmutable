@@ -26,7 +26,7 @@ flatpak install -y \
 		it.mijorus.gearlever\
 		/tmp/hytale.flatpak
 
-rm -rf "/tmp/hytale.flatpak"
+rm -rf /tmp/hytale.flatpak
 
 # Status-Datei anlegen, damit es beim nächsten Login übersprungen wird
 touch "$STATE_FILE"

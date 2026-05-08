@@ -30,8 +30,8 @@ dnf5 copr enable -y copr.fedorainfracloud.org/ublue-os/packages
 
 # uBlue Staging manuell (enthält den libadwaita-Patch für Fedora 43)
 cat <<EOF > /etc/yum.repos.d/_copr_ublue_staging.repo
-[copr:copr.fedorainfracloud.org:ublue-os:staging]
-name=Copr repo for staging owned by ublue-os
+[ublue-staging-f43]
+name=Copr repo for staging owned by ublue-os (F43)
 baseurl=https://download.copr.fedorainfracloud.org/results/ublue-os/staging/fedora-43-\$basearch/
 type=rpm-md
 enabled=1
@@ -67,7 +67,7 @@ enabled=1
 enabled_metadata=1
 EOF
 
-dnf5 swap -y libadwaita libadwaita --from-repo=copr:copr.fedorainfracloud.org:ublue-os:staging --allowerasing
+dnf5 swap -y libadwaita libadwaita --from-repo=ublue-staging-f43 --allowerasing
 dnf5 install -y bazaar
 
 dnf5 config-manager setopt fedora-multimedia.priority=1
