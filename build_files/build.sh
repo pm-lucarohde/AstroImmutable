@@ -29,10 +29,6 @@ dnf5 copr enable -y scottames/ghostty
 dnf5 copr enable -y copr.fedorainfracloud.org/ublue-os/packages
 dnf5 copr enable -y ublue-os/staging
 
-dnf5 list libadwaita --available
-dnf5 swap -y libadwaita libadwaita --allowerasing
-dnf5 install -y bazaar
-
 dnf5 config-manager setopt fedora-multimedia.priority=1
 dnf5 config-manager setopt fedora-steam.priority=10
 
@@ -43,6 +39,8 @@ dnf5 remove -y kate
 dnf5 remove -y konsole
 dnf5 remove -y plasma-discover
 
+dnf5 list libhelium --available
+
 dnf5 install -y \
 	git\
 	htop\
@@ -52,6 +50,7 @@ dnf5 install -y \
 	fdk-aac\
 	libavcodec\
 	pipewire-libs-extra\
+	libhelium\
 	docker\
 	distrobox\
 	vlc\
@@ -64,6 +63,7 @@ dnf5 install -y \
 	gwenview\
 	ghostty\
 	nautilus-python\
+	bazaar\
 	krunner-bazaar\
 	xdg-desktop-portal-kde\
 	xdg-desktop-portal-gtk
