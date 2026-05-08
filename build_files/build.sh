@@ -42,8 +42,7 @@ enabled=1
 enabled_metadata=1
 EOF
 
-dnf5 install -y libadwaita-without-adwaita --allowerasing
-dnf5 install -y bazaar-store
+dnf5 install -y bazaar-store krunner-bazaar --allowerasing
 
 dnf5 config-manager setopt fedora-multimedia.priority=1
 dnf5 config-manager setopt fedora-steam.priority=10
