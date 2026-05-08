@@ -29,8 +29,8 @@ dnf5 copr enable -y scottames/ghostty
 dnf5 copr enable -y copr.fedorainfracloud.org/ublue-os/packages
 dnf5 copr enable -y ublue-os/staging
 
-dnf5 repoquery --provides libadwaita --queryformat "%{repoid}"
-dnf5 swap -y libadwaita libadwaita --from-repo=ublue-staging-f43 --allowerasing
+dnf5 list libadwaita --available
+dnf5 swap -y libadwaita libadwaita --allowerasing
 dnf5 install -y bazaar
 
 dnf5 config-manager setopt fedora-multimedia.priority=1
