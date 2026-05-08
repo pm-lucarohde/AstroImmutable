@@ -28,13 +28,11 @@ done
 dnf5 copr enable -y scottames/ghostty
 dnf5 copr enable -y copr.fedorainfracloud.org/ublue-os/packages
 dnf5 copr enable -y ublue-os/staging
-dnf5 copr enable -y ublue-os/bazzite
 
 dnf5 config-manager setopt fedora-multimedia.priority=1
 dnf5 config-manager setopt fedora-steam.priority=10
-dnf5 config-manager setopt "copr:copr.fedorainfracloud.org:ublue-os:bazzite".priority=98
 
-dnf5 remove -y dolphin
+dnf5 remove -y dolphin && dnf5 install -y gnome-software
 dnf5 remove -y firefox
 dnf5 remove -y kwrite
 dnf5 remove -y kate
@@ -52,7 +50,6 @@ dnf5 install -y \
 	pipewire-libs-extra\
 	xdg-desktop-portal-kde\
 	xdg-desktop-portal-gtk\
-	libadwaita\
 	docker\
 	distrobox\
 	vlc\
@@ -64,9 +61,7 @@ dnf5 install -y \
 	steam\
 	gwenview\
 	ghostty\
-	nautilus-python\
-	bazaar\
-	krunner-bazaar
+	nautilus-python
 	
 if flatpak --system remotes | awk '{print $1}' | grep -qx fedora; then
     flatpak --system remote-delete fedora --force
@@ -105,22 +100,5 @@ install -Dm644 /ctx/astroimmutable-firstlogin.service /usr/lib/systemd/user/astr
 mkdir -p /etc/systemd/user/default.target.wants
 ln -sf /usr/lib/systemd/user/astroimmutable-firstlogin.service \
   /etc/systemd/user/default.target.wants/astroimmutable-firstlogin.service
-
-# Verzeichnis für Overrides sicherstellen
-mkdir -p /usr/share/glib-2.0/schemas
-
-# Den Button-Layout Override erstellen (exakt wie in Bazzite's system_files/overrides)
-cat <<EOF > /usr/share/glib-2.0/schemas/zz0-00-astro-kinoite-global.gschema.override
-[org.gnome.desktop.wm.preferences]
-button-layout='menu:minimize,maximize,close'
-
-[org.gnome.desktop.interface]
-gtk-theme='adwaita'
-icon-theme='breeze'
-font-name='Noto Sans 10'
-EOF
-
-# WICHTIG: Alle Schemas kompilieren, damit die Overrides aktiv werden
-glib-compile-schemas /usr/share/glib-2.0/schemas
 
 systemctl enable podman.socket
