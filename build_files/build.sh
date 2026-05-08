@@ -27,7 +27,8 @@ done
 
 dnf5 copr enable -y scottames/ghostty
 dnf5 copr enable -y copr.fedorainfracloud.org/ublue-os/packages
-dnf5 config-manager addrepo --from-repofile="https://copr.fedorainfracloud.org/coprs/madoka241/libadwaita-without-adwaita/repo/fedora-43/madoka241-libadwaita-without-adwaita-fedora-43.repo"
+curl -Lo /etc/yum.repos.d/_copr_libadwaita.repo https://copr.fedorainfracloud.org/coprs/madoka241/libadwaita-without-adwaita/repo/fedora-43/madoka241-libadwaita-without-adwaita-fedora-43.repo
+sed -i 's/\$releasever/43/g' /etc/yum.repos.d/_copr_libadwaita.repo
 
 dnf5 config-manager setopt fedora-multimedia.priority=1
 dnf5 config-manager setopt fedora-steam.priority=10
@@ -94,9 +95,8 @@ sed -i 's/^Name=.*/Name=Terminal/' /usr/share/applications/com.mitchellh.ghostty
 # Entfernt alle übersetzten Namen (z.B. Name[de], Name[fr]), damit nur noch "Terminal" übrig bleibt
 sed -i '/^Name\[/d' /usr/share/applications/com.mitchellh.ghostty.desktop
 
-dnf5 swap -y libadwaita libadwaita-without-adwaita
-dnf5 install -y bazaar
 dnf5 install -y libadwaita-without-adwaita --allowerasing
+dnf5 install -y bazaar
 
 mkdir -p /usr/libexec/astroimmutable
 install -m755 /ctx/firstlogin-setup.sh /usr/libexec/astroimmutable/firstlogin-setup.sh
