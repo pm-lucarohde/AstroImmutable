@@ -32,6 +32,7 @@ dnf5 copr enable -y ublue-os/bazzite
 
 dnf5 config-manager setopt fedora-multimedia.priority=1
 dnf5 config-manager setopt fedora-steam.priority=10
+dnf5 config-manager setopt "copr:copr.fedorainfracloud.org:ublue-os:bazzite".priority=98
 
 dnf5 remove -y dolphin
 dnf5 remove -y firefox
@@ -49,7 +50,6 @@ dnf5 install -y \
 	fdk-aac\
 	libavcodec\
 	pipewire-libs-extra\
-	bazzite-portal\
 	xdg-desktop-portal-kde\
 	xdg-desktop-portal-gtk\
 	libadwaita\
@@ -66,8 +66,9 @@ dnf5 install -y \
 	ghostty\
 	nautilus-python\
 	bazaar\
-	krunner-bazaar
-
+	krunner-bazaar\
+	yafti
+	
 if flatpak --system remotes | awk '{print $1}' | grep -qx fedora; then
     flatpak --system remote-delete fedora --force
 fi
