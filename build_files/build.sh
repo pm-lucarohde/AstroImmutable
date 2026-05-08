@@ -28,6 +28,7 @@ done
 dnf5 copr enable -y scottames/ghostty
 dnf5 copr enable -y copr.fedorainfracloud.org/ublue-os/packages
 dnf5 copr enable -y ublue-os/staging
+dnf5 copr enable -y ublue-os/bazzite
 
 dnf5 config-manager setopt fedora-multimedia.priority=1
 dnf5 config-manager setopt fedora-steam.priority=10
@@ -39,8 +40,6 @@ dnf5 remove -y kate
 dnf5 remove -y konsole
 dnf5 remove -y plasma-discover
 
-dnf5 list libhelium --available
-
 dnf5 install -y \
 	git\
 	htop\
@@ -50,7 +49,10 @@ dnf5 install -y \
 	fdk-aac\
 	libavcodec\
 	pipewire-libs-extra\
-	libhelium\
+	bazzite-portal\
+	xdg-desktop-portal-kde\
+	xdg-desktop-portal-gtk\
+	libadwaita\
 	docker\
 	distrobox\
 	vlc\
@@ -64,9 +66,7 @@ dnf5 install -y \
 	ghostty\
 	nautilus-python\
 	bazaar\
-	krunner-bazaar\
-	xdg-desktop-portal-kde\
-	xdg-desktop-portal-gtk
+	krunner-bazaar
 
 if flatpak --system remotes | awk '{print $1}' | grep -qx fedora; then
     flatpak --system remote-delete fedora --force
@@ -106,13 +106,21 @@ mkdir -p /etc/systemd/user/default.target.wants
 ln -sf /usr/lib/systemd/user/astroimmutable-firstlogin.service \
   /etc/systemd/user/default.target.wants/astroimmutable-firstlogin.service
 
-# Use a COPR Example:
-#
-# dnf5 -y copr enable ublue-os/staging
-# dnf5 -y install package
-# Disable COPRs so they don't end up enabled on the final image:
-# dnf5 -y copr disable ublue-os/staging
+# Verzeichnis für Overrides sicherstellen
+mkdir -p /usr/share/glib-2.0/schemas
 
-#### Example for enabling a System Unit File
+# Den Button-Layout Override erstellen (exakt wie in Bazzite's system_files/overrides)
+cat <<EOF > /usr/share/glib-2.0/schemas/zz0-00-astro-kinoite-global.gschema.override
+[org.gnome.desktop.wm.preferences]
+button-layout='menu:minimize,maximize,close'
+
+[org.gnome.desktop.interface]
+gtk-theme='adwaita'
+icon-theme='breeze'
+font-name='Noto Sans 10'
+EOF
+
+# WICHTIG: Alle Schemas kompilieren, damit die Overrides aktiv werden
+glib-compile-schemas /usr/share/glib-2.0/schemas
 
 systemctl enable podman.socket
