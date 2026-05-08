@@ -27,46 +27,9 @@ done
 
 dnf5 copr enable -y scottames/ghostty
 dnf5 copr enable -y copr.fedorainfracloud.org/ublue-os/packages
+dnf5 copr enable -y ublue-os/staging
 
-# uBlue Staging manuell (enthält den libadwaita-Patch für Fedora 43)
-cat <<EOF > /etc/yum.repos.d/_copr_ublue_staging.repo
-[ublue-staging-f43]
-name=Copr repo for staging owned by ublue-os (F43)
-baseurl=https://download.copr.fedorainfracloud.org/results/ublue-os/staging/fedora-43-\$basearch/
-type=rpm-md
-enabled=1
-gpgcheck=1
-gpgkey=https://download.copr.fedorainfracloud.org/results/ublue-os/staging/pubkey.gpg
-EOF
-
-# Libadwaita Patch Repo
-cat <<EOF > /etc/yum.repos.d/_copr_libadwaita.repo
-[copr:copr.fedorainfracloud.org:madoka241:libadwaita-without-adwaita]
-name=Copr repo for libadwaita-without-adwaita owned by madoka241
-baseurl=https://download.copr.fedorainfracloud.org/results/madoka241/libadwaita-without-adwaita/fedora-43-\$basearch/
-type=rpm-md
-skip_if_unavailable=True
-gpgcheck=1
-gpgkey=https://download.copr.fedorainfracloud.org/results/madoka241/libadwaita-without-adwaita/pubkey.gpg
-repo_gpgcheck=0
-enabled=1
-enabled_metadata=1
-EOF
-
-# uBlue Packages Repo (enthält Bazaar)
-cat <<EOF > /etc/yum.repos.d/_copr_ublue_packages.repo
-[copr:copr.fedorainfracloud.org:ublue-os:packages]
-name=Copr repo for packages owned by ublue-os
-baseurl=https://download.copr.fedorainfracloud.org/results/ublue-os/packages/fedora-43-\$basearch/
-type=rpm-md
-skip_if_unavailable=True
-gpgcheck=1
-gpgkey=https://download.copr.fedorainfracloud.org/results/ublue-os/packages/pubkey.gpg
-repo_gpgcheck=0
-enabled=1
-enabled_metadata=1
-EOF
-
+dnf5 repoquery --provides libadwaita --queryformat "%{repoid}"
 dnf5 swap -y libadwaita libadwaita --from-repo=ublue-staging-f43 --allowerasing
 dnf5 install -y bazaar
 
