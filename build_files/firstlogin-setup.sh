@@ -17,7 +17,7 @@ kwriteconfig6 --file kdeglobals --group General --key TerminalService com.mitche
 curl -fL "https://launcher.hytale.com/builds/release/linux/amd64/hytale-launcher-latest.flatpak" -o /tmp/hytale.flatpak
 
 # Flatpaks installieren
-flatpak install -y \
+flatpak install --system -y\
         com.spotify.Client\
         com.ktechpit.whatsie\
         dev.vencord.Vesktop\

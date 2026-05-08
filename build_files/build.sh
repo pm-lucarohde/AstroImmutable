@@ -100,5 +100,13 @@ install -Dm644 /ctx/astroimmutable-firstlogin.service /usr/lib/systemd/user/astr
 mkdir -p /etc/systemd/user/default.target.wants
 ln -sf /usr/lib/systemd/user/astroimmutable-firstlogin.service \
   /etc/systemd/user/default.target.wants/astroimmutable-firstlogin.service
+  
+# Ersetzt JEDES Vorkommen von Ghostty in der Desktop-Datei durch Terminal
+if [ -f /usr/share/applications/com.mitchellh.ghostty.desktop ]; then
+    sed -i 's/Ghostty/Terminal/g' /usr/share/applications/com.mitchellh.ghostty.desktop
+    # Entfernt trotzdem alle Übersetzungen, damit nichts dazwischenfunkt
+    sed -i '/^Name\[/d' /usr/share/applications/com.mitchellh.ghostty.desktop
+    sed -i '/^GenericName\[/d' /usr/share/applications/com.mitchellh.ghostty.desktop
+fi
 
 systemctl enable podman.socket
