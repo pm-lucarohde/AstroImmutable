@@ -66,8 +66,7 @@ dnf5 install -y \
 	ghostty\
 	nautilus-python\
 	bazaar\
-	krunner-bazaar\
-	yafti
+	krunner-bazaar
 	
 if flatpak --system remotes | awk '{print $1}' | grep -qx fedora; then
     flatpak --system remote-delete fedora --force
