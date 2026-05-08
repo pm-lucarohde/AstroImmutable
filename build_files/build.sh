@@ -27,8 +27,23 @@ done
 
 dnf5 copr enable -y scottames/ghostty
 dnf5 copr enable -y copr.fedorainfracloud.org/ublue-os/packages
-curl -Lo /etc/yum.repos.d/_copr_libadwaita.repo https://copr.fedorainfracloud.org/coprs/madoka241/libadwaita-without-adwaita/repo/fedora-43/madoka241-libadwaita-without-adwaita-fedora-43.repo
-sed -i 's/\$releasever/43/g' /etc/yum.repos.d/_copr_libadwaita.repo
+dnf5 copr enable -y ublue-os/staging
+
+cat <<EOF > /etc/yum.repos.d/_copr_libadwaita.repo
+[copr:copr.fedorainfracloud.org:madoka241:libadwaita-without-adwaita]
+name=Copr repo for libadwaita-without-adwaita owned by madoka241
+baseurl=https://download.copr.fedorainfracloud.org/results/madoka241/libadwaita-without-adwaita/fedora-43-\$basearch/
+type=rpm-md
+skip_if_unavailable=True
+gpgcheck=1
+gpgkey=https://download.copr.fedorainfracloud.org/results/madoka241/libadwaita-without-adwaita/pubkey.gpg
+repo_gpgcheck=0
+enabled=1
+enabled_metadata=1
+EOF
+
+dnf5 install -y libadwaita-without-adwaita --allowerasing
+dnf5 install -y bazaar-store
 
 dnf5 config-manager setopt fedora-multimedia.priority=1
 dnf5 config-manager setopt fedora-steam.priority=10
@@ -94,9 +109,6 @@ EOF
 sed -i 's/^Name=.*/Name=Terminal/' /usr/share/applications/com.mitchellh.ghostty.desktop
 # Entfernt alle übersetzten Namen (z.B. Name[de], Name[fr]), damit nur noch "Terminal" übrig bleibt
 sed -i '/^Name\[/d' /usr/share/applications/com.mitchellh.ghostty.desktop
-
-dnf5 install -y libadwaita-without-adwaita --allowerasing
-dnf5 install -y bazaar
 
 mkdir -p /usr/libexec/astroimmutable
 install -m755 /ctx/firstlogin-setup.sh /usr/libexec/astroimmutable/firstlogin-setup.sh
