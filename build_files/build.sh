@@ -60,11 +60,11 @@ dnf5 install -y \
 	gwenview\
 	ghostty
 
-# Symlink auf greetd umbiegen
+# Symlink erstellen (für Kompatibilität)
 ln -sf /usr/lib/systemd/system/greetd.service /etc/systemd/system/display-manager.service
 
-# Service aktivieren
-systemctl enable display-manager.service --now
+# greetd DIREKT aktivieren (nicht über den Symlink)
+systemctl enable greetd.service --now
 
 dnf5 autoremove
 
