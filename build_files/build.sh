@@ -87,11 +87,8 @@ if [ -f /usr/share/applications/com.mitchellh.ghostty.desktop ]; then
     sed -i '/^Name\[/d' /usr/share/applications/com.mitchellh.ghostty.desktop
 fi
 
-# 2. KDE Service Menu fixen
-if [ -f /usr/share/kio/servicemenus/com.mitchellh.ghostty.desktop ]; then
-    sed -i "s/Name=Open Ghostty Here/Name=Terminal öffnen/g" /usr/share/kio/servicemenus/com.mitchellh.ghostty.desktop
-    sed -i "s/Ghostty/Terminal/g" /usr/share/kio/servicemenus/com.mitchellh.ghostty.desktop
-fi
+# Ghostty Service Menu entfernen, um Dopplungen in Dolphin zu vermeiden
+rm -f /usr/share/kio/servicemenus/com.mitchellh.ghostty.desktop
 
 mkdir -p /usr/libexec/astroimmutable
 install -m755 /ctx/firstlogin-setup.sh /usr/libexec/astroimmutable/firstlogin-setup.sh
