@@ -25,6 +25,7 @@ flatpak install --user -y\
         dev.vencord.Vesktop\
         org.mozilla.Thunderbird\
         org.mozilla.firefox\
+		org.qbittorrent.qBittorrent\
 		it.mijorus.gearlever
 
 # Status-Datei anlegen, damit es beim nächsten Login übersprungen wird

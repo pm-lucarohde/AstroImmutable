@@ -88,7 +88,7 @@ if [ -f /usr/share/applications/com.mitchellh.ghostty.desktop ]; then
 fi
 
 # Ghostty Service Menu entfernen, um Dopplungen in Dolphin zu vermeiden
-rm -f /usr/share/kio/servicemenus/com.mitchellh.ghostty.desktop
+# rm -f /usr/share/kio/servicemenus/com.mitchellh.ghostty.desktop
 
 mkdir -p /usr/libexec/astroimmutable
 install -m755 /ctx/firstlogin-setup.sh /usr/libexec/astroimmutable/firstlogin-setup.sh
