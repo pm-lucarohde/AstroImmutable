@@ -116,9 +116,6 @@ mkdir -p /etc/systemd/user/default.target.wants
 ln -sf /usr/lib/systemd/user/astroimmutable-firstlogin.service \
   /etc/systemd/user/default.target.wants/astroimmutable-firstlogin.service
 
-# Pfade im Image vorbereiten
-mkdir -p /usr/libexec/astroimmutable
-
 # Skript und Service ins Image kopieren (Pfade in /ctx/ anpassen, falls nötig)
 install -m755 /ctx/trash-watcher.sh /usr/libexec/astroimmutable/trash-watcher.sh
 install -Dm644 /ctx/trash-watcher.service /usr/lib/systemd/user/trash-watcher.service
@@ -127,5 +124,9 @@ install -Dm644 /ctx/trash-watcher.service /usr/lib/systemd/user/trash-watcher.se
 mkdir -p /etc/systemd/user/default.target.wants
 ln -sf /usr/lib/systemd/user/trash-watcher.service \
   /etc/systemd/user/default.target.wants/trash-watcher.service
+
+rm -f /usr/share/templates/TextFile.desktop
+rm -f /usr/share/templates/HTMLFile.desktop
+rm -f /usr/share/templates/Plaintext.desktop
 
 systemctl enable podman.socket

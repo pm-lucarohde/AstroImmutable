@@ -1,7 +1,7 @@
 #!/bin/bash
 # Checkt alle 2 Sekunden, ob der Trash-Ordner existiert (falls noch nie gelöscht wurde)
 while [ ! -d "$HOME/.local/share/Trash/info" ]; do
-    sleep 5
+    sleep 2
 done
 
 # Überwacht den Papierkorb
