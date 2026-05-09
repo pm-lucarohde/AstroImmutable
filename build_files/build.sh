@@ -36,7 +36,7 @@ dnf5 remove -y firefox
 dnf5 remove -y kwrite
 dnf5 remove -y kate
 dnf5 remove -y konsole
-dnf5 remove -y plasma-discover
+dnf5 remove -y dolphin
 
 dnf5 install -y \
 	git\
