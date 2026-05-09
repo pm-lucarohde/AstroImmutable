@@ -36,9 +36,9 @@ dnf5 remove -y kate
 dnf5 remove -y konsole
 dnf5 remove -y plasma-login-manager
 dnf5 remove -y sddm
+dnf5 install -y cosmic-greeter
 
 dnf5 install -y \
-	cosmic-greeter\
 	git\
 	htop\
 	flatpak\
@@ -61,8 +61,6 @@ dnf5 install -y \
 	ghostty
 
 systemctl enable cosmic-greeter.service
-
-dnf5 autoremove -y
 
 if flatpak --system remotes | awk '{print $1}' | grep -qx fedora; then
     flatpak --system remote-delete fedora --force
