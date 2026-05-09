@@ -60,8 +60,8 @@ dnf5 install -y \
 	gwenview\
 	ghostty
 
-# Symlink für display-manager.service auf LightDM umbiegen
-ln -sf /usr/lib/systemd/system/lightdm.service /etc/systemd/system/display-manager.service
+# Symlink auf greetd umbiegen
+ln -sf /usr/lib/systemd/system/greetd.service /etc/systemd/system/display-manager.service
 
 # Service aktivieren
 systemctl enable display-manager.service --now
