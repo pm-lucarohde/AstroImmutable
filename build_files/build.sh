@@ -88,10 +88,25 @@ Comment=A cross-platform reimplementation of Notepad++
 Terminal=false
 EOF
 
-# Ändert den Hauptnamen
-sed -i 's/^Name=.*/Name=Terminal/' /usr/share/applications/com.mitchellh.ghostty.desktop
-# Entfernt alle übersetzten Namen (z.B. Name[de], Name[fr]), damit nur noch "Terminal" übrig bleibt
-sed -i '/^Name\[/d' /usr/share/applications/com.mitchellh.ghostty.desktop
+# 1. Haupt-Desktop-Datei fixen (hast du schon teilweise, aber hier nochmal sauber)
+if [ -f /usr/share/applications/com.mitchellh.ghostty.desktop ]; then
+    sed -i 's/^Name=.*/Name=Terminal/' /usr/share/applications/com.mitchellh.ghostty.desktop
+    sed -i '/^Name\[/d' /usr/share/applications/com.mitchellh.ghostty.desktop
+fi
+
+# 2. Nautilus-Rechtsklick fixen (Python Extension)
+if [ -f /usr/share/nautilus-python/extensions/ghostty.py ]; then
+    # Ersetzt das Label direkt im Code, damit Nautilus "Terminal öffnen" anzeigt
+    sed -i "s/Open in Ghostty/Terminal öffnen/g" /usr/share/nautilus-python/extensions/ghostty.py
+    # Ersetzt auch andere interne Ghostty-Namen zur Sicherheit
+    sed -i "s/Ghostty/Terminal/g" /usr/share/nautilus-python/extensions/ghostty.py
+fi
+
+# 3. KDE Service Menu fixen
+if [ -f /usr/share/kio/servicemenus/com.mitchellh.ghostty.desktop ]; then
+    sed -i "s/Name=Open Ghostty Here/Name=Terminal öffnen/g" /usr/share/kio/servicemenus/com.mitchellh.ghostty.desktop
+    sed -i "s/Ghostty/Terminal/g" /usr/share/kio/servicemenus/com.mitchellh.ghostty.desktop
+fi
 
 mkdir -p /usr/libexec/astroimmutable
 install -m755 /ctx/firstlogin-setup.sh /usr/libexec/astroimmutable/firstlogin-setup.sh
@@ -100,13 +115,5 @@ install -Dm644 /ctx/astroimmutable-firstlogin.service /usr/lib/systemd/user/astr
 mkdir -p /etc/systemd/user/default.target.wants
 ln -sf /usr/lib/systemd/user/astroimmutable-firstlogin.service \
   /etc/systemd/user/default.target.wants/astroimmutable-firstlogin.service
-  
-# Ersetzt JEDES Vorkommen von Ghostty in der Desktop-Datei durch Terminal
-if [ -f /usr/share/applications/com.mitchellh.ghostty.desktop ]; then
-    sed -i 's/Ghostty/Terminal/g' /usr/share/applications/com.mitchellh.ghostty.desktop
-    # Entfernt trotzdem alle Übersetzungen, damit nichts dazwischenfunkt
-    sed -i '/^Name\[/d' /usr/share/applications/com.mitchellh.ghostty.desktop
-    sed -i '/^GenericName\[/d' /usr/share/applications/com.mitchellh.ghostty.desktop
-fi
 
 systemctl enable podman.socket
