@@ -49,7 +49,6 @@ dnf5 install -y \
 	pipewire-libs-extra\
 	xdg-desktop-portal-kde\
 	xdg-desktop-portal-gtk\
-	gvfs-trash\
 	docker\
 	distrobox\
 	vlc\

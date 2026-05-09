@@ -15,7 +15,7 @@ mkdir -p "${STATE_DIR}"
 kwriteconfig6 --file kdeglobals --group General --key TerminalService com.mitchellh.ghostty.desktop
 
 curl -fL "https://launcher.hytale.com/builds/release/linux/amd64/hytale-launcher-latest.flatpak" -o /tmp/hytale.flatpak
-flatpak install --user -y "/tmp/hytale.flatpak"
+flatpak install --user -y "/tmp/hytale.flatpak" || true
 rm -rf /tmp/hytale.flatpak
 
 # Flatpaks installieren
