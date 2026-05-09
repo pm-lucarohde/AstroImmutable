@@ -28,7 +28,7 @@ touch "$TEMPLATES_DIR/HTML-Datei.html"
 touch "$TEMPLATES_DIR/Shell-Skript.sh"
 
 # Flatpaks installieren
-flatpak install -y\
+flatpak install --user -y\
         com.spotify.Client\
         com.ktechpit.whatsie\
         dev.vencord.Vesktop\
