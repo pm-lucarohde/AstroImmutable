@@ -64,9 +64,9 @@ dnf5 install -y \
 ln -sf /usr/lib/systemd/system/greetd.service /etc/systemd/system/display-manager.service
 
 # greetd DIREKT aktivieren (nicht über den Symlink)
-systemctl enable greetd.service --now
+systemctl enable greetd.service
 
-dnf5 autoremove
+dnf5 autoremove -y
 
 if flatpak --system remotes | awk '{print $1}' | grep -qx fedora; then
     flatpak --system remote-delete fedora --force
