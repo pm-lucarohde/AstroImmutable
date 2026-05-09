@@ -36,7 +36,7 @@ dnf5 remove -y kate
 dnf5 remove -y konsole
 dnf5 remove -y plasma-login-manager
 dnf5 remove -y sddm
-dnf5 install -y --no-weak-deps cosmic-greeter
+dnf5 install -y --setopt=install_weak_deps=false cosmic-greeter
 
 dnf5 install -y \
 	git\
