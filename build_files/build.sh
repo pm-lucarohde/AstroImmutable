@@ -57,7 +57,6 @@ dnf5 install -y \
 	thunar\
 	thunar-archive-plugin\
 	thunar-volman\
-	tumbler\
 	fastfetch\
 	wine\
 	steam\
@@ -108,5 +107,18 @@ install -Dm644 /ctx/astroimmutable-firstlogin.service /usr/lib/systemd/user/astr
 mkdir -p /etc/systemd/user/default.target.wants
 ln -sf /usr/lib/systemd/user/astroimmutable-firstlogin.service \
   /etc/systemd/user/default.target.wants/astroimmutable-firstlogin.service
+
+# Thunar Terminal-Fix (Ghostty statt exo-open)
+if [ -f /etc/xdg/Thunar/uca.xml ]; then
+    sed -i 's|<command>exo-open --working-directory %f --launch TerminalEmulator</command>|<command>ghostty --working-directory=%f</command>|' /etc/xdg/Thunar/uca.xml
+    sed -i 's|<name>Open Terminal Here</name>|<name>Terminal öffnen</name>|' /etc/xdg/Thunar/uca.xml
+fi
+
+# GTK-Portal gegenüber KDE-Portal bevorzugen
+mkdir -p /etc/xdg/xdg-desktop-portal
+cat <<EOF > /etc/xdg/xdg-desktop-portal/portals.conf
+[preferred]
+default=gtk;kde;
+EOF
 
 systemctl enable podman.socket

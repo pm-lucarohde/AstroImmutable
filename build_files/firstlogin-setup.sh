@@ -14,13 +14,18 @@ mkdir -p "${STATE_DIR}"
 # KDE Standard-Terminal setzen
 kwriteconfig6 --file kdeglobals --group General --key TerminalService com.mitchellh.ghostty.desktop
 
+# In die firstlogin-setup.sh einfügen:
+export GTK_USE_PORTAL=1
+
+xdg-mime default thunar.desktop inode/directory
+
 curl -fL "https://launcher.hytale.com/builds/release/linux/amd64/hytale-launcher-latest.flatpak" -o /tmp/hytale.flatpak
 flatpak install --user -y "/tmp/hytale.flatpak" || true
+flatpak install --user -y com.spotify.Client || true
 rm -rf /tmp/hytale.flatpak
 
 # Flatpaks installieren
 flatpak install --user -y\
-        com.spotify.Client\
         com.ktechpit.whatsie\
         dev.vencord.Vesktop\
         org.mozilla.Thunderbird\
