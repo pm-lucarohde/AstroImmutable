@@ -34,8 +34,10 @@ dnf5 remove -y firefox
 dnf5 remove -y kwrite
 dnf5 remove -y kate
 dnf5 remove -y konsole
+dnf5 remove -y plasma-login-manager
 
 dnf5 install -y \
+	cosmic-greeter\
 	git\
 	htop\
 	flatpak\
@@ -56,7 +58,12 @@ dnf5 install -y \
 	steam\
 	gwenview\
 	ghostty
-	
+
+systemctl disable sddm
+systemctl enable lightdm
+
+dnf5 autoremove
+
 if flatpak --system remotes | awk '{print $1}' | grep -qx fedora; then
     flatpak --system remote-delete fedora --force
 fi
@@ -88,7 +95,11 @@ if [ -f /usr/share/applications/com.mitchellh.ghostty.desktop ]; then
 fi
 
 # Ghostty Service Menu entfernen, um Dopplungen in Dolphin zu vermeiden
-# rm -f /usr/share/kio/servicemenus/com.mitchellh.ghostty.desktop
+rm -f /usr/share/kio/servicemenus/com.mitchellh.ghostty.desktop
+
+# Kopiert die user.js aus deinem Repo fest ins System-Image
+mkdir -p /usr/share/astroimmutable
+install -Dm644 /ctx/user.js /usr/share/astroimmutable/user.js
 
 mkdir -p /usr/libexec/astroimmutable
 install -m755 /ctx/firstlogin-setup.sh /usr/libexec/astroimmutable/firstlogin-setup.sh

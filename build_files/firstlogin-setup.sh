@@ -28,5 +28,22 @@ flatpak install --user -y\
 		org.qbittorrent.qBittorrent\
 		it.mijorus.gearlever
 
+FF_DIR="$HOME/.var/app/org.mozilla.firefox/config/mozilla/firefox"
+mkdir -p "$FF_DIR/Standard.Profile"
+
+cp /usr/share/astroimmutable/user.js "$FF_DIR/Standard.Profile/user.js"
+
+cat <<EOF > "$FF_DIR/profiles.ini"
+[Profile0]
+Name=Standard
+IsRelative=1
+Path=Standard.Profile
+Default=1
+
+[General]
+StartWithLastProfile=1
+Version=2
+EOF
+
 # Status-Datei anlegen, damit es beim nächsten Login übersprungen wird
 touch "$STATE_FILE"
