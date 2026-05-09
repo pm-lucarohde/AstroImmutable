@@ -60,7 +60,8 @@ dnf5 install -y \
 	steam\
 	gwenview\
 	ghostty\
-	nautilus-python
+	nautilus-python\
+	inotify-tools
 	
 if flatpak --system remotes | awk '{print $1}' | grep -qx fedora; then
     flatpak --system remote-delete fedora --force
@@ -114,5 +115,17 @@ install -Dm644 /ctx/astroimmutable-firstlogin.service /usr/lib/systemd/user/astr
 mkdir -p /etc/systemd/user/default.target.wants
 ln -sf /usr/lib/systemd/user/astroimmutable-firstlogin.service \
   /etc/systemd/user/default.target.wants/astroimmutable-firstlogin.service
+
+# Pfade im Image vorbereiten
+mkdir -p /usr/libexec/astroimmutable
+
+# Skript und Service ins Image kopieren (Pfade in /ctx/ anpassen, falls nötig)
+install -m755 /ctx/trash-watcher.sh /usr/libexec/astroimmutable/trash-watcher.sh
+install -Dm644 /ctx/trash-watcher.service /usr/lib/systemd/user/trash-watcher.service
+
+# Service für alle User standardmäßig aktivieren (Symlink)
+mkdir -p /etc/systemd/user/default.target.wants
+ln -sf /usr/lib/systemd/user/trash-watcher.service \
+  /etc/systemd/user/default.target.wants/trash-watcher.service
 
 systemctl enable podman.socket
