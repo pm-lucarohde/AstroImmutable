@@ -35,6 +35,7 @@ dnf5 remove -y kwrite
 dnf5 remove -y kate
 dnf5 remove -y konsole
 dnf5 remove -y plasma-login-manager
+dnf5 remove -y sddm
 
 dnf5 install -y \
 	cosmic-greeter\
@@ -59,8 +60,11 @@ dnf5 install -y \
 	gwenview\
 	ghostty
 
-systemctl disable sddm
-systemctl enable lightdm
+# Symlink für display-manager.service auf LightDM umbiegen
+ln -sf /usr/lib/systemd/system/lightdm.service /etc/systemd/system/display-manager.service
+
+# Service aktivieren
+systemctl enable display-manager.service --now
 
 dnf5 autoremove
 
