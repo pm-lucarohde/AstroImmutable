@@ -32,7 +32,6 @@ dnf5 copr enable -y ublue-os/staging
 dnf5 config-manager setopt fedora-multimedia.priority=1
 dnf5 config-manager setopt fedora-steam.priority=10
 
-dnf5 remove -y dolphin && dnf5 install -y gnome-software
 dnf5 remove -y firefox
 dnf5 remove -y kwrite
 dnf5 remove -y kate

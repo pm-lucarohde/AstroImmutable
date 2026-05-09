@@ -18,6 +18,15 @@ curl -fL "https://launcher.hytale.com/builds/release/linux/amd64/hytale-launcher
 flatpak install --system -y "/tmp/hytale.flatpak"
 rm -rf /tmp/hytale.flatpak
 
+# Vorlagen-Ordner finden und erstellen
+TEMPLATES_DIR=$(xdg-user-dir TEMPLATES)
+mkdir -p "$TEMPLATES_DIR"
+
+# Die 3 Optionen anlegen
+touch "$TEMPLATES_DIR/Textdatei.txt"
+touch "$TEMPLATES_DIR/HTML-Datei.html"
+touch "$TEMPLATES_DIR/Shell-Skript.sh"
+
 # Flatpaks installieren
 flatpak install -y\
         com.spotify.Client\
