@@ -49,19 +49,21 @@ dnf5 install -y \
 	pipewire-libs-extra\
 	xdg-desktop-portal-kde\
 	xdg-desktop-portal-gtk\
+	gvfs-trash\
 	docker\
 	distrobox\
 	vlc\
 	7zip\
 	podman\
-	nautilus\
+	thunar\
+	thunar-archive-plugin\
+	thunar-volman\
+	tumbler\
 	fastfetch\
 	wine\
 	steam\
 	gwenview\
-	ghostty\
-	nautilus-python\
-	inotify-tools
+	ghostty
 	
 if flatpak --system remotes | awk '{print $1}' | grep -qx fedora; then
     flatpak --system remote-delete fedora --force
@@ -94,15 +96,7 @@ if [ -f /usr/share/applications/com.mitchellh.ghostty.desktop ]; then
     sed -i '/^Name\[/d' /usr/share/applications/com.mitchellh.ghostty.desktop
 fi
 
-# 2. Nautilus-Rechtsklick fixen (Python Extension)
-if [ -f /usr/share/nautilus-python/extensions/ghostty.py ]; then
-    # Ersetzt das Label direkt im Code, damit Nautilus "Terminal öffnen" anzeigt
-    sed -i "s/Open in Ghostty/Terminal öffnen/g" /usr/share/nautilus-python/extensions/ghostty.py
-    # Ersetzt auch andere interne Ghostty-Namen zur Sicherheit
-    sed -i "s/Ghostty/Terminal/g" /usr/share/nautilus-python/extensions/ghostty.py
-fi
-
-# 3. KDE Service Menu fixen
+# 2. KDE Service Menu fixen
 if [ -f /usr/share/kio/servicemenus/com.mitchellh.ghostty.desktop ]; then
     sed -i "s/Name=Open Ghostty Here/Name=Terminal öffnen/g" /usr/share/kio/servicemenus/com.mitchellh.ghostty.desktop
     sed -i "s/Ghostty/Terminal/g" /usr/share/kio/servicemenus/com.mitchellh.ghostty.desktop
@@ -115,18 +109,5 @@ install -Dm644 /ctx/astroimmutable-firstlogin.service /usr/lib/systemd/user/astr
 mkdir -p /etc/systemd/user/default.target.wants
 ln -sf /usr/lib/systemd/user/astroimmutable-firstlogin.service \
   /etc/systemd/user/default.target.wants/astroimmutable-firstlogin.service
-
-# Skript und Service ins Image kopieren (Pfade in /ctx/ anpassen, falls nötig)
-install -m755 /ctx/trash-watcher.sh /usr/libexec/astroimmutable/trash-watcher.sh
-install -Dm644 /ctx/trash-watcher.service /usr/lib/systemd/user/trash-watcher.service
-
-# Service für alle User standardmäßig aktivieren (Symlink)
-mkdir -p /etc/systemd/user/default.target.wants
-ln -sf /usr/lib/systemd/user/trash-watcher.service \
-  /etc/systemd/user/default.target.wants/trash-watcher.service
-
-rm -f /usr/share/templates/TextFile.desktop
-rm -f /usr/share/templates/HTMLFile.desktop
-rm -f /usr/share/templates/Plaintext.desktop
 
 systemctl enable podman.socket
