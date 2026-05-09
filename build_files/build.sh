@@ -26,8 +26,6 @@ for repo_url in \
 done
 
 dnf5 copr enable -y scottames/ghostty
-dnf5 copr enable -y copr.fedorainfracloud.org/ublue-os/packages
-dnf5 copr enable -y ublue-os/staging
 
 dnf5 config-manager setopt fedora-multimedia.priority=1
 dnf5 config-manager setopt fedora-steam.priority=10
@@ -36,7 +34,6 @@ dnf5 remove -y firefox
 dnf5 remove -y kwrite
 dnf5 remove -y kate
 dnf5 remove -y konsole
-dnf5 remove -y dolphin
 
 dnf5 install -y \
 	git\
@@ -54,9 +51,6 @@ dnf5 install -y \
 	vlc\
 	7zip\
 	podman\
-	thunar\
-	thunar-archive-plugin\
-	thunar-volman\
 	fastfetch\
 	wine\
 	steam\
@@ -69,8 +63,7 @@ fi
 
 flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
 
-NOTEPAD_NEXT_URL=$(curl -s https://api.github.com/repos/dail8859/NotepadNext/releases/latest | grep "browser_download_url.*AppImage" | cut -d '"' -f 4)
-curl -L "$NOTEPAD_NEXT_URL" -o /usr/bin/notepadnext
+install -m755 /ctx/notepadnext /usr/bin/notepadnext
 chmod +x /usr/bin/notepadnext
 
 mkdir -p /usr/share/icons/hicolor/512x512/apps
@@ -107,18 +100,5 @@ install -Dm644 /ctx/astroimmutable-firstlogin.service /usr/lib/systemd/user/astr
 mkdir -p /etc/systemd/user/default.target.wants
 ln -sf /usr/lib/systemd/user/astroimmutable-firstlogin.service \
   /etc/systemd/user/default.target.wants/astroimmutable-firstlogin.service
-
-# Thunar Terminal-Fix (Ghostty statt exo-open)
-if [ -f /etc/xdg/Thunar/uca.xml ]; then
-    sed -i 's|<command>exo-open --working-directory %f --launch TerminalEmulator</command>|<command>ghostty --working-directory=%f</command>|' /etc/xdg/Thunar/uca.xml
-    sed -i 's|<name>Open Terminal Here</name>|<name>Terminal öffnen</name>|' /etc/xdg/Thunar/uca.xml
-fi
-
-# GTK-Portal gegenüber KDE-Portal bevorzugen
-mkdir -p /etc/xdg/xdg-desktop-portal
-cat <<EOF > /etc/xdg/xdg-desktop-portal/portals.conf
-[preferred]
-default=gtk;kde;
-EOF
 
 systemctl enable podman.socket
