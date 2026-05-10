@@ -45,5 +45,17 @@ flatpak install --user -y\
 		org.qbittorrent.qBittorrent\
 		it.mijorus.gearlever
 
+flatpak run org.mozilla.firefox --headless --no-remote &
+FF_PID=$!
+sleep 3
+kill $FF_PID 2>/dev/null || true
+
+HASH=$(grep -o '^\[.*\]' "$FF_DIR/installs.ini" | tr -d '[]')
+cat <<EOF > "$FF_DIR/installs.ini"
+[$HASH]
+Default=Standard.Profile
+Locked=1
+EOF
+
 # Status-Datei anlegen, damit es beim nächsten Login übersprungen wird
 touch "$STATE_FILE"
