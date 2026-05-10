@@ -45,5 +45,13 @@ StartWithLastProfile=1
 Version=2
 EOF
 
+cat <<EOF > "$FF_DIR/installs.ini"
+[CF146F38BCAB2D21]
+Default=Standard.Profile
+Locked=1
+
+EOF
+
+
 # Status-Datei anlegen, damit es beim nächsten Login übersprungen wird
 touch "$STATE_FILE"
