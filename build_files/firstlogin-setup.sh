@@ -14,20 +14,6 @@ mkdir -p "${STATE_DIR}"
 # KDE Standard-Terminal setzen
 kwriteconfig6 --file kdeglobals --group General --key TerminalService com.mitchellh.ghostty.desktop
 
-curl -fL "https://launcher.hytale.com/builds/release/linux/amd64/hytale-launcher-latest.flatpak" -o /tmp/hytale.flatpak
-flatpak install --user -y "/tmp/hytale.flatpak" || true
-flatpak install --user -y com.spotify.Client || true
-rm -rf /tmp/hytale.flatpak
-
-# Flatpaks installieren
-flatpak install --user -y\
-        com.ktechpit.whatsie\
-        dev.vencord.Vesktop\
-        org.mozilla.Thunderbird\
-        org.mozilla.firefox\
-		org.qbittorrent.qBittorrent\
-		it.mijorus.gearlever
-
 FF_DIR="$HOME/.var/app/org.mozilla.firefox/config/mozilla/firefox"
 mkdir -p "$FF_DIR/Standard.Profile"
 
@@ -45,13 +31,19 @@ StartWithLastProfile=1
 Version=2
 EOF
 
-cat <<EOF > "$FF_DIR/installs.ini"
-[CF146F38BCAB2D21]
-Default=Standard.Profile
-Locked=1
+curl -fL "https://launcher.hytale.com/builds/release/linux/amd64/hytale-launcher-latest.flatpak" -o /tmp/hytale.flatpak
+flatpak install --user -y "/tmp/hytale.flatpak" || true
+flatpak install --user -y com.spotify.Client || true
+rm -rf /tmp/hytale.flatpak
 
-EOF
-
+# Flatpaks installieren
+flatpak install --user -y\
+        com.ktechpit.whatsie\
+        dev.vencord.Vesktop\
+        org.mozilla.Thunderbird\
+        org.mozilla.firefox\
+		org.qbittorrent.qBittorrent\
+		it.mijorus.gearlever
 
 # Status-Datei anlegen, damit es beim nächsten Login übersprungen wird
 touch "$STATE_FILE"
