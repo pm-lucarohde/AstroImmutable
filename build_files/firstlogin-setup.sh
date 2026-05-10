@@ -14,23 +14,6 @@ mkdir -p "${STATE_DIR}"
 # KDE Standard-Terminal setzen
 kwriteconfig6 --file kdeglobals --group General --key TerminalService com.mitchellh.ghostty.desktop
 
-FF_DIR="$HOME/.var/app/org.mozilla.firefox/config/mozilla/firefox"
-mkdir -p "$FF_DIR/Standard.Profile"
-
-cp /usr/share/astroimmutable/user.js "$FF_DIR/Standard.Profile/user.js"
-
-cat <<EOF > "$FF_DIR/profiles.ini"
-[Profile0]
-Name=Standard
-IsRelative=1
-Path=Standard.Profile
-Default=1
-
-[General]
-StartWithLastProfile=1
-Version=2
-EOF
-
 curl -fL "https://launcher.hytale.com/builds/release/linux/amd64/hytale-launcher-latest.flatpak" -o /tmp/hytale.flatpak
 flatpak install --user -y "/tmp/hytale.flatpak" || true
 flatpak install --user -y com.spotify.Client || true
@@ -45,10 +28,33 @@ flatpak install --user -y\
 		org.qbittorrent.qBittorrent\
 		it.mijorus.gearlever
 
+FF_DIR="$HOME/.var/app/org.mozilla.firefox/config/mozilla/firefox"
+mkdir -p "$FF_DIR/Standard.Profile"
+
+cp /usr/share/astroimmutable/user.js "$FF_DIR/Standard.Profile/user.js"
+
 flatpak run org.mozilla.firefox --headless --no-remote &
 FF_PID=$!
-sleep 3
+
+# Warten bis installs.ini existiert, max 30 Sekunden
+for i in $(seq 1 30); do
+    [ -f "$FF_DIR/installs.ini" ] && break
+    sleep 1
+done
+
 kill $FF_PID 2>/dev/null || true
+
+cat <<EOF > "$FF_DIR/profiles.ini"
+[Profile0]
+Name=Standard
+IsRelative=1
+Path=Standard.Profile
+Default=1
+
+[General]
+StartWithLastProfile=1
+Version=2
+EOF
 
 HASH=$(grep -o '^\[.*\]' "$FF_DIR/installs.ini" | tr -d '[]')
 cat <<EOF > "$FF_DIR/installs.ini"
