@@ -63,5 +63,12 @@ Default=Standard.Profile
 Locked=1
 EOF
 
+cat <<EOF >> "$FF_DIR/profiles.ini"
+
+[Install${HASH}]
+Default=Standard.Profile
+Locked=1
+EOF
+
 # Status-Datei anlegen, damit es beim nächsten Login übersprungen wird
 touch "$STATE_FILE"
