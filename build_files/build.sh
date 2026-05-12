@@ -62,7 +62,7 @@ dnf5 install -y \
 	gwenview\
 	ghostty
 
-systemctl enable cosmic-greeter.service
+systemctl enable greetd.service
 
 if flatpak --system remotes | awk '{print $1}' | grep -qx fedora; then
     flatpak --system remote-delete fedora --force
