@@ -25,8 +25,7 @@ flatpak install --user -y\
         dev.vencord.Vesktop\
         org.mozilla.Thunderbird\
         org.mozilla.firefox\
-		org.qbittorrent.qBittorrent\
-		it.mijorus.gearlever
+		org.qbittorrent.qBittorrent
 
 FF_DIR="$HOME/.var/app/org.mozilla.firefox/config/mozilla/firefox"
 mkdir -p "$FF_DIR/Standard.Profile"

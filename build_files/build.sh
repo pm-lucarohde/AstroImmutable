@@ -36,7 +36,8 @@ dnf5 remove -y kate
 dnf5 remove -y konsole
 dnf5 remove -y plasma-login-manager
 dnf5 remove -y sddm
-dnf5 install -y --setopt=install_weak_deps=false cosmic-greeter
+dnf5 install -y cosmic-greeter
+dnf5 remove -y --noautoremove cosmic-session
 
 dnf5 install -y \
 	git\
@@ -47,6 +48,7 @@ dnf5 install -y \
 	fdk-aac\
 	libavcodec\
 	pipewire-libs-extra\
+	kvantum\
 	xdg-desktop-portal-kde\
 	xdg-desktop-portal-gtk\
 	docker\
