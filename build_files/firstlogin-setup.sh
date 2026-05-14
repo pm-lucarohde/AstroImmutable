@@ -14,6 +14,12 @@ mkdir -p "${STATE_DIR}"
 # KDE Standard-Terminal setzen
 kwriteconfig6 --file kdeglobals --group General --key TerminalService com.mitchellh.ghostty.desktop
 
+mkdir -p ~/.config/Kvantum
+cat <<EOF > ~/.config/Kvantum/kvantum.kvconfig
+[General]
+theme=KvKonqiDark
+EOF
+
 curl -fL "https://launcher.hytale.com/builds/release/linux/amd64/hytale-launcher-latest.flatpak" -o /tmp/hytale.flatpak
 flatpak install --user -y "/tmp/hytale.flatpak" || true
 flatpak install --user -y com.spotify.Client || true

@@ -68,12 +68,6 @@ mkdir -p /usr/share/Kvantum
 curl -fL "https://github.com/Niru2169/KvKonqi/releases/download/v1.1/KvKonqiDark.tar.gz" \
   | tar -xz -C /usr/share/Kvantum/
 
-mkdir -p /etc/skel/.config/Kvantum
-cat <<EOF > /etc/skel/.config/Kvantum/kvantum.kvconfig
-[General]
-theme=KvKonqiDark
-EOF
-
 if flatpak --system remotes | awk '{print $1}' | grep -qx fedora; then
     flatpak --system remote-delete fedora --force
 fi
