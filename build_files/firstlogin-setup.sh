@@ -13,12 +13,21 @@ mkdir -p "${STATE_DIR}"
 
 # KDE Standard-Terminal setzen
 kwriteconfig6 --file kdeglobals --group General --key TerminalService com.mitchellh.ghostty.desktop
+mkdir -p ~/.config/ghostty
+cat <<EOF > ~/.config/ghostty/config.ghostty
+theme = "Breeze"
+font-family = "Noto Sans Mono"
+background-opacity = "0.8"
+background-blur = "true"
+EOF
 
 mkdir -p ~/.config/Kvantum
 cat <<EOF > ~/.config/Kvantum/kvantum.kvconfig
 [General]
 theme=KvKonqiDark
 EOF
+
+kwriteconfig6 --file kdeglobals --group KDE --key widgetStyle kvantum-dark
 
 curl -fL "https://launcher.hytale.com/builds/release/linux/amd64/hytale-launcher-latest.flatpak" -o /tmp/hytale.flatpak
 flatpak install --user -y "/tmp/hytale.flatpak" || true

@@ -99,7 +99,7 @@ if [ -f /usr/share/applications/com.mitchellh.ghostty.desktop ]; then
 fi
 
 # Ghostty Service Menu entfernen, um Dopplungen in Dolphin zu vermeiden
-rm -f /usr/share/kio/servicemenus/com.mitchellh.ghostty.desktop
+#rm -f /usr/share/kio/servicemenus/com.mitchellh.ghostty.desktop
 
 # Kopiert die user.js aus deinem Repo fest ins System-Image
 mkdir -p /usr/share/astroimmutable
