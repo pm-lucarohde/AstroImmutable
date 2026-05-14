@@ -33,9 +33,12 @@ dnf5 config-manager setopt fedora-steam.priority=10
 dnf5 remove -y firefox
 dnf5 remove -y kwrite
 dnf5 remove -y kate
-dnf5 remove -y konsole
+#dnf5 remove -y konsole
+# Statt dnf5 remove -y konsole
+echo "NoDisplay=true" >> /usr/share/applications/org.kde.konsole.desktop
 dnf5 remove -y plasma-login-manager
 dnf5 remove -y sddm
+dnf5 remove -y filelight
 dnf5 install -y cosmic-greeter
 dnf5 remove -y --noautoremove cosmic-session cosmic-files cosmic-term cosmic-screenshot
 
@@ -100,7 +103,6 @@ EOF
 if [ -f /usr/share/applications/com.mitchellh.ghostty.desktop ]; then
     sed -i 's/^Name=.*/Name=Terminal/' /usr/share/applications/com.mitchellh.ghostty.desktop
     sed -i '/^Name\[/d' /usr/share/applications/com.mitchellh.ghostty.desktop
-	sed -i 's/^Icon=.*/Icon=utilities-terminal/' /usr/share/applications/com.mitchellh.ghostty.desktop
 fi
 
 # Ghostty Service Menu entfernen, um Dopplungen in Dolphin zu vermeiden
