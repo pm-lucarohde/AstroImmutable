@@ -37,7 +37,7 @@ dnf5 remove -y konsole
 dnf5 remove -y plasma-login-manager
 dnf5 remove -y sddm
 dnf5 install -y cosmic-greeter
-dnf5 remove -y --noautoremove cosmic-session
+dnf5 remove -y --noautoremove cosmic-session cosmic-files cosmic-term cosmic-screenshot
 
 systemctl enable cosmic-greeter.service
 
@@ -63,6 +63,16 @@ dnf5 install -y \
 	steam\
 	gwenview\
 	ghostty
+
+mkdir -p /usr/share/kvantum
+curl -fL "https://github.com/Niru2169/KvKonqi/releases/download/v1.1/KvKonqiDark.tar.gz" \
+  | tar -xz -C /usr/share/kvantum/
+
+mkdir -p /etc/skel/.config/Kvantum
+cat <<EOF > /etc/skel/.config/Kvantum/kvantum.kvconfig
+[General]
+theme=KvKonqiDark
+EOF
 
 if flatpak --system remotes | awk '{print $1}' | grep -qx fedora; then
     flatpak --system remote-delete fedora --force
