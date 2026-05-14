@@ -19,6 +19,8 @@ theme = "Breeze"
 font-family = "Noto Sans Mono"
 background-opacity = "0.8"
 background-blur = "true"
+window-width = "128"
+window-height = "32"
 EOF
 
 mkdir -p ~/.config/Kvantum
@@ -37,7 +39,6 @@ rm -rf /tmp/hytale.flatpak
 # Flatpaks installieren
 flatpak install --user -y\
         com.ktechpit.whatsie\
-        dev.vencord.Vesktop\
         org.mozilla.Thunderbird\
         org.mozilla.firefox\
 		org.qbittorrent.qBittorrent

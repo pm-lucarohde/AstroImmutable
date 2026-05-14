@@ -64,6 +64,10 @@ dnf5 install -y \
 	gwenview\
 	ghostty
 
+curl -fL "https://vencord.dev/download/vesktop/amd64/rpm" -o /tmp/vesktop.rpm
+dnf5 install -y /tmp/vesktop.rpm
+rm -rf /tmp/vesktop.rpm
+
 mkdir -p /usr/share/Kvantum
 curl -fL "https://github.com/Niru2169/KvKonqi/releases/download/v1.1/KvKonqiDark.tar.gz" \
   | tar -xz -C /usr/share/Kvantum/
@@ -96,10 +100,11 @@ EOF
 if [ -f /usr/share/applications/com.mitchellh.ghostty.desktop ]; then
     sed -i 's/^Name=.*/Name=Terminal/' /usr/share/applications/com.mitchellh.ghostty.desktop
     sed -i '/^Name\[/d' /usr/share/applications/com.mitchellh.ghostty.desktop
+	sed -i 's/^Icon=.*/Icon=utilities-terminal/' /usr/share/applications/com.mitchellh.ghostty.desktop
 fi
 
 # Ghostty Service Menu entfernen, um Dopplungen in Dolphin zu vermeiden
-#rm -f /usr/share/kio/servicemenus/com.mitchellh.ghostty.desktop
+rm -f /usr/share/kio/servicemenus/com.mitchellh.ghostty.desktop
 
 # Kopiert die user.js aus deinem Repo fest ins System-Image
 mkdir -p /usr/share/astroimmutable
