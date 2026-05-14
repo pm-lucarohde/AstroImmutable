@@ -33,9 +33,7 @@ dnf5 config-manager setopt fedora-steam.priority=10
 dnf5 remove -y firefox
 dnf5 remove -y kwrite
 dnf5 remove -y kate
-#dnf5 remove -y konsole
-# Statt dnf5 remove -y konsole
-echo "NoDisplay=true" >> /usr/share/applications/org.kde.konsole.desktop
+dnf5 remove -y konsole
 dnf5 remove -y plasma-login-manager
 dnf5 remove -y sddm
 dnf5 remove -y filelight
@@ -64,12 +62,25 @@ dnf5 install -y \
 	fastfetch\
 	wine\
 	steam\
-	gwenview\
-	ghostty
+	eog\
+	ghostty\
+	bleachbit\
+	mediawriter\
+	lutris\
+	obs-studio\
+	kcalc
+
+curl -fL "https://download.virtualbox.org/virtualbox/7.2.8/VirtualBox-7.2-7.2.8_173730_fedora40-1.x86_64.rpm" -o /tmp/VirtualBox.rpm
+dnf5 install -y /tmp/VirtualBox.rpm
+rm -rf /tmp/VirtualBox.rpm
 
 curl -fL "https://vencord.dev/download/vesktop/amd64/rpm" -o /tmp/vesktop.rpm
 dnf5 install -y /tmp/vesktop.rpm
 rm -rf /tmp/vesktop.rpm
+
+curl -fL "https://github.com/Heroic-Games-Launcher/HeroicGamesLauncher/releases/download/v2.21.0/Heroic-2.21.0-linux-x86_64.rpm" -o /tmp/heroic.rpm
+dnf5 install -y /tmp/heroic.rpm
+rm -rf /tmp/heroic.rpm
 
 mkdir -p /usr/share/Kvantum
 curl -fL "https://github.com/Niru2169/KvKonqi/releases/download/v1.1/KvKonqiDark.tar.gz" \
@@ -80,6 +91,23 @@ if flatpak --system remotes | awk '{print $1}' | grep -qx fedora; then
 fi
 
 flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+
+# 1. Ziel-Verzeichnis im System erstellen
+mkdir -p /opt/jetbrains-toolbox
+
+# 2. Den kompletten Inhalt aus deinem lokalen ctx/bin dorthin kopieren
+cp -r /ctx/bin/* /opt/jetbrains-toolbox/
+
+# 3. Sicherstellen, dass das Teil ausführbar ist
+chmod +x /opt/jetbrains-toolbox/jetbrains-toolbox
+
+# 4. Symlink setzen, damit es global im Terminal verfügbar ist
+ln -sf /opt/jetbrains-toolbox/jetbrains-toolbox /usr/bin/jetbrains-toolbox
+
+# 5. Desktop-Icon für dein Startmenü einrichten
+cp /opt/jetbrains-toolbox/jetbrains-toolbox.desktop /usr/share/applications/
+sed -i 's|^Exec=.*|Exec=/opt/jetbrains-toolbox/jetbrains-toolbox|' /usr/share/applications/jetbrains-toolbox.desktop
+sed -i 's|^Icon=.*|Icon=/opt/jetbrains-toolbox/toolbox-tray-color.png|' /usr/share/applications/jetbrains-toolbox.desktop
 
 install -m755 /ctx/notepadnext /usr/bin/notepadnext
 chmod +x /usr/bin/notepadnext

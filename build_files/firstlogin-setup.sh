@@ -41,7 +41,16 @@ flatpak install --user -y\
         com.ktechpit.whatsie\
         org.mozilla.Thunderbird\
         org.mozilla.firefox\
-		org.qbittorrent.qBittorrent
+		org.qbittorrent.qBittorrent\
+		org.prismlauncher.PrismLauncher\
+		net.blockbench.Blockbench\
+		org.azahar_emu.Azahar\
+		org.gimp.GIMP\
+		org.onlyoffice.desktopeditors\
+		com.pokemmo.PokeMMO\
+		io.github.ryubing.Ryujinx\
+		org.telegram.desktop\
+		org.torproject.torbrowser-launcher
 
 FF_DIR="$HOME/.var/app/org.mozilla.firefox/config/mozilla/firefox"
 mkdir -p "$FF_DIR/Standard.Profile"
@@ -84,6 +93,10 @@ cat <<EOF >> "$FF_DIR/profiles.ini"
 Default=Standard.Profile
 Locked=1
 EOF
+
+# Erstellt die Box und installiert CurseForge im Hintergrund
+distrobox create -y --image ubuntu:26.04 --name ubuntu
+distrobox enter ubuntu -- bash -c 'sudo apt update && sudo apt upgrade -y && curl -fL "https://curseforge.overwolf.com/downloads/curseforge-latest-linux.deb" -o /tmp/curseforge.deb && sudo apt install -y /tmp/curseforge.deb && distrobox-export --app curseforge'
 
 # Status-Datei anlegen, damit es beim nächsten Login übersprungen wird
 touch "$STATE_FILE"
