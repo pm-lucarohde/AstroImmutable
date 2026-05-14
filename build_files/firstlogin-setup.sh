@@ -36,22 +36,6 @@ flatpak install --user -y "/tmp/hytale.flatpak" || true
 flatpak install --user -y com.spotify.Client || true
 rm -rf /tmp/hytale.flatpak
 
-# Flatpaks installieren
-flatpak install --user -y\
-        com.ktechpit.whatsie\
-        org.mozilla.Thunderbird\
-        org.mozilla.firefox\
-		org.qbittorrent.qBittorrent\
-		org.prismlauncher.PrismLauncher\
-		net.blockbench.Blockbench\
-		org.azahar_emu.Azahar\
-		org.gimp.GIMP\
-		org.onlyoffice.desktopeditors\
-		com.pokemmo.PokeMMO\
-		io.github.ryubing.Ryujinx\
-		org.telegram.desktop\
-		org.torproject.torbrowser-launcher
-
 FF_DIR="$HOME/.var/app/org.mozilla.firefox/config/mozilla/firefox"
 mkdir -p "$FF_DIR/Standard.Profile"
 

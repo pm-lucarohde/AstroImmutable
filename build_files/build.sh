@@ -90,7 +90,19 @@ if flatpak --system remotes | awk '{print $1}' | grep -qx fedora; then
     flatpak --system remote-delete fedora --force
 fi
 
-flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+# 1. Custom-Location in deinem neuen, festen /opt Ordner anlegen
+mkdir -p /opt/flatpak
+mkdir -p /etc/flatpak/installations.d
+
+# 2. Flatpak sagen, dass es diese Location gibt
+cat <<EOF > /etc/flatpak/installations.d/opt.conf
+[Installation "opt"]
+Path=/opt/flatpak
+DisplayName=Immutable Opt Flatpaks
+StorageType=harddisk
+EOF
+# 3. Flathub explizit für diese neue Location hinzufügen
+flatpak remote-add --if-not-exists --installation=opt flathub https://flathub.org/repo/flathub.flatpakrepo
 
 # 1. Ziel-Verzeichnis im System erstellen
 mkdir -p /opt/jetbrains-toolbox
@@ -139,6 +151,22 @@ rm -f /usr/share/kio/servicemenus/com.mitchellh.ghostty.desktop
 # Kopiert die user.js aus deinem Repo fest ins System-Image
 mkdir -p /usr/share/astroimmutable
 install -Dm644 /ctx/user.js /usr/share/astroimmutable/user.js
+
+# Flatpaks installieren
+flatpak install --installation=opt -y\
+        com.ktechpit.whatsie\
+        org.mozilla.Thunderbird\
+        org.mozilla.firefox\
+		org.qbittorrent.qBittorrent\
+		org.prismlauncher.PrismLauncher\
+		net.blockbench.Blockbench\
+		org.azahar_emu.Azahar\
+		org.gimp.GIMP\
+		org.onlyoffice.desktopeditors\
+		com.pokemmo.PokeMMO\
+		io.github.ryubing.Ryujinx\
+		org.telegram.desktop\
+		org.torproject.torbrowser-launcher
 
 mkdir -p /usr/libexec/astroimmutable
 install -m755 /ctx/firstlogin-setup.sh /usr/libexec/astroimmutable/firstlogin-setup.sh
