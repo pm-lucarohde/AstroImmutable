@@ -181,8 +181,6 @@ mkdir -p /etc/systemd/user/default.target.wants
 ln -sf /usr/lib/systemd/user/astroimmutable-firstlogin.service \
   /etc/systemd/user/default.target.wants/astroimmutable-firstlogin.service
 
-dnf5 upgrade -y
-flatpak upgrade -y
 dnf5 clean all -y
 
 systemctl enable podman.socket
