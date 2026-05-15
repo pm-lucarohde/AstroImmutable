@@ -77,5 +77,7 @@ EOF
 distrobox create -y --image ubuntu:26.04 --name ubuntu
 distrobox enter ubuntu -- bash -c 'sudo apt update && sudo apt upgrade -y && curl -fL "https://curseforge.overwolf.com/downloads/curseforge-latest-linux.deb" -o /tmp/curseforge.deb && sudo apt install -y /tmp/curseforge.deb && distrobox-export --app curseforge'
 
+dnf5 clean all -y
+
 # Status-Datei anlegen, damit es beim nächsten Login übersprungen wird
 touch "$STATE_FILE"
