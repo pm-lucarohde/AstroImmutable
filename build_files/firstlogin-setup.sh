@@ -31,11 +31,6 @@ EOF
 
 kwriteconfig6 --file kdeglobals --group KDE --key widgetStyle kvantum-dark
 
-curl -fL "https://launcher.hytale.com/builds/release/linux/amd64/hytale-launcher-latest.flatpak" -o /tmp/hytale.flatpak
-flatpak install --user -y "/tmp/hytale.flatpak" || true
-flatpak install --user -y com.spotify.Client || true
-rm -rf /tmp/hytale.flatpak
-
 FF_DIR="$HOME/.var/app/org.mozilla.firefox/config/mozilla/firefox"
 mkdir -p "$FF_DIR/Standard.Profile"
 

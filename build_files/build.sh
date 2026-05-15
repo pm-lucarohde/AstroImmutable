@@ -168,6 +168,11 @@ flatpak install --installation=opt -y\
 		org.telegram.desktop\
 		org.torproject.torbrowser-launcher
 
+curl -fL "https://launcher.hytale.com/builds/release/linux/amd64/hytale-launcher-latest.flatpak" -o /tmp/hytale.flatpak
+flatpak install --installation=opt -y "/tmp/hytale.flatpak" || true
+flatpak install --installation=opt -y com.spotify.Client || true
+rm -rf /tmp/hytale.flatpak
+
 mkdir -p /usr/libexec/astroimmutable
 install -m755 /ctx/firstlogin-setup.sh /usr/libexec/astroimmutable/firstlogin-setup.sh
 install -Dm644 /ctx/astroimmutable-firstlogin.service /usr/lib/systemd/user/astroimmutable-firstlogin.service
