@@ -92,7 +92,7 @@ jobs:
           sep-tags: " "
           sep-annotations: " "
 
-- name: Install Flatpaks
+      - name: Install Flatpaks
         run: |
           FLATPAK_DIR="${{ github.workspace }}/flatpak-export"
           mkdir -p "$FLATPAK_DIR/flatpak" "$FLATPAK_DIR/triggers"
