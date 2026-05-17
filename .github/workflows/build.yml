@@ -103,7 +103,7 @@ jobs:
           mkdir -p /var/tmp
           chmod -R 1777 /var/tmp
           flatpak config --system --set languages "*"
-          flatpak remote-add --system flathub https://flathub.org/repo/flathub.flatpakrepo
+          flatpak remote-add --if-not-exists --system flathub https://flathub.org/repo/flathub.flatpakrepo
           flatpak install --system -y \
             com.ktechpit.whatsie \
             dev.vencord.Vesktop \
