@@ -2,12 +2,6 @@
 
 set -ouex pipefail
 
-# Vorgepackte Flatpaks aus dem Build-Context ins System kopieren
-if [ -d /ctx/flatpaks ]; then
-    mkdir -p /var/lib/flatpak
-    cp -r /ctx/flatpaks/* /var/lib/flatpak/
-fi
-
 ### Install packages
 
 # Packages can be installed from any enabled yum repo on the image.

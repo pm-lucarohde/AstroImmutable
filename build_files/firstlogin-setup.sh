@@ -31,6 +31,29 @@ EOF
 
 kwriteconfig6 --file kdeglobals --group KDE --key widgetStyle kvantum-dark
 
+flatpak config --user --set languages "de;en"
+flatpak remote-add --if-not-exists --user flathub https://flathub.org/repo/flathub.flatpakrepo
+
+flatpak install --user -y \
+            com.ktechpit.whatsie \
+            org.mozilla.Thunderbird \
+            org.mozilla.firefox \
+            org.qbittorrent.qBittorrent \
+            org.prismlauncher.PrismLauncher \
+            net.blockbench.Blockbench \
+            org.azahar_emu.Azahar \
+            org.gimp.GIMP \
+            org.onlyoffice.desktopeditors \
+            com.pokemmo.PokeMMO \
+            io.github.ryubing.Ryujinx \
+            org.telegram.desktop \
+            org.torproject.torbrowser-launcher \
+            com.spotify.Client
+
+curl -fL "https://launcher.hytale.com/builds/release/linux/amd64/hytale-launcher-latest.flatpak" -o /tmp/hytale.flatpak
+flatpak install --user -y /tmp/hytale.flatpak
+rm -f /tmp/hytale.flatpak
+
 FF_DIR="$HOME/.var/app/org.mozilla.firefox/config/mozilla/firefox"
 mkdir -p "$FF_DIR/Standard.Profile"
 
