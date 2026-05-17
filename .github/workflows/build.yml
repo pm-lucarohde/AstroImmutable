@@ -92,21 +92,18 @@ jobs:
           sep-tags: " "
           sep-annotations: " "
 
-      - name: Install Flatpaks
+- name: Install Flatpaks
         run: |
           FLATPAK_DIR="${{ github.workspace }}/flatpak-export"
           mkdir -p "$FLATPAK_DIR/flatpak" "$FLATPAK_DIR/triggers"
           
-          cat > /tmp/install-flatpaks.sh <<'SCRIPT'
+          cat > /tmp/install-flatpaks.sh << 'SCRIPT'
           #!/bin/bash
           set -euo pipefail
-          
           mkdir -p /var/tmp
           chmod -R 1777 /var/tmp
-          
           flatpak config --system --set languages "*"
           flatpak remote-add --system flathub https://flathub.org/repo/flathub.flatpakrepo
-          
           flatpak install --system -y \
             com.ktechpit.whatsie \
             dev.vencord.Vesktop \
@@ -126,7 +123,8 @@ jobs:
           curl -fL "https://launcher.hytale.com/builds/release/linux/amd64/hytale-launcher-latest.flatpak" -o /tmp/hytale.flatpak
           flatpak install --system -y /tmp/hytale.flatpak
           rm -f /tmp/hytale.flatpak
-SCRIPT
+          SCRIPT
+          
           chmod +x /tmp/install-flatpaks.sh
           docker run --rm --privileged \
             --entrypoint bash \
