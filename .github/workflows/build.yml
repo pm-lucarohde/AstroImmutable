@@ -140,6 +140,10 @@ jobs:
           sudo mkdir -p ./build_files/flatpaks
           sudo cp -r ${{ github.workspace }}/flatpak-export/flatpak/* ./build_files/flatpaks/
           sudo chown -R $(id -u):$(id -g) ./build_files/flatpaks
+          rm -rf ${{ github.workspace }}/flatpak-export
+
+      - name: Free disk space before image build
+        run: docker system prune -af
 
       - name: Build Image
         id: build_image
