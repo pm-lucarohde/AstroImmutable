@@ -92,6 +92,57 @@ jobs:
           sep-tags: " "
           sep-annotations: " "
 
+      - name: Install Flatpaks
+        run: |
+          FLATPAK_DIR="${{ github.workspace }}/flatpak-export"
+          mkdir -p "$FLATPAK_DIR/flatpak" "$FLATPAK_DIR/triggers"
+          
+          cat > /tmp/install-flatpaks.sh <<'SCRIPT'
+          #!/bin/bash
+          set -euo pipefail
+          
+          mkdir -p /var/tmp
+          chmod -R 1777 /var/tmp
+          
+          flatpak config --system --set languages "*"
+          flatpak remote-add --system flathub https://flathub.org/repo/flathub.flatpakrepo
+          
+          flatpak install --system -y \
+            com.ktechpit.whatsie \
+            dev.vencord.Vesktop \
+            org.mozilla.Thunderbird \
+            org.mozilla.firefox \
+            org.qbittorrent.qBittorrent \
+            org.prismlauncher.PrismLauncher \
+            net.blockbench.Blockbench \
+            org.azahar_emu.Azahar \
+            org.gimp.GIMP \
+            org.onlyoffice.desktopeditors \
+            com.pokemmo.PokeMMO \
+            io.github.ryubing.Ryujinx \
+            org.telegram.desktop \
+            org.torproject.torbrowser-launcher \
+            com.spotify.Client
+          curl -fL "https://launcher.hytale.com/builds/release/linux/amd64/hytale-launcher-latest.flatpak" -o /tmp/hytale.flatpak
+          flatpak install --system -y /tmp/hytale.flatpak
+          rm -f /tmp/hytale.flatpak
+SCRIPT
+          chmod +x /tmp/install-flatpaks.sh
+          docker run --rm --privileged \
+            --entrypoint bash \
+            -e FLATPAK_SYSTEM_DIR=/flatpak/flatpak \
+            -e FLATPAK_TRIGGERSDIR=/flatpak/triggers \
+            -v "$FLATPAK_DIR:/flatpak" \
+            -v /tmp/install-flatpaks.sh:/install-flatpaks.sh \
+            ghcr.io/ublue-os/kinoite-nvidia:latest \
+            /install-flatpaks.sh
+
+      - name: Move flatpaks to build context
+        run: |
+          sudo mkdir -p ./build_files/flatpaks
+          sudo cp -r ${{ github.workspace }}/flatpak-export/flatpak/* ./build_files/flatpaks/
+          sudo chown -R $(id -u):$(id -g) ./build_files/flatpaks
+
       - name: Build Image
         id: build_image
         uses: redhat-actions/buildah-build@7a95fa7ee0f02d552a32753e7414641a04307056 # v2

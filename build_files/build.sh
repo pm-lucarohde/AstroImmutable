@@ -2,6 +2,12 @@
 
 set -ouex pipefail
 
+# Vorgepackte Flatpaks aus dem Build-Context ins System kopieren
+if [ -d /ctx/flatpaks ]; then
+    mkdir -p /var/lib/flatpak
+    cp -r /ctx/flatpaks/* /var/lib/flatpak/
+fi
+
 ### Install packages
 
 # Packages can be installed from any enabled yum repo on the image.
@@ -26,6 +32,7 @@ for repo_url in \
 done
 
 dnf5 copr enable -y scottames/ghostty
+dnf5 copr enable -y copr.fedorainfracloud.org/ublue-os/packages
 
 dnf5 config-manager setopt fedora-multimedia.priority=1
 dnf5 config-manager setopt fedora-steam.priority=10
@@ -37,6 +44,7 @@ dnf5 remove -y konsole
 dnf5 remove -y plasma-login-manager
 dnf5 remove -y sddm
 dnf5 remove -y filelight
+dnf5 remove -y plasma-discover
 dnf5 install -y cosmic-greeter
 dnf5 remove -y --noautoremove cosmic-session cosmic-files cosmic-term cosmic-screenshot
 
@@ -68,6 +76,7 @@ dnf5 install -y \
 	mediawriter\
 	lutris\
 	obs-studio\
+	bazaar\
 	kcalc
 
 curl -fL "https://download.virtualbox.org/virtualbox/7.2.8/VirtualBox-7.2-7.2.8_173730_fedora40-1.x86_64.rpm" -o /tmp/VirtualBox.rpm
@@ -89,20 +98,6 @@ curl -fL "https://github.com/Niru2169/KvKonqi/releases/download/v1.1/KvKonqiDark
 if flatpak --system remotes | awk '{print $1}' | grep -qx fedora; then
     flatpak --system remote-delete fedora --force
 fi
-
-# 1. Custom-Location in deinem neuen, festen /opt Ordner anlegen
-mkdir -p /opt/flatpak
-mkdir -p /etc/flatpak/installations.d
-
-# 2. Flatpak sagen, dass es diese Location gibt
-cat <<EOF > /etc/flatpak/installations.d/opt.conf
-[Installation "opt"]
-Path=/opt/flatpak
-DisplayName=Immutable Opt Flatpaks
-StorageType=harddisk
-EOF
-# 3. Flathub explizit für diese neue Location hinzufügen
-flatpak remote-add --if-not-exists --installation=opt flathub https://flathub.org/repo/flathub.flatpakrepo
 
 # 1. Ziel-Verzeichnis im System erstellen
 mkdir -p /opt/jetbrains-toolbox
@@ -151,27 +146,6 @@ rm -f /usr/share/kio/servicemenus/com.mitchellh.ghostty.desktop
 # Kopiert die user.js aus deinem Repo fest ins System-Image
 mkdir -p /usr/share/astroimmutable
 install -Dm644 /ctx/user.js /usr/share/astroimmutable/user.js
-
-# Flatpaks installieren
-flatpak install --installation=opt -y\
-        com.ktechpit.whatsie\
-        org.mozilla.Thunderbird\
-        org.mozilla.firefox\
-		org.qbittorrent.qBittorrent\
-		org.prismlauncher.PrismLauncher\
-		net.blockbench.Blockbench\
-		org.azahar_emu.Azahar\
-		org.gimp.GIMP\
-		org.onlyoffice.desktopeditors\
-		com.pokemmo.PokeMMO\
-		io.github.ryubing.Ryujinx\
-		org.telegram.desktop\
-		org.torproject.torbrowser-launcher
-
-curl -fL "https://launcher.hytale.com/builds/release/linux/amd64/hytale-launcher-latest.flatpak" -o /tmp/hytale.flatpak
-flatpak install --installation=opt -y "/tmp/hytale.flatpak" || true
-flatpak install --installation=opt -y com.spotify.Client || true
-rm -rf /tmp/hytale.flatpak
 
 mkdir -p /usr/libexec/astroimmutable
 install -m755 /ctx/firstlogin-setup.sh /usr/libexec/astroimmutable/firstlogin-setup.sh
