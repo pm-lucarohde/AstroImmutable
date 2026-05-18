@@ -74,7 +74,9 @@ kwriteconfig6 --file kdeglobals --group KDE --key widgetStyle kvantum-dark
 flatpak config --user --set languages "de;en"
 flatpak remote-add --if-not-exists --user flathub https://flathub.org/repo/flathub.flatpakrepo
 
-curl -s "https://get.sdkman.io" | bash
+if [ ! -d "$HOME/.sdkman" ]; then
+    curl -s "https://get.sdkman.io" | bash
+fi
 set +u
 source "$HOME/.sdkman/bin/sdkman-init.sh"
 set -u
