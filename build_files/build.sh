@@ -93,9 +93,21 @@ dnf5 install -y \
 	lutris\
 	bazaar\
 	VirtualBox\
-	akmod-VirtualBox\
-	vesktop\
-	heroic
+	akmod-VirtualBox
+
+VESKTOP_URL=$(curl -s https://api.github.com/repos/Vencord/Vesktop/releases/latest \
+  | grep -o '"browser_download_url": "[^"]*\.x86_64\.rpm"' \
+  | cut -d'"' -f4)
+curl -fL "$VESKTOP_URL" -o /tmp/vesktop.rpm
+dnf5 install -y /tmp/vesktop.rpm
+rm -f /tmp/vesktop.rpm
+
+HEROIC_URL=$(curl -s https://api.github.com/repos/Heroic-Games-Launcher/HeroicGamesLauncher/releases/latest \
+  | grep -o '"browser_download_url": "[^"]*\.x86_64\.rpm"' \
+  | cut -d'"' -f4)
+curl -fL "$HEROIC_URL" -o /tmp/heroic.rpm
+dnf5 install -y /tmp/heroic.rpm
+rm -f /tmp/heroic.rpm
 
 mkdir -p /usr/share/Kvantum
 KVKONQI_URL=$(curl -s https://api.github.com/repos/Niru2169/KvKonqi/releases/latest \
