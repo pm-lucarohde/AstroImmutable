@@ -101,9 +101,7 @@ dnf5 install -y \
 	google-noto-sans-fonts\
 	wine\
 	lutris\
-	bazaar\
-	VirtualBox\
-	akmod-VirtualBox
+	bazaar
 
 VESKTOP_URL=$(curl -s -H "Accept: application/vnd.github+json" \
   https://api.github.com/repos/Vencord/Vesktop/releases/latest \
