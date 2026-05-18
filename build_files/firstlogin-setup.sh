@@ -149,7 +149,7 @@ EOF
 
 # Erstellt die Box und installiert CurseForge im Hintergrund
 distrobox create --yes --image ubuntu:26.04 --name ubuntu --nvidia
-distrobox enter ubuntu -- bash -c 'sudo apt update && sudo apt upgrade -y && sudo apt install -y libasound2t64 && curl -fL "https://curseforge.overwolf.com/downloads/curseforge-latest-linux.deb" -o /tmp/curseforge.deb && sudo apt install -y /tmp/curseforge.deb && distrobox-export --app curseforge'
+distrobox enter ubuntu -- bash -c 'sudo apt update && sudo apt upgrade -y && sudo apt install -y libasound2t64 && curl -fL "https://curseforge.overwolf.com/downloads/curseforge-latest-linux.deb" -o ~/curseforge.deb && sudo apt install -y ~/curseforge.deb && rm -f ~/curseforge.deb && distrobox-export --app curseforge'
 
 # Status-Datei anlegen, damit es beim nächsten Login übersprungen wird
 touch "$STATE_FILE"
