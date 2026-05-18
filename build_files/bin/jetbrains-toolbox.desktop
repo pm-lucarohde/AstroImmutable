@@ -1,9 +1,18 @@
 [Desktop Entry]
-Type=Application
-Name=JetBrains Toolbox
+Comment[de_DE]=
+Comment=
 Exec=jetbrains-toolbox
+GenericName[de_DE]=
+GenericName=
 Icon=jetbrains-toolbox
+MimeType=
+Name[de_DE]=JetBrains Toolbox
+Name=JetBrains Toolbox
+Path=
 StartupNotify=false
 Terminal=false
-MimeType=
+TerminalOptions=
+Type=Application
 X-AppImage-Integrate=false
+X-KDE-SubstituteUID=false
+X-KDE-Username=
