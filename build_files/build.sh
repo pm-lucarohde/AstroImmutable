@@ -99,8 +99,7 @@ dnf5 install -y \
 	bleachbit\
 	wine\
 	lutris\
-	bazaar\
-	libvirt
+	bazaar
 
 mkdir -p /usr/share/Kvantum
 KVKONQI_URL=$(curl -s https://api.github.com/repos/Niru2169/KvKonqi/releases/latest \
@@ -173,4 +172,3 @@ ln -sf /usr/lib/systemd/user/astroimmutable-firstlogin.service \
 dnf5 clean all -y
 
 systemctl enable podman.socket
-systemctl enable libvirtd
