@@ -93,6 +93,8 @@ flatpak install --user -y \
             net.blockbench.Blockbench \
             org.azahar_emu.Azahar \
             org.gimp.GIMP \
+			com.heroicgameslauncher.hgl \
+			dev.vencord.Vesktop \
             org.onlyoffice.desktopeditors \
             com.pokemmo.PokeMMO \
             io.github.ryubing.Ryujinx \
