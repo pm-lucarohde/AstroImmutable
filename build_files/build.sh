@@ -115,20 +115,25 @@ done
 
 mkdir -p /opt/jetbrains-toolbox
 JB_URL=$(curl -s "https://data.services.jetbrains.com/products/releases?code=TBA&latest=true&type=release" \
-  | grep -o 'https://download\.jetbrains\.com/toolbox/jetbrains-toolbox-[0-9.]*\.tar\.gz' \
-  | head -1)
-curl -fL "$JB_URL" | tar -xz --strip-components=1 -C /opt/jetbrains-toolbox/
-cp /ctx/bin/jetbrains-toolbox.desktop /opt/jetbrains-toolbox/
-cp /ctx/bin/toolbox-tray-color.png /opt/jetbrains-toolbox/
+  | grep -o '"link":"https://download\.jetbrains\.com/toolbox/jetbrains-toolbox-[0-9.]*\.tar\.gz"' \
+  | head -1 \
+  | grep -o 'https://[^"]*' || true)
+if [ -z "$JB_URL" ]; then
+  echo "WARNING: Could not fetch JetBrains Toolbox URL, skipping"
+else
+  curl -fL "$JB_URL" | tar -xz --strip-components=1 -C /opt/jetbrains-toolbox/
+  cp /ctx/bin/jetbrains-toolbox.desktop /opt/jetbrains-toolbox/
+  cp /ctx/bin/toolbox-tray-color.png /opt/jetbrains-toolbox/
 
-JB_BIN=$(find /opt/jetbrains-toolbox -name "jetbrains-toolbox" -type f | head -1)
-chmod +x "$JB_BIN"
+  JB_BIN=$(find /opt/jetbrains-toolbox -name "jetbrains-toolbox" -type f | head -1)
+  chmod +x "$JB_BIN"
 
-ln -sf "$JB_BIN" /usr/bin/jetbrains-toolbox
+  ln -sf "$JB_BIN" /usr/bin/jetbrains-toolbox
 
-cp /opt/jetbrains-toolbox/jetbrains-toolbox.desktop /usr/share/applications/
-sed -i "s|^Exec=.*|Exec=${JB_BIN}|" /usr/share/applications/jetbrains-toolbox.desktop
-sed -i 's|^Icon=.*|Icon=/opt/jetbrains-toolbox/toolbox-tray-color.png|' /usr/share/applications/jetbrains-toolbox.desktop
+  cp /opt/jetbrains-toolbox/jetbrains-toolbox.desktop /usr/share/applications/
+  sed -i "s|^Exec=.*|Exec=${JB_BIN}|" /usr/share/applications/jetbrains-toolbox.desktop
+  sed -i 's|^Icon=.*|Icon=/opt/jetbrains-toolbox/toolbox-tray-color.png|' /usr/share/applications/jetbrains-toolbox.desktop
+fi
 
 install -m755 /ctx/notepadnext /usr/bin/notepadnext
 chmod +x /usr/bin/notepadnext
