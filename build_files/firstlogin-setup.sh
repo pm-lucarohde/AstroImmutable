@@ -97,7 +97,7 @@ Locked=1
 EOF
 
 # Erstellt die Box und installiert CurseForge im Hintergrund
-distrobox create -y --image ubuntu:26.04 --name ubuntu
+distrobox create --yes --image ubuntu:26.04 --name ubuntu
 distrobox enter ubuntu -- bash -c 'sudo apt update && sudo apt upgrade -y && curl -fL "https://curseforge.overwolf.com/downloads/curseforge-latest-linux.deb" -o /tmp/curseforge.deb && sudo apt install -y /tmp/curseforge.deb && distrobox-export --app curseforge'
 
 # Status-Datei anlegen, damit es beim nächsten Login übersprungen wird
