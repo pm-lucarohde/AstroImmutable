@@ -90,18 +90,10 @@ dnf5 install -y \
 	gamemode\
 	ghostty\
 	bleachbit\
-	mediawriter\
 	lutris\
-	obs-studio\
-	bazaar\
-	kcalc
+	bazaar
 
-VB_VERSION=$(curl -s https://download.virtualbox.org/virtualbox/LATEST.TXT | tr -d '[:space:]')
-VB_RPM=$(curl -s "https://download.virtualbox.org/virtualbox/${VB_VERSION}/" \
-  | grep -o "VirtualBox-[^\"]*fedora40-1\.x86_64\.rpm" | head -1)
-curl -fL "https://download.virtualbox.org/virtualbox/${VB_VERSION}/${VB_RPM}" -o /tmp/VirtualBox.rpm
-dnf5 install -y /tmp/VirtualBox.rpm
-rm -f /tmp/VirtualBox.rpm
+dnf5 install -y VirtualBox akmod-VirtualBox
 
 curl -fL "https://vencord.dev/download/vesktop/amd64/rpm" -o /tmp/vesktop.rpm
 dnf5 install -y /tmp/vesktop.rpm
