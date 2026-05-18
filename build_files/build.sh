@@ -58,7 +58,6 @@ dnf5 remove -y --noautoremove \
   cosmic-launcher \
   cosmic-randr \
   cosmic-settings-daemon \
-  cosmic-wallpapers \
   xdg-desktop-portal-cosmic \
   pop-launcher \
   pop-sound-theme \
