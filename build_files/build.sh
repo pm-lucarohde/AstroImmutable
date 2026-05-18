@@ -101,8 +101,7 @@ dnf5 install -y \
 	wine\
 	lutris\
 	bazaar\
-	virt-manager\
-	qemu-kvm
+	libvirt
 
 VESKTOP_URL=$(curl -s -H "Accept: application/vnd.github+json" \
   https://api.github.com/repos/Vencord/Vesktop/releases/latest \

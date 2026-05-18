@@ -98,7 +98,9 @@ flatpak install --user -y \
 			com.obsproject.Studio \
 			net.davidotek.pupgui2 \
 			org.kde.kcalc \
-			org.fedoraproject.MediaWriter
+			org.fedoraproject.MediaWriter \
+			org.virt_manager.virt-manager \
+			org.virt_manager.virt_manager.Extension.Qemu
 
 if ! flatpak info --user com.hypixel.HytaleLauncher &>/dev/null; then
     curl -fL "https://launcher.hytale.com/builds/release/linux/amd64/hytale-launcher-latest.flatpak" -o /tmp/hytale.flatpak
