@@ -88,7 +88,10 @@ flatpak install --user -y \
             io.github.ryubing.Ryujinx \
             org.telegram.desktop \
             org.torproject.torbrowser-launcher \
-            com.spotify.Client
+            com.spotify.Client \
+			com.obsproject.Studio \
+			org.kde.kcalc \
+			org.fedoraproject.MediaWriter
 
 if ! flatpak info --user com.hypixel.HytaleLauncher &>/dev/null; then
     curl -fL "https://launcher.hytale.com/builds/release/linux/amd64/hytale-launcher-latest.flatpak" -o /tmp/hytale.flatpak

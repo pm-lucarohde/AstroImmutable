@@ -91,20 +91,11 @@ dnf5 install -y \
 	ghostty\
 	bleachbit\
 	lutris\
-	bazaar
-
-dnf5 install -y VirtualBox akmod-VirtualBox
-
-curl -fL "https://vencord.dev/download/vesktop/amd64/rpm" -o /tmp/vesktop.rpm
-dnf5 install -y /tmp/vesktop.rpm
-rm -rf /tmp/vesktop.rpm
-
-HEROIC_URL=$(curl -s https://api.github.com/repos/Heroic-Games-Launcher/HeroicGamesLauncher/releases/latest \
-  | grep -o '"browser_download_url": "[^"]*x86_64\.rpm"' \
-  | cut -d'"' -f4)
-curl -fL "$HEROIC_URL" -o /tmp/heroic.rpm
-dnf5 install -y /tmp/heroic.rpm
-rm -f /tmp/heroic.rpm
+	bazaar\
+	VirtualBox\
+	akmod-VirtualBox\
+	vesktop\
+	heroic
 
 mkdir -p /usr/share/Kvantum
 KVKONQI_URL=$(curl -s https://api.github.com/repos/Niru2169/KvKonqi/releases/latest \
