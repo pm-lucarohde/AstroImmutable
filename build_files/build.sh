@@ -40,7 +40,29 @@ dnf5 remove -y sddm
 dnf5 remove -y filelight
 dnf5 remove -y plasma-discover
 dnf5 install -y cosmic-greeter
-dnf5 remove -y --noautoremove cosmic-session cosmic-files cosmic-term cosmic-screenshot
+dnf5 remove -y --noautoremove \
+  cosmic-session \
+  cosmic-files \
+  cosmic-term \
+  cosmic-screenshot \
+  cosmic-app-library \
+  cosmic-applets \
+  cosmic-panel \
+  cosmic-initial-setup \
+  cosmic-workspaces \
+  cosmic-notifications \
+  cosmic-osd \
+  cosmic-idle \
+  cutecosmic-qt6 \
+  gvfs \
+  gvfs-client \
+  gvfs-fuse \
+  gvfs-nfs \
+  gvfs-smb \
+  wsdd \
+  nm-connection-editor \
+  playerctl \
+  playerctl-libs
 
 systemctl enable cosmic-greeter.service
 
@@ -110,12 +132,13 @@ curl -fL "$JB_URL" | tar -xz --strip-components=1 -C /opt/jetbrains-toolbox/
 cp /ctx/bin/jetbrains-toolbox.desktop /opt/jetbrains-toolbox/
 cp /ctx/bin/toolbox-tray-color.png /opt/jetbrains-toolbox/
 
-chmod +x /opt/jetbrains-toolbox/jetbrains-toolbox
+JB_BIN=$(find /opt/jetbrains-toolbox -name "jetbrains-toolbox" -type f | head -1)
+chmod +x "$JB_BIN"
 
-ln -sf /opt/jetbrains-toolbox/jetbrains-toolbox /usr/bin/jetbrains-toolbox
+ln -sf "$JB_BIN" /usr/bin/jetbrains-toolbox
 
 cp /opt/jetbrains-toolbox/jetbrains-toolbox.desktop /usr/share/applications/
-sed -i 's|^Exec=.*|Exec=/opt/jetbrains-toolbox/jetbrains-toolbox|' /usr/share/applications/jetbrains-toolbox.desktop
+sed -i "s|^Exec=.*|Exec=${JB_BIN}|" /usr/share/applications/jetbrains-toolbox.desktop
 sed -i 's|^Icon=.*|Icon=/opt/jetbrains-toolbox/toolbox-tray-color.png|' /usr/share/applications/jetbrains-toolbox.desktop
 
 install -m755 /ctx/notepadnext /usr/bin/notepadnext
