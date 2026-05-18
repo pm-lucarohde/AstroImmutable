@@ -79,9 +79,9 @@ if [ ! -d "$HOME/.sdkman" ]; then
 fi
 set +euo pipefail
 source "$HOME/.sdkman/bin/sdkman-init.sh"
-sdk install java 25.0.3-graalce
-sdk install java 21.0.11-graalce
-sdk default java 25.0.3-graalce
+sdk install java 25.0.2-graalce
+sdk install java 21.0.2-graalce
+sdk default java 25.0.2-graalce
 set -euo pipefail
 
 flatpak install --user -y \
