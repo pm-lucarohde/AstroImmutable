@@ -104,12 +104,17 @@ curl -fL "$VESKTOP_URL" -o /tmp/vesktop.rpm
 dnf5 install -y /tmp/vesktop.rpm
 rm -f /tmp/vesktop.rpm
 
-HEROIC_URL=$(curl -s https://api.github.com/repos/Heroic-Games-Launcher/HeroicGamesLauncher/releases/latest \
+HEROIC_URL=$(curl -s -H "Accept: application/vnd.github+json" \
+  https://api.github.com/repos/Heroic-Games-Launcher/HeroicGamesLauncher/releases/latest \
   | grep -o '"browser_download_url": "[^"]*\.x86_64\.rpm"' \
   | cut -d'"' -f4)
-curl -fL "$HEROIC_URL" -o /tmp/heroic.rpm
-dnf5 install -y /tmp/heroic.rpm
-rm -f /tmp/heroic.rpm
+if [ -z "$HEROIC_URL" ]; then
+  echo "WARNING: Could not fetch Heroic URL, skipping"
+else
+  curl -fL "$HEROIC_URL" -o /tmp/heroic.rpm
+  dnf5 install -y /tmp/heroic.rpm
+  rm -f /tmp/heroic.rpm
+fi
 
 mkdir -p /usr/share/Kvantum
 KVKONQI_URL=$(curl -s https://api.github.com/repos/Niru2169/KvKonqi/releases/latest \
