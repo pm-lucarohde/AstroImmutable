@@ -12,7 +12,7 @@ fi
 mkdir -p "${STATE_DIR}"
 
 # Region erkennen und Locale + Tastaturlayout automatisch setzen
-COUNTRY=$(curl -sf --max-time 5 "https://ipapi.co/country/" 2>/dev/null | tr -d '[:space:]')
+COUNTRY=$(curl -sf --max-time 5 "https://ipapi.co/country/" 2>/dev/null | tr -d '[:space:]' || true)
 case "$COUNTRY" in
     DE) LOCALE="de_DE.UTF-8"; KEYMAP="de" ;;
     AT) LOCALE="de_AT.UTF-8"; KEYMAP="de" ;;
@@ -95,6 +95,7 @@ flatpak install --user -y \
             org.torproject.torbrowser-launcher \
             com.spotify.Client \
 			com.obsproject.Studio \
+			net.davidotek.pupgui2 \
 			org.kde.kcalc \
 			org.fedoraproject.MediaWriter
 
