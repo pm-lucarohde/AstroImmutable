@@ -80,7 +80,7 @@ fi
 set +euo pipefail
 source "$HOME/.sdkman/bin/sdkman-init.sh"
 sdk install java 25.0.2-graalce
-sdk install java 21.0.2-graalce
+echo "n" | sdk install java 21.0.2-graalce
 sdk default java 25.0.2-graalce
 set -euo pipefail
 
