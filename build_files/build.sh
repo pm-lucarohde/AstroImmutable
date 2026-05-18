@@ -95,6 +95,8 @@ dnf5 install -y \
 	VirtualBox\
 	akmod-VirtualBox
 
+dnf5 install -y --disablerepo=fedora-multimedia wine
+
 VESKTOP_URL=$(curl -s https://api.github.com/repos/Vencord/Vesktop/releases/latest \
   | grep -o '"browser_download_url": "[^"]*\.x86_64\.rpm"' \
   | cut -d'"' -f4)
