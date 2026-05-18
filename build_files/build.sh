@@ -66,6 +66,8 @@ dnf5 remove -y --noautoremove \
 
 systemctl enable cosmic-greeter.service
 
+dnf5 install -y --disablerepo=fedora-multimedia wine
+
 dnf5 install -y \
 	git\
 	htop\
@@ -84,7 +86,6 @@ dnf5 install -y \
 	7zip\
 	podman\
 	fastfetch\
-	wine\
 	steam\
 	eog\
 	gamemode\
@@ -94,8 +95,6 @@ dnf5 install -y \
 	bazaar\
 	VirtualBox\
 	akmod-VirtualBox
-
-dnf5 install -y --disablerepo=fedora-multimedia wine
 
 VESKTOP_URL=$(curl -s https://api.github.com/repos/Vencord/Vesktop/releases/latest \
   | grep -o '"browser_download_url": "[^"]*\.x86_64\.rpm"' \

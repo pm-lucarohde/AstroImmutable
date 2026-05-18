@@ -74,6 +74,11 @@ kwriteconfig6 --file kdeglobals --group KDE --key widgetStyle kvantum-dark
 flatpak config --user --set languages "de;en"
 flatpak remote-add --if-not-exists --user flathub https://flathub.org/repo/flathub.flatpakrepo
 
+curl -s "https://get.sdkman.io" | bash
+source "$HOME/.sdkman/bin/sdkman-init.sh"
+sdk install java 25.0.3-graalce
+sdk default java 25.0.3-graalce
+
 flatpak install --user -y \
             com.ktechpit.whatsie \
             org.mozilla.Thunderbird \
