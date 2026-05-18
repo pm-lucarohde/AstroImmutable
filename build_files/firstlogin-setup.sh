@@ -96,12 +96,19 @@ if ! flatpak info --user com.hypixel.HytaleLauncher &>/dev/null; then
     rm -f /tmp/hytale.flatpak
 fi
 
-flatpak override --user --filesystem=/etc/firefox:ro org.mozilla.firefox
-
 FF_DIR="$HOME/.var/app/org.mozilla.firefox/config/mozilla/firefox"
-mkdir -p "$FF_DIR/Standard.Profile"
+mkdir -p "$FF_DIR/Standard.Profile/extensions"
 
 cp /usr/share/astroimmutable/user.js "$FF_DIR/Standard.Profile/user.js"
+
+curl -fL "https://addons.mozilla.org/firefox/downloads/latest/ublock-origin/latest.xpi" \
+    -o "$FF_DIR/Standard.Profile/extensions/uBlock0@raymondhill.net.xpi"
+curl -fL "https://addons.mozilla.org/firefox/downloads/latest/return-youtube-dislikes/latest.xpi" \
+    -o "$FF_DIR/Standard.Profile/extensions/{762f9885-5a13-4abd-9c77-433dcd38b8fd}.xpi"
+curl -fL "https://addons.mozilla.org/firefox/downloads/latest/betterttv/latest.xpi" \
+    -o "$FF_DIR/Standard.Profile/extensions/firefox@betterttv.net.xpi"
+curl -fL "https://agrd.io/adguard_extra_firefox_beta" \
+    -o "$FF_DIR/Standard.Profile/extensions/adguardextra@adguard.com.xpi"
 
 flatpak run org.mozilla.firefox --headless --no-remote &
 FF_PID=$!
