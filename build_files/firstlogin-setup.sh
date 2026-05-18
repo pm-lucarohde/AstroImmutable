@@ -50,9 +50,11 @@ flatpak install --user -y \
             org.torproject.torbrowser-launcher \
             com.spotify.Client
 
-curl -fL "https://launcher.hytale.com/builds/release/linux/amd64/hytale-launcher-latest.flatpak" -o /tmp/hytale.flatpak
-flatpak install --user -y /tmp/hytale.flatpak
-rm -f /tmp/hytale.flatpak
+if ! flatpak info --user com.hypixel.HytaleLauncher &>/dev/null; then
+    curl -fL "https://launcher.hytale.com/builds/release/linux/amd64/hytale-launcher-latest.flatpak" -o /tmp/hytale.flatpak
+    flatpak install --user -y /tmp/hytale.flatpak
+    rm -f /tmp/hytale.flatpak
+fi
 
 FF_DIR="$HOME/.var/app/org.mozilla.firefox/config/mozilla/firefox"
 mkdir -p "$FF_DIR/Standard.Profile"
