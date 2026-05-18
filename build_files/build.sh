@@ -172,8 +172,6 @@ rm -f /usr/share/kio/servicemenus/com.mitchellh.ghostty.desktop
 mkdir -p /usr/share/astroimmutable
 install -Dm644 /ctx/user.js /usr/share/astroimmutable/user.js
 
-install -Dm644 /ctx/policies.json /etc/firefox/policies/policies.json
-
 mkdir -p /usr/libexec/astroimmutable
 install -m755 /ctx/firstlogin-setup.sh /usr/libexec/astroimmutable/firstlogin-setup.sh
 install -Dm644 /ctx/astroimmutable-firstlogin.service /usr/lib/systemd/user/astroimmutable-firstlogin.service
