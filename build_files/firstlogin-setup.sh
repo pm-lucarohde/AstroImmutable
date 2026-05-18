@@ -104,6 +104,19 @@ if ! flatpak info --user com.hypixel.HytaleLauncher &>/dev/null; then
     rm -f /tmp/hytale.flatpak
 fi
 
+PROTON_DIR="$HOME/.local/share/Steam/compatibilitytools.d"
+mkdir -p "$PROTON_DIR"
+PROTON_URL=$(curl -s https://api.github.com/repos/CachyOS/proton-cachyos/releases/latest \
+  | grep "browser_download_url" | grep "x86_64\.tar\.xz" | cut -d '"' -f 4 || true)
+if [ -z "$PROTON_URL" ]; then
+  echo "WARNING: Could not fetch Proton-CachyOS URL, skipping"
+else
+  PROTON_FILE=$(basename "$PROTON_URL")
+  curl -fL "$PROTON_URL" -o "$PROTON_DIR/$PROTON_FILE"
+  tar -xf "$PROTON_DIR/$PROTON_FILE" -C "$PROTON_DIR/"
+  rm -f "$PROTON_DIR/$PROTON_FILE"
+fi
+
 FF_DIR="$HOME/.var/app/org.mozilla.firefox/config/mozilla/firefox"
 mkdir -p "$FF_DIR/Standard.Profile/extensions"
 
