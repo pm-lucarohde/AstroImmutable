@@ -97,12 +97,17 @@ dnf5 install -y \
 	VirtualBox\
 	akmod-VirtualBox
 
-VESKTOP_URL=$(curl -s https://api.github.com/repos/Vencord/Vesktop/releases/latest \
+VESKTOP_URL=$(curl -s -H "Accept: application/vnd.github+json" \
+  https://api.github.com/repos/Vencord/Vesktop/releases/latest \
   | grep -o '"browser_download_url": "[^"]*\.x86_64\.rpm"' \
   | cut -d'"' -f4)
-curl -fL "$VESKTOP_URL" -o /tmp/vesktop.rpm
-dnf5 install -y /tmp/vesktop.rpm
-rm -f /tmp/vesktop.rpm
+if [ -z "$VESKTOP_URL" ]; then
+  echo "WARNING: Could not fetch Vesktop URL, skipping"
+else
+  curl -fL "$VESKTOP_URL" -o /tmp/vesktop.rpm
+  dnf5 install -y /tmp/vesktop.rpm
+  rm -f /tmp/vesktop.rpm
+fi
 
 HEROIC_URL=$(curl -s -H "Accept: application/vnd.github+json" \
   https://api.github.com/repos/Heroic-Games-Launcher/HeroicGamesLauncher/releases/latest \
