@@ -77,6 +77,7 @@ flatpak remote-add --if-not-exists --user flathub https://flathub.org/repo/flath
 curl -s "https://get.sdkman.io" | bash
 source "$HOME/.sdkman/bin/sdkman-init.sh"
 sdk install java 25.0.3-graalce
+sdk install java 21.0.11-graalce
 sdk default java 25.0.3-graalce
 
 flatpak install --user -y \
