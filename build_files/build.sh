@@ -100,7 +100,7 @@ dnf5 install -y \
 VESKTOP_URL=$(curl -s -H "Accept: application/vnd.github+json" \
   https://api.github.com/repos/Vencord/Vesktop/releases/latest \
   | grep -o '"browser_download_url": "[^"]*\.x86_64\.rpm"' \
-  | cut -d'"' -f4)
+  | cut -d'"' -f4 || true)
 if [ -z "$VESKTOP_URL" ]; then
   echo "WARNING: Could not fetch Vesktop URL, skipping"
 else
@@ -112,7 +112,7 @@ fi
 HEROIC_URL=$(curl -s -H "Accept: application/vnd.github+json" \
   https://api.github.com/repos/Heroic-Games-Launcher/HeroicGamesLauncher/releases/latest \
   | grep -o '"browser_download_url": "[^"]*\.x86_64\.rpm"' \
-  | cut -d'"' -f4)
+  | cut -d'"' -f4 || true)
 if [ -z "$HEROIC_URL" ]; then
   echo "WARNING: Could not fetch Heroic URL, skipping"
 else
