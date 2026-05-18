@@ -67,6 +67,7 @@ dnf5 remove -y --noautoremove \
 systemctl enable cosmic-greeter.service
 
 dnf5 install -y \
+	--setopt=tsflags=noscripts \
 	--exclude=wine-core.i686 \
 	git\
 	htop\
