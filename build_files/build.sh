@@ -101,6 +101,13 @@ dnf5 install -y \
 	lutris\
 	bazaar
 
+dnf5 remove -y fcitx5
+dnf5 remove -y --noautoremove \
+qt6ct \
+qt5ct \
+dosbox \
+kcharselect
+
 mkdir -p /usr/share/Kvantum
 KVKONQI_URL=$(curl -s https://api.github.com/repos/Niru2169/KvKonqi/releases/latest \
   | grep -o '"browser_download_url": "[^"]*KvKonqiDark\.tar\.gz"' \
