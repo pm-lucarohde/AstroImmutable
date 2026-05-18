@@ -74,7 +74,6 @@ dnf5 remove -y --noautoremove \
 systemctl enable cosmic-greeter.service
 
 dnf5 install -y \
-	--setopt=tsflags=noscripts \
 	--exclude=wine-core.i686 \
 	git\
 	htop\
@@ -101,7 +100,9 @@ dnf5 install -y \
 	google-noto-sans-fonts\
 	wine\
 	lutris\
-	bazaar
+	bazaar\
+	virt-manager\
+	qemu-kvm
 
 VESKTOP_URL=$(curl -s -H "Accept: application/vnd.github+json" \
   https://api.github.com/repos/Vencord/Vesktop/releases/latest \
