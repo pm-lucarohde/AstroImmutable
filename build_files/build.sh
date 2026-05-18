@@ -17,6 +17,7 @@ dnf5 install -y \
   https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
 
 for repo_url in \
+    "https://negativo17.org/repos/fedora-multimedia.repo" \
     "https://negativo17.org/repos/fedora-steam.repo"; do
     repo_id=$(basename "$repo_url" .repo)
     if ! ls /etc/yum.repos.d/ | grep -q "$repo_id"; then
@@ -27,6 +28,7 @@ done
 dnf5 copr enable -y scottames/ghostty
 dnf5 copr enable -y copr.fedorainfracloud.org/ublue-os/packages
 
+dnf5 config-manager setopt fedora-multimedia.priority=1
 dnf5 config-manager setopt fedora-steam.priority=10
 
 dnf5 remove -y firefox
@@ -65,6 +67,7 @@ dnf5 remove -y --noautoremove \
 systemctl enable cosmic-greeter.service
 
 dnf5 install -y \
+	--exclude=wine-core.i686 \
 	git\
 	htop\
 	flatpak\
