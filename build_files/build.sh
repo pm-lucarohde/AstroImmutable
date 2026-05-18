@@ -98,6 +98,7 @@ dnf5 install -y \
 	gamemode\
 	ghostty\
 	bleachbit\
+	google-noto-sans-fonts\
 	wine\
 	lutris\
 	bazaar\
