@@ -65,6 +65,7 @@ dnf5 install -y \
 	wine\
 	steam\
 	eog\
+	gamemode\
 	ghostty\
 	bleachbit\
 	mediawriter\
@@ -73,39 +74,46 @@ dnf5 install -y \
 	bazaar\
 	kcalc
 
-curl -fL "https://download.virtualbox.org/virtualbox/7.2.8/VirtualBox-7.2-7.2.8_173730_fedora40-1.x86_64.rpm" -o /tmp/VirtualBox.rpm
+VB_VERSION=$(curl -s https://download.virtualbox.org/virtualbox/LATEST.TXT | tr -d '[:space:]')
+VB_RPM=$(curl -s "https://download.virtualbox.org/virtualbox/${VB_VERSION}/" \
+  | grep -o "VirtualBox-[^\"]*fedora40-1\.x86_64\.rpm" | head -1)
+curl -fL "https://download.virtualbox.org/virtualbox/${VB_VERSION}/${VB_RPM}" -o /tmp/VirtualBox.rpm
 dnf5 install -y /tmp/VirtualBox.rpm
-rm -rf /tmp/VirtualBox.rpm
+rm -f /tmp/VirtualBox.rpm
 
 curl -fL "https://vencord.dev/download/vesktop/amd64/rpm" -o /tmp/vesktop.rpm
 dnf5 install -y /tmp/vesktop.rpm
 rm -rf /tmp/vesktop.rpm
 
-curl -fL "https://github.com/Heroic-Games-Launcher/HeroicGamesLauncher/releases/download/v2.21.0/Heroic-2.21.0-linux-x86_64.rpm" -o /tmp/heroic.rpm
+HEROIC_URL=$(curl -s https://api.github.com/repos/Heroic-Games-Launcher/HeroicGamesLauncher/releases/latest \
+  | grep -o '"browser_download_url": "[^"]*x86_64\.rpm"' \
+  | cut -d'"' -f4)
+curl -fL "$HEROIC_URL" -o /tmp/heroic.rpm
 dnf5 install -y /tmp/heroic.rpm
-rm -rf /tmp/heroic.rpm
+rm -f /tmp/heroic.rpm
 
 mkdir -p /usr/share/Kvantum
-curl -fL "https://github.com/Niru2169/KvKonqi/releases/download/v1.1/KvKonqiDark.tar.gz" \
-  | tar -xz -C /usr/share/Kvantum/
+KVKONQI_URL=$(curl -s https://api.github.com/repos/Niru2169/KvKonqi/releases/latest \
+  | grep -o '"browser_download_url": "[^"]*KvKonqiDark\.tar\.gz"' \
+  | cut -d'"' -f4)
+curl -fL "$KVKONQI_URL" | tar -xz -C /usr/share/Kvantum/
 
 if flatpak --system remotes | awk '{print $1}' | grep -qx fedora; then
     flatpak --system remote-delete fedora --force
 fi
 
-# 1. Ziel-Verzeichnis im System erstellen
 mkdir -p /opt/jetbrains-toolbox
+JB_URL=$(curl -s "https://data.services.jetbrains.com/products/releases?code=TBA&latest=true&type=release" \
+  | grep -o 'https://download\.jetbrains\.com/toolbox/jetbrains-toolbox-[0-9.]*\.tar\.gz' \
+  | head -1)
+curl -fL "$JB_URL" | tar -xz --strip-components=1 -C /opt/jetbrains-toolbox/
+cp /ctx/bin/jetbrains-toolbox.desktop /opt/jetbrains-toolbox/
+cp /ctx/bin/toolbox-tray-color.png /opt/jetbrains-toolbox/
 
-# 2. Den kompletten Inhalt aus deinem lokalen ctx/bin dorthin kopieren
-cp -r /ctx/bin/* /opt/jetbrains-toolbox/
-
-# 3. Sicherstellen, dass das Teil ausführbar ist
 chmod +x /opt/jetbrains-toolbox/jetbrains-toolbox
 
-# 4. Symlink setzen, damit es global im Terminal verfügbar ist
 ln -sf /opt/jetbrains-toolbox/jetbrains-toolbox /usr/bin/jetbrains-toolbox
 
-# 5. Desktop-Icon für dein Startmenü einrichten
 cp /opt/jetbrains-toolbox/jetbrains-toolbox.desktop /usr/share/applications/
 sed -i 's|^Exec=.*|Exec=/opt/jetbrains-toolbox/jetbrains-toolbox|' /usr/share/applications/jetbrains-toolbox.desktop
 sed -i 's|^Icon=.*|Icon=/opt/jetbrains-toolbox/toolbox-tray-color.png|' /usr/share/applications/jetbrains-toolbox.desktop
