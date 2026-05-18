@@ -120,9 +120,11 @@ KVKONQI_URL=$(curl -s https://api.github.com/repos/Niru2169/KvKonqi/releases/lat
   | cut -d'"' -f4)
 curl -fL "$KVKONQI_URL" | tar -xz -C /usr/share/Kvantum/
 
-if flatpak --system remotes | awk '{print $1}' | grep -qx fedora; then
-    flatpak --system remote-delete fedora --force
-fi
+for remote in fedora flathub; do
+    if flatpak --system remotes | awk '{print $1}' | grep -qx "$remote"; then
+        flatpak --system remote-delete "$remote" --force
+    fi
+done
 
 mkdir -p /opt/jetbrains-toolbox
 JB_URL=$(curl -s "https://data.services.jetbrains.com/products/releases?code=TBA&latest=true&type=release" \
