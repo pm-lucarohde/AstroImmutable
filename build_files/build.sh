@@ -173,3 +173,4 @@ ln -sf /usr/lib/systemd/user/astroimmutable-firstlogin.service \
 dnf5 clean all -y
 
 systemctl enable podman.socket
+systemctl enable libvirtd
