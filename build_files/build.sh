@@ -96,7 +96,6 @@ dnf5 install -y \
 	steam\
 	eog\
 	gamemode\
-#	ghostty\
 	bleachbit\
 	wezterm\
 	wine\
