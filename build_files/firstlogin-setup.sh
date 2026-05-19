@@ -66,6 +66,7 @@ background-opacity = "0.8"
 background-blur = "true"
 window-width = "128"
 window-height = "32"
+gtk-single-instance = "false"
 EOF
 
 mkdir -p ~/.config/Kvantum
