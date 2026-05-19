@@ -139,10 +139,48 @@ else
   rm -f "$PROTON_DIR/$PROTON_FILE"
 fi
 
+FIREFOX_DIST="$HOME/.local/share/flatpak/app/org.mozilla.firefox/current/active/files/lib/firefox/distribution"
+mkdir -p "$FIREFOX_DIST"
+cat <<'JSON' > "$FIREFOX_DIST/policies.json"
+{
+  "policies": {
+    "Extensions": {
+      "Install": [
+        "https://addons.mozilla.org/firefox/downloads/latest/ublock-origin/latest.xpi",
+        "https://addons.mozilla.org/firefox/downloads/latest/return-youtube-dislikes/latest.xpi",
+        "https://addons.mozilla.org/firefox/downloads/latest/betterttv/latest.xpi",
+        "https://agrd.io/adguard_extra_firefox_beta"
+      ]
+    },
+    "ExtensionSettings": {
+      "uBlock0@raymondhill.net": {
+        "allowed_in_private_browsing": true
+      },
+      "{762f9885-5a13-4abd-9c77-433dcd38b8fd}": {
+        "allowed_in_private_browsing": true
+      },
+      "firefox@betterttv.net": {
+        "allowed_in_private_browsing": true
+      },
+      "adguardextra@adguard.com": {
+        "allowed_in_private_browsing": true
+      }
+    },
+    "EnableTrackingProtection": {
+      "Value": true,
+      "Category": "strict",
+      "BaselineExceptions": true,
+      "ConvenienceExceptions": false
+    }
+  }
+}
+JSON
+
 FF_DIR="$HOME/.var/app/org.mozilla.firefox/config/mozilla/firefox"
 mkdir -p "$FF_DIR/Standard.Profile"
 
 cp /usr/share/astroimmutable/user.js "$FF_DIR/Standard.Profile/user.js"
+cp /usr/share/astroimmutable/xulstore.json "$FF_DIR/Standard.Profile/xulstore.json"
 
 flatpak run org.mozilla.firefox --headless --no-remote &
 FF_PID=$!
