@@ -53,6 +53,11 @@ kwriteconfig6 --file kxkbrc --group Layout --key Use        true
 
 # KDE Standard-Terminal setzen
 kwriteconfig6 --file kdeglobals --group General --key TerminalService com.mitchellh.ghostty.desktop
+mkdir -p ~/.local/share/applications
+cp /usr/share/applications/com.mitchellh.ghostty.desktop ~/.local/share/applications/
+sed -i 's/^DBusActivatable=.*/DBusActivatable=false/' ~/.local/share/applications/com.mitchellh.ghostty.desktop
+sed -i 's|^Exec=ghostty$|Exec=ghostty --working-directory=%f|' ~/.local/share/applications/com.mitchellh.ghostty.desktop
+
 mkdir -p ~/.config/ghostty
 cat <<EOF > ~/.config/ghostty/config.ghostty
 theme = "Breeze"
@@ -61,7 +66,6 @@ background-opacity = "0.8"
 background-blur = "true"
 window-width = "128"
 window-height = "32"
-gtk-single-instance = "false"
 EOF
 
 mkdir -p ~/.config/Kvantum

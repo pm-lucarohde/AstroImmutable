@@ -168,6 +168,7 @@ EOF
 if [ -f /usr/share/applications/com.mitchellh.ghostty.desktop ]; then
     sed -i 's/^Name=.*/Name=Terminal/' /usr/share/applications/com.mitchellh.ghostty.desktop
     sed -i '/^Name\[/d' /usr/share/applications/com.mitchellh.ghostty.desktop
+    sed -i 's|^Exec=ghostty$|Exec=ghostty --working-directory=%f|' /usr/share/applications/com.mitchellh.ghostty.desktop
 fi
 
 # Ghostty Service Menu entfernen, um Dopplungen in Dolphin zu vermeiden
