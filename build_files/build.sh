@@ -27,6 +27,7 @@ done
 
 dnf5 copr enable -y scottames/ghostty
 dnf5 copr enable -y copr.fedorainfracloud.org/ublue-os/packages
+dnf5 copr enable -y wezfurlong/wezterm-nightly
 
 dnf5 config-manager setopt fedora-multimedia.priority=1
 dnf5 config-manager setopt fedora-steam.priority=10
@@ -95,11 +96,13 @@ dnf5 install -y \
 	steam\
 	eog\
 	gamemode\
-	ghostty\
+#	ghostty\
 	bleachbit\
+	wezterm\
 	wine\
 	lutris\
 	bazaar
+
 
 dnf5 remove -y fcitx5
 dnf5 remove -y --noautoremove \
