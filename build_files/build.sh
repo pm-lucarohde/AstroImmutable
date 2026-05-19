@@ -2,14 +2,18 @@
 
 set -ouex pipefail
 
-### Install packages
+mkdir -p /usr/lib/bootc/install
+cat <<'TOML' > /usr/lib/bootc/install/50-astroimmutable.toml
+[install]
+bootloader = "systemd-boot"
+TOML
 
-# Packages can be installed from any enabled yum repo on the image.
-# RPMfusion repos are available by default in ublue main images
-# List of rpmfusion packages can be found here:
-# https://mirrors.rpmfusion.org/mirrorlist?path=free/fedora/updates/43/x86_64/repoview/index.html&protocol=https&redirect=1
-
-# this installs a package from fedora repos
+mkdir -p /usr/lib/systemd/boot
+cat <<'LOADERCONF' > /usr/lib/systemd/boot/loader.conf
+timeout menu-hidden
+console-mode auto
+editor no
+LOADERCONF
 
 dnf5 install -y \
   https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm
@@ -100,7 +104,6 @@ dnf5 install -y \
 	wine\
 	lutris\
 	bazaar
-
 
 dnf5 remove -y fcitx5
 dnf5 remove -y --noautoremove \
