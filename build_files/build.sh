@@ -174,6 +174,22 @@ fi
 # Ghostty Service Menu entfernen, um Dopplungen in Dolphin zu vermeiden
 rm -f /usr/share/kio/servicemenus/com.mitchellh.ghostty.desktop
 
+mkdir -p /etc/firefox/policies
+cat <<'JSON' > /etc/firefox/policies/policies.json
+{
+  "policies": {
+    "Extensions": {
+      "Install": [
+        "https://addons.mozilla.org/firefox/downloads/latest/ublock-origin/latest.xpi",
+        "https://addons.mozilla.org/firefox/downloads/latest/return-youtube-dislikes/latest.xpi",
+        "https://addons.mozilla.org/firefox/downloads/latest/betterttv/latest.xpi",
+        "https://agrd.io/adguard_extra_firefox_beta"
+      ]
+    }
+  }
+}
+JSON
+
 # Kopiert die user.js aus deinem Repo fest ins System-Image
 mkdir -p /usr/share/astroimmutable
 install -Dm644 /ctx/user.js /usr/share/astroimmutable/user.js

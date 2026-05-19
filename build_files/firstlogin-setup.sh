@@ -79,6 +79,12 @@ EOF
 
 kwriteconfig6 --file kdeglobals --group KDE --key widgetStyle kvantum-dark
 
+for remote in fedora flathub; do
+    if flatpak --system remotes | awk '{print $1}' | grep -qx "$remote"; then
+        sudo flatpak --system remote-delete "$remote" --force
+    fi
+done
+
 flatpak config --user --set languages "de;en"
 flatpak remote-add --if-not-exists --user flathub https://flathub.org/repo/flathub.flatpakrepo
 
@@ -134,18 +140,9 @@ else
 fi
 
 FF_DIR="$HOME/.var/app/org.mozilla.firefox/config/mozilla/firefox"
-mkdir -p "$FF_DIR/Standard.Profile/extensions"
+mkdir -p "$FF_DIR/Standard.Profile"
 
 cp /usr/share/astroimmutable/user.js "$FF_DIR/Standard.Profile/user.js"
-
-curl -fL "https://addons.mozilla.org/firefox/downloads/latest/ublock-origin/latest.xpi" \
-    -o "$FF_DIR/Standard.Profile/extensions/uBlock0@raymondhill.net.xpi"
-curl -fL "https://addons.mozilla.org/firefox/downloads/latest/return-youtube-dislikes/latest.xpi" \
-    -o "$FF_DIR/Standard.Profile/extensions/{762f9885-5a13-4abd-9c77-433dcd38b8fd}.xpi"
-curl -fL "https://addons.mozilla.org/firefox/downloads/latest/betterttv/latest.xpi" \
-    -o "$FF_DIR/Standard.Profile/extensions/firefox@betterttv.net.xpi"
-curl -fL "https://agrd.io/adguard_extra_firefox_beta" \
-    -o "$FF_DIR/Standard.Profile/extensions/adguardextra@adguard.com.xpi"
 
 flatpak run org.mozilla.firefox --headless --no-remote &
 FF_PID=$!
