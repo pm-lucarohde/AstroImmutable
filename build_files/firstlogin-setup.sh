@@ -171,6 +171,39 @@ cat <<'JSON' > "$FIREFOX_DIST/policies.json"
       "Category": "strict",
       "BaselineExceptions": true,
       "ConvenienceExceptions": false
+    },
+    "3rdparty": {
+      "Extensions": {
+        "uBlock0@raymondhill.net": {
+          "userSettings": [
+            ["advancedUserEnabled", "true"]
+          ],
+          "toOverwrite": {
+            "filterLists": [
+              "ublock-filters",
+              "ublock-badware",
+              "ublock-privacy",
+              "ublock-unbreak",
+              "ublock-quick-fixes",
+              "easylist",
+              "adguard-generic",
+              "easyprivacy",
+              "adguard-spyware-url",
+              "urlhaus-1",
+              "plowe-0",
+              "fanboy-cookiemonster",
+              "ublock-cookies-easylist",
+              "fanboy-social",
+              "easylist-annoyances",
+              "easylist-chat",
+              "fanboy-ai-suggestions",
+              "easylist-newsletters",
+              "easylist-notifications",
+              "ublock-annoyances"
+            ]
+          }
+        }
+      }
     }
   }
 }
