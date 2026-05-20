@@ -97,6 +97,8 @@ build $target_image=image_name $tag=default_tag:
     podman build \
         "${BUILD_ARGS[@]}" \
         --pull=newer \
+        --retry 3 \
+        --retry-delay 30s \
         --tag "${target_image}:${tag}" \
         .
 
