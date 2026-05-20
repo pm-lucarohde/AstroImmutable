@@ -2,14 +2,18 @@
 
 set -ouex pipefail
 
-_dnf5_install() {
+_retry() {
     local attempt
     for attempt in 1 2 3; do
-        dnf5 install -y "$@" && return 0
-        echo "dnf5 install attempt ${attempt}/3 failed, retrying in 30s..."
+        "$@" && return 0
+        echo "Command failed (attempt ${attempt}/3), retrying in 30s..."
         sleep 30
     done
     return 1
+}
+
+_dnf5_install() {
+    _retry dnf5 install -y "$@"
 }
 
 mkdir -p /usr/lib/systemd/boot
@@ -29,12 +33,12 @@ for repo_url in \
     "https://negativo17.org/repos/fedora-steam.repo"; do
     repo_id=$(basename "$repo_url" .repo)
     if ! ls /etc/yum.repos.d/ | grep -q "$repo_id"; then
-        dnf5 config-manager addrepo --from-repofile="$repo_url"
+        _retry dnf5 config-manager addrepo --from-repofile="$repo_url"
     fi
 done
 
-dnf5 copr enable -y scottames/ghostty
-dnf5 copr enable -y copr.fedorainfracloud.org/ublue-os/packages
+_retry dnf5 copr enable -y scottames/ghostty
+_retry dnf5 copr enable -y copr.fedorainfracloud.org/ublue-os/packages
 
 dnf5 config-manager setopt fedora-multimedia.priority=1
 dnf5 config-manager setopt fedora-steam.priority=10
@@ -42,7 +46,6 @@ dnf5 config-manager setopt fedora-steam.priority=10
 dnf5 remove -y firefox
 dnf5 remove -y kwrite
 dnf5 remove -y kate
-dnf5 remove -y konsole
 dnf5 remove -y plasma-login-manager
 dnf5 remove -y sddm
 dnf5 remove -y filelight
@@ -116,10 +119,10 @@ dosbox \
 kcharselect
 
 mkdir -p /usr/share/Kvantum
-KVKONQI_URL=$(curl -s https://api.github.com/repos/Niru2169/KvKonqi/releases/latest \
+KVKONQI_URL=$(curl -s --retry 3 --retry-delay 30 https://api.github.com/repos/Niru2169/KvKonqi/releases/latest \
   | grep -o '"browser_download_url": "[^"]*KvKonqiDark\.tar\.gz"' \
   | cut -d'"' -f4)
-curl -fL "$KVKONQI_URL" | tar -xz -C /usr/share/Kvantum/
+curl -fL --retry 3 --retry-delay 30 "$KVKONQI_URL" | tar -xz -C /usr/share/Kvantum/
 
 for remote in fedora flathub; do
     if flatpak --system remotes | awk '{print $1}' | grep -qx "$remote"; then
@@ -128,14 +131,14 @@ for remote in fedora flathub; do
 done
 
 mkdir -p /opt/jetbrains-toolbox
-JB_URL=$(curl -s "https://data.services.jetbrains.com/products/releases?code=TBA&latest=true&type=release" \
+JB_URL=$(curl -s --retry 3 --retry-delay 30 "https://data.services.jetbrains.com/products/releases?code=TBA&latest=true&type=release" \
   | grep -o '"link":"https://download\.jetbrains\.com/toolbox/jetbrains-toolbox-[0-9.]*\.tar\.gz"' \
   | head -1 \
   | grep -o 'https://[^"]*' || true)
 if [ -z "$JB_URL" ]; then
   echo "WARNING: Could not fetch JetBrains Toolbox URL, skipping"
 else
-  curl -fL "$JB_URL" | tar -xz --strip-components=1 -C /opt/jetbrains-toolbox/
+  curl -fL --retry 3 --retry-delay 30 "$JB_URL" | tar -xz --strip-components=1 -C /opt/jetbrains-toolbox/
   cp /ctx/bin/jetbrains-toolbox.desktop /opt/jetbrains-toolbox/
   cp /ctx/bin/toolbox-tray-color.png /opt/jetbrains-toolbox/
 
@@ -153,7 +156,7 @@ install -m755 /ctx/notepadnext /usr/bin/notepadnext
 chmod +x /usr/bin/notepadnext
 
 mkdir -p /usr/share/icons/hicolor/512x512/apps
-curl -fL "https://raw.githubusercontent.com/dail8859/NotepadNext/master/src/icons/NotepadNext.png" -o /usr/share/icons/hicolor/512x512/apps/notepadnext.png
+curl -fL --retry 3 --retry-delay 30 "https://raw.githubusercontent.com/dail8859/NotepadNext/master/src/icons/NotepadNext.png" -o /usr/share/icons/hicolor/512x512/apps/notepadnext.png
 gtk-update-icon-cache /usr/share/icons/hicolor
 
 cat <<EOF > /usr/share/applications/notepadnext.desktop
