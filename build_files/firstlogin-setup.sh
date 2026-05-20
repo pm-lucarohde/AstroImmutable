@@ -79,29 +79,23 @@ EOF
 
 kwriteconfig6 --file kdeglobals --group KDE --key widgetStyle kvantum-dark
 
-for remote in fedora flathub; do
-    if flatpak --system remotes | awk '{print $1}' | grep -qx "$remote"; then
-        sudo flatpak --system remote-delete "$remote" --force
-    fi
-done
-
 flatpak config --user --set languages "de;en"
 flatpak remote-add --if-not-exists --user flathub https://flathub.org/repo/flathub.flatpakrepo
 
-if [ ! -d "$HOME/.sdkman" ]; then
-    curl -s "https://get.sdkman.io" | bash
-fi
-set +euo pipefail
-source "$HOME/.sdkman/bin/sdkman-init.sh"
-sdk install java 25.0.2-graalce
-echo "n" | sdk install java 21.0.2-graalce
-sdk default java 25.0.2-graalce
-set -euo pipefail
+_flatpak_install() {
+    local attempt
+    for attempt in 1 2 3; do
+        flatpak install --user -y "$@" && return 0
+        echo "Flatpak install attempt ${attempt}/3 failed, retrying in 30s..."
+        sleep 30
+    done
+    return 1
+}
 
-flatpak install --user -y \
+_flatpak_install \
+            org.mozilla.firefox \
             com.ktechpit.whatsie \
             org.mozilla.Thunderbird \
-            org.mozilla.firefox \
             org.qbittorrent.qBittorrent \
             org.prismlauncher.PrismLauncher \
             net.blockbench.Blockbench \
@@ -116,6 +110,7 @@ flatpak install --user -y \
             org.torproject.torbrowser-launcher \
             com.spotify.Client \
 			com.obsproject.Studio \
+			org.gnome.eog \
 			net.davidotek.pupgui2 \
 			org.kde.kcalc \
 			org.fedoraproject.MediaWriter
@@ -255,6 +250,16 @@ EOF
 # Erstellt die Box und installiert CurseForge im Hintergrund
 distrobox create --yes --image ubuntu:26.04 --name ubuntu --nvidia
 distrobox enter ubuntu -- bash -c 'sudo apt update && sudo apt upgrade -y && sudo apt install -y libasound2t64 && curl -fL "https://curseforge.overwolf.com/downloads/curseforge-latest-linux.deb" -o ~/curseforge.deb && sudo apt install -y ~/curseforge.deb && rm -f ~/curseforge.deb && distrobox-export --app curseforge'
+
+if [ ! -d "$HOME/.sdkman" ]; then
+    curl -s "https://get.sdkman.io" | bash
+fi
+set +euo pipefail
+source "$HOME/.sdkman/bin/sdkman-init.sh"
+sdk install java 25.0.2-graalce
+echo "n" | sdk install java 21.0.2-graalce
+sdk default java 25.0.2-graalce
+set -euo pipefail
 
 # Status-Datei anlegen, damit es beim nächsten Login übersprungen wird
 touch "$STATE_FILE"

@@ -2,12 +2,6 @@
 
 set -ouex pipefail
 
-mkdir -p /usr/lib/bootc/install
-cat <<'TOML' > /usr/lib/bootc/install/50-astroimmutable.toml
-[install]
-bootloader = "systemd-boot"
-TOML
-
 mkdir -p /usr/lib/systemd/boot
 cat <<'LOADERCONF' > /usr/lib/systemd/boot/loader.conf
 timeout menu-hidden
@@ -98,7 +92,6 @@ dnf5 install -y \
 	fastfetch\
 	steam\
 	ghostty\
-	eog\
 	gamemode\
 	bleachbit\
 	wine\
