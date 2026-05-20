@@ -2,6 +2,16 @@
 
 set -ouex pipefail
 
+_dnf5_install() {
+    local attempt
+    for attempt in 1 2 3; do
+        dnf5 install -y "$@" && return 0
+        echo "dnf5 install attempt ${attempt}/3 failed, retrying in 30s..."
+        sleep 30
+    done
+    return 1
+}
+
 mkdir -p /usr/lib/systemd/boot
 cat <<'LOADERCONF' > /usr/lib/systemd/boot/loader.conf
 timeout menu-hidden
@@ -9,9 +19,9 @@ console-mode auto
 editor no
 LOADERCONF
 
-dnf5 install -y \
+_dnf5_install \
   https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm
-dnf5 install -y \
+_dnf5_install \
   https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
 
 for repo_url in \
@@ -37,7 +47,7 @@ dnf5 remove -y plasma-login-manager
 dnf5 remove -y sddm
 dnf5 remove -y filelight
 dnf5 remove -y plasma-discover
-dnf5 install -y cosmic-greeter
+_dnf5_install cosmic-greeter
 dnf5 remove -y --noautoremove \
   cosmic-session \
   cosmic-files \
@@ -71,7 +81,7 @@ dnf5 remove -y --noautoremove \
 
 systemctl enable cosmic-greeter.service
 
-dnf5 install -y \
+_dnf5_install \
 	--exclude=wine-core.i686 \
 	git\
 	htop\
