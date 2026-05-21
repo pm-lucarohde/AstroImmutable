@@ -97,6 +97,8 @@ _dnf5_install \
 	kvantum\
 	xdg-desktop-portal-kde\
 	xdg-desktop-portal-gtk\
+	akmod-xone.x86_64\
+	kmod-xone.x86_64\
 	docker\
 	distrobox\
 	vlc\
