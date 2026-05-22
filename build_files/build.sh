@@ -16,13 +16,6 @@ _dnf5_install() {
     _retry dnf5 install -y "$@"
 }
 
-mkdir -p /boot/loader
-cat <<'LOADERCONF' > /boot/loader/loader.conf
-timeout menu-hidden
-console-mode auto
-editor no
-LOADERCONF
-
 _dnf5_install \
   https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm
 _dnf5_install \
@@ -99,7 +92,6 @@ _dnf5_install \
 	xdg-desktop-portal-gtk\
 	akmod-xone.x86_64\
 	kmod-xone.x86_64\
-	systemd-boot-unsigned\
 	docker\
 	distrobox\
 	vlc\

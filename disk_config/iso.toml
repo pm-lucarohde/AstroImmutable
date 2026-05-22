@@ -1,6 +1,5 @@
 [customizations.installer.kickstart]
 contents = """
-bootloader --sdboot
 autopart --type=btrfs
 
 %post --erroronfail
