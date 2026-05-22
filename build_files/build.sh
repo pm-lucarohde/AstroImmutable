@@ -16,8 +16,8 @@ _dnf5_install() {
     _retry dnf5 install -y "$@"
 }
 
-mkdir -p /usr/lib/systemd/boot
-cat <<'LOADERCONF' > /usr/lib/systemd/boot/loader.conf
+mkdir -p /boot/loader
+cat <<'LOADERCONF' > /boot/loader/loader.conf
 timeout menu-hidden
 console-mode auto
 editor no
@@ -99,6 +99,7 @@ _dnf5_install \
 	xdg-desktop-portal-gtk\
 	akmod-xone.x86_64\
 	kmod-xone.x86_64\
+	systemd-boot-unsigned\
 	docker\
 	distrobox\
 	vlc\
