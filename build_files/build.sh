@@ -16,13 +16,6 @@ _dnf5_install() {
     _retry dnf5 install -y "$@"
 }
 
-mkdir -p /usr/lib/systemd/boot
-cat <<'LOADERCONF' > /usr/lib/systemd/boot/loader.conf
-timeout menu-hidden
-console-mode auto
-editor no
-LOADERCONF
-
 _dnf5_install \
   https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm
 _dnf5_install \
