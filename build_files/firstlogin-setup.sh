@@ -80,6 +80,17 @@ EOF
 
 kwriteconfig6 --file kdeglobals --group KDE --key widgetStyle kvantum-dark
 
+DESKTOP_DIR="$(xdg-user-dir DESKTOP)"
+mkdir -p "$DESKTOP_DIR"
+cat <<'EOF' > "$DESKTOP_DIR/trash:⁄.desktop"
+[Desktop Entry]
+EmptyIcon=user-trash
+Icon=user-trash-full
+Name=Papierkorb
+Type=Link
+URL[$e]=trash:/
+EOF
+
 flatpak config --user --set languages "de;en"
 flatpak remote-add --if-not-exists --user flathub https://flathub.org/repo/flathub.flatpakrepo
 
