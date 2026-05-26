@@ -59,6 +59,7 @@ mkdir -p ~/.local/share/applications
 cp /usr/share/applications/com.mitchellh.ghostty.desktop ~/.local/share/applications/
 sed -i 's/^DBusActivatable=.*/DBusActivatable=false/' ~/.local/share/applications/com.mitchellh.ghostty.desktop
 sed -i 's|^Exec=ghostty$|Exec=ghostty --working-directory=%f|' ~/.local/share/applications/com.mitchellh.ghostty.desktop
+sed -i 's/--gtk-single-instance=true/--gtk-single-instance=false/g' ~/.local/share/applications/com.mitchellh.ghostty.desktop
 
 mkdir -p ~/.config/ghostty
 cat <<EOF > ~/.config/ghostty/config.ghostty
@@ -111,6 +112,7 @@ _flatpak_install \
             com.spotify.Client \
 			com.obsproject.Studio \
 			org.gnome.eog \
+			org.gnome.Boxes \
 			net.davidotek.pupgui2 \
 			org.kde.kcalc \
 			org.fedoraproject.MediaWriter
