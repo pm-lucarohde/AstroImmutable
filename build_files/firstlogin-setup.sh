@@ -201,6 +201,48 @@ cat <<'JSON' > "$FIREFOX_DIST/policies.json"
           }
         }
       }
+    },
+    "RequestedLocales": ["en-US"],
+    "FirefoxHome": {
+      "Search": true,
+      "TopSites": false,
+      "SponsoredTopSites": false,
+      "Highlights": false,
+      "Pocket": false,
+      "SponsoredPocket": false,
+      "Snippets": false,
+      "Locked": false
+    },
+    "SearchEngines": {
+      "Default": "DuckDuckGo"
+    },
+    "HttpsOnlyMode": "enabled",
+    "DNSOverHTTPS": {
+      "Enabled": true,
+      "ProviderURL": "https://mozilla.cloudflare-dns.com/dns-query",
+      "Fallback": false,
+      "Locked": false
+    },
+    "Preferences": {
+      "browser.link.open_newwindow": {"Value": 3, "Status": "default"},
+      "layout.spellcheckDefault": {"Value": 0, "Status": "default"},
+      "media.eme.enabled": {"Value": true, "Status": "default"},
+      "browser.preferences.defaultPerformanceSettings.enabled": {"Value": true, "Status": "default"},
+      "browser.urlbar.showSearchTerms.enabled": {"Value": false, "Status": "default"},
+      "browser.search.separatePrivateDefault": {"Value": false, "Status": "default"},
+      "browser.urlbar.suggest.bookmark": {"Value": false, "Status": "default"},
+      "browser.urlbar.suggest.openpage": {"Value": false, "Status": "default"},
+      "browser.urlbar.suggest.topsites": {"Value": false, "Status": "default"},
+      "browser.urlbar.suggest.searches": {"Value": false, "Status": "default"},
+      "browser.urlbar.suggest.engines": {"Value": false, "Status": "default"},
+      "browser.urlbar.shortcuts.bookmarks": {"Value": false, "Status": "default"},
+      "browser.urlbar.shortcuts.tabs": {"Value": false, "Status": "default"},
+      "browser.urlbar.shortcuts.history": {"Value": false, "Status": "default"},
+      "browser.urlbar.quickactions.enabled": {"Value": false, "Status": "default"},
+      "browser.safebrowsing.malware.enabled": {"Value": false, "Status": "default"},
+      "browser.safebrowsing.phishing.enabled": {"Value": false, "Status": "default"},
+      "browser.safebrowsing.blockedURIs.enabled": {"Value": false, "Status": "default"},
+      "browser.safebrowsing.downloads.enabled": {"Value": false, "Status": "default"}
     }
   }
 }
