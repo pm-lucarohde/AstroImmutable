@@ -13,17 +13,6 @@ mkdir -p "${STATE_DIR}"
 
 # Standard-Apps konfigurieren
 mkdir -p ~/.local/share/applications
-cat <<'EOF' > ~/.local/share/applications/google-maps.desktop
-[Desktop Entry]
-Name=Google Maps
-Exec=xdg-open "https://maps.google.com/maps?q=%u"
-Icon=internet-web-browser
-Type=Application
-MimeType=x-scheme-handler/geo;
-NoDisplay=true
-Terminal=false
-EOF
-
 mkdir -p ~/.config
 cat <<'EOF' > ~/.config/mimeapps.list
 [Default Applications]
@@ -35,7 +24,6 @@ application/xhtml+xml=org.mozilla.firefox.desktop
 x-scheme-handler/mailto=org.mozilla.firefox.desktop
 x-scheme-handler/tel=org.kde.kdeconnect.handler.desktop
 x-scheme-handler/callto=org.kde.kdeconnect.handler.desktop
-x-scheme-handler/geo=google-maps.desktop
 image/jpeg=org.gnome.eog.desktop
 image/png=org.gnome.eog.desktop
 image/gif=org.gnome.eog.desktop
