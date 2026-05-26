@@ -11,6 +11,76 @@ fi
 
 mkdir -p "${STATE_DIR}"
 
+# Standard-Apps konfigurieren
+mkdir -p ~/.local/share/applications
+cat <<'EOF' > ~/.local/share/applications/google-maps.desktop
+[Desktop Entry]
+Name=Google Maps
+Exec=xdg-open "https://maps.google.com/maps?q=%u"
+Icon=internet-web-browser
+Type=Application
+MimeType=x-scheme-handler/geo;
+NoDisplay=true
+Terminal=false
+EOF
+
+mkdir -p ~/.config
+cat <<'EOF' > ~/.config/mimeapps.list
+[Default Applications]
+x-scheme-handler/http=org.mozilla.firefox.desktop
+x-scheme-handler/https=org.mozilla.firefox.desktop
+x-scheme-handler/ftp=org.mozilla.firefox.desktop
+text/html=org.mozilla.firefox.desktop
+application/xhtml+xml=org.mozilla.firefox.desktop
+x-scheme-handler/mailto=org.mozilla.firefox.desktop
+x-scheme-handler/tel=org.kde.kdeconnect.handler.desktop
+x-scheme-handler/callto=org.kde.kdeconnect.handler.desktop
+x-scheme-handler/geo=google-maps.desktop
+image/jpeg=org.gnome.eog.desktop
+image/png=org.gnome.eog.desktop
+image/gif=org.gnome.eog.desktop
+image/webp=org.gnome.eog.desktop
+image/bmp=org.gnome.eog.desktop
+image/tiff=org.gnome.eog.desktop
+image/svg+xml=org.gnome.eog.desktop
+image/heic=org.gnome.eog.desktop
+image/heif=org.gnome.eog.desktop
+image/avif=org.gnome.eog.desktop
+audio/mpeg=vlc.desktop
+audio/ogg=vlc.desktop
+audio/flac=vlc.desktop
+audio/x-flac=vlc.desktop
+audio/x-wav=vlc.desktop
+audio/mp4=vlc.desktop
+audio/x-m4a=vlc.desktop
+audio/aac=vlc.desktop
+audio/vorbis=vlc.desktop
+video/mp4=vlc.desktop
+video/x-matroska=vlc.desktop
+video/webm=vlc.desktop
+video/mpeg=vlc.desktop
+video/x-msvideo=vlc.desktop
+video/quicktime=vlc.desktop
+video/x-flv=vlc.desktop
+video/3gpp=vlc.desktop
+video/ogg=vlc.desktop
+text/plain=notepadnext.desktop
+application/pdf=org.mozilla.firefox.desktop
+inode/directory=org.kde.dolphin.desktop
+application/zip=org.kde.ark.desktop
+application/x-tar=org.kde.ark.desktop
+application/gzip=org.kde.ark.desktop
+application/x-gzip=org.kde.ark.desktop
+application/x-bzip2=org.kde.ark.desktop
+application/x-7z-compressed=org.kde.ark.desktop
+application/x-rar=org.kde.ark.desktop
+application/x-rar-compressed=org.kde.ark.desktop
+application/x-xz=org.kde.ark.desktop
+application/x-xz-compressed-tar=org.kde.ark.desktop
+application/zstd=org.kde.ark.desktop
+application/x-zstd-compressed-tar=org.kde.ark.desktop
+EOF
+
 # Region erkennen und Locale + Tastaturlayout automatisch setzen
 COUNTRY=$(curl -sf --max-time 5 "https://ipapi.co/country/" 2>/dev/null | tr -d '[:space:]' || true)
 if [ -n "$COUNTRY" ]; then
