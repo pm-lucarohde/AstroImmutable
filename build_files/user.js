@@ -218,8 +218,9 @@ user_pref("layout.word_select.eat_space_to_next_word", false);
  * START: MY OVERRIDES                                                      *
 ****************************************************************************/
 
-
-
+user_pref("browser.uiCustomization.state", "{\"placements\":{\"widget-overflow-fixed-list\":[],\"unified-extensions-area\":[\"_762f9885-5a13-4abd-9c77-433dcd38b8fd_-browser-action\",\"adguard-extra-beta_adguard_com-browser-action\"],\"nav-bar\":[\"back-button\",\"forward-button\",\"vertical-spacer\",\"stop-reload-button\",\"home-button\",\"urlbar-container\",\"downloads-button\",\"reset-pbm-toolbar-button\",\"ublock0_raymondhill_net-browser-action\",\"unified-extensions-button\"],\"toolbar-menubar\":[\"menubar-items\"],\"TabsToolbar\":[\"tabbrowser-tabs\",\"new-tab-button\"],\"vertical-tabs\":[],\"PersonalToolbar\":[\"import-button\",\"personal-bookmarks\"]},\"seen\":[\"reset-pbm-toolbar-button\",\"developer-button\",\"screenshot-button\",\"_762f9885-5a13-4abd-9c77-433dcd38b8fd_-browser-action\",\"ublock0_raymondhill_net-browser-action\",\"adguard-extra-beta_adguard_com-browser-action\"],\"dirtyAreaCache\":[\"nav-bar\",\"vertical-tabs\",\"toolbar-menubar\",\"TabsToolbar\",\"PersonalToolbar\",\"unified-extensions-area\"],\"currentVersion\":24,\"newElementCount\":3}");
+user_pref("browser.uidensity", 1);
+user_pref("browser.toolbars.bookmarks.visibility", "never");
 
 /****************************************************************************
  * SECTION: SMOOTHFOX                                                       *

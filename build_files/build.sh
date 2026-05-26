@@ -179,7 +179,6 @@ rm -f /usr/share/kio/servicemenus/com.mitchellh.ghostty.desktop
 # Kopiert die user.js aus deinem Repo fest ins System-Image
 mkdir -p /usr/share/astroimmutable
 install -Dm644 /ctx/user.js /usr/share/astroimmutable/user.js
-install -Dm644 /ctx/xulstore.json /usr/share/astroimmutable/xulstore.json
 
 mkdir -p /usr/libexec/astroimmutable
 install -m755 /ctx/firstlogin-setup.sh /usr/libexec/astroimmutable/firstlogin-setup.sh

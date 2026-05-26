@@ -210,7 +210,6 @@ FF_DIR="$HOME/.var/app/org.mozilla.firefox/config/mozilla/firefox"
 mkdir -p "$FF_DIR/Standard.Profile"
 
 cp /usr/share/astroimmutable/user.js "$FF_DIR/Standard.Profile/user.js"
-cp /usr/share/astroimmutable/xulstore.json "$FF_DIR/Standard.Profile/xulstore.json"
 
 flatpak run org.mozilla.firefox --headless --no-remote &
 FF_PID=$!
