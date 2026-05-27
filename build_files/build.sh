@@ -105,7 +105,7 @@ _dnf5_install \
 	bazaar
 
 _retry dnf5 download --destdir=/tmp/xone akmod-xone.x86_64 kmod-xone.x86_64 kmodtool xone-kmod-common
-rpm -ivh --nodeps /tmp/xone/*.rpm
+find /tmp/xone -name "*.rpm" ! -name "*.src.rpm" | xargs rpm -ivh --nodeps
 
 dnf5 remove -y fcitx5
 dnf5 remove -y --noautoremove \
