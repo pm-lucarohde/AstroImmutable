@@ -102,6 +102,7 @@ _dnf5_install \
 	bleachbit\
 	wine\
 	lutris\
+	spotify\
 	bazaar
 
 _retry dnf5 download --destdir=/tmp/xone akmod-xone.x86_64 kmod-xone.x86_64 kmodtool xone-kmod-common

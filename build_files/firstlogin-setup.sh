@@ -9,65 +9,17 @@ if [ -f "$STATE_FILE" ]; then
     exit 0
 fi
 
+# Warten bis Plasmashell auf DBus antwortet (max 60s)
+for i in $(seq 1 60); do
+    dbus-send --session --dest=org.kde.plasmashell --print-reply \
+      /PlasmaShell org.freedesktop.DBus.Peer.Ping &>/dev/null && break
+    sleep 1
+done
+
 mkdir -p "${STATE_DIR}"
 
-# Standard-Apps konfigurieren
-mkdir -p ~/.local/share/applications
-mkdir -p ~/.config
-cat <<'EOF' > ~/.config/mimeapps.list
-[Default Applications]
-x-scheme-handler/http=org.mozilla.firefox.desktop
-x-scheme-handler/https=org.mozilla.firefox.desktop
-x-scheme-handler/ftp=org.mozilla.firefox.desktop
-text/html=org.mozilla.firefox.desktop
-application/xhtml+xml=org.mozilla.firefox.desktop
-x-scheme-handler/mailto=org.mozilla.thunderbird_esr.desktop
-x-scheme-handler/tel=org.kde.kdeconnect.handler.desktop
-x-scheme-handler/callto=org.kde.kdeconnect.handler.desktop
-image/jpeg=org.gnome.eog.desktop
-image/png=org.gnome.eog.desktop
-image/gif=org.gnome.eog.desktop
-image/webp=org.gnome.eog.desktop
-image/bmp=org.gnome.eog.desktop
-image/tiff=org.gnome.eog.desktop
-image/svg+xml=org.gnome.eog.desktop
-image/heic=org.gnome.eog.desktop
-image/heif=org.gnome.eog.desktop
-image/avif=org.gnome.eog.desktop
-audio/mpeg=vlc.desktop
-audio/ogg=vlc.desktop
-audio/flac=vlc.desktop
-audio/x-flac=vlc.desktop
-audio/x-wav=vlc.desktop
-audio/mp4=vlc.desktop
-audio/x-m4a=vlc.desktop
-audio/aac=vlc.desktop
-audio/vorbis=vlc.desktop
-video/mp4=vlc.desktop
-video/x-matroska=vlc.desktop
-video/webm=vlc.desktop
-video/mpeg=vlc.desktop
-video/x-msvideo=vlc.desktop
-video/quicktime=vlc.desktop
-video/x-flv=vlc.desktop
-video/3gpp=vlc.desktop
-video/ogg=vlc.desktop
-text/plain=notepadnext.desktop
-application/pdf=org.mozilla.firefox.desktop
-inode/directory=org.kde.dolphin.desktop
-application/zip=org.kde.ark.desktop
-application/x-tar=org.kde.ark.desktop
-application/gzip=org.kde.ark.desktop
-application/x-gzip=org.kde.ark.desktop
-application/x-bzip2=org.kde.ark.desktop
-application/x-7z-compressed=org.kde.ark.desktop
-application/x-rar=org.kde.ark.desktop
-application/x-rar-compressed=org.kde.ark.desktop
-application/x-xz=org.kde.ark.desktop
-application/x-xz-compressed-tar=org.kde.ark.desktop
-application/zstd=org.kde.ark.desktop
-application/x-zstd-compressed-tar=org.kde.ark.desktop
-EOF
+# Wallpaper live setzen
+plasma-apply-wallpaperimage /usr/share/astroimmutable/wallpaper/mars.jpg || true
 
 # Profilbild setzen
 cp /usr/share/astroimmutable/avatar/katzenhai.png ~/.face.icon
@@ -77,7 +29,7 @@ chmod 644 ~/.face.icon
 KDE_CFG_SRC="/usr/share/astroimmutable/config"
 if [ -d "$KDE_CFG_SRC" ]; then
     mkdir -p ~/.config/KDE ~/.config/kdedefaults
-    for f in kdeglobals plasmarc plasmashellrc plasma-org.kde.plasma.desktop-appletsrc \
+    for f in kdeglobals plasmarc plasmashellrc \
               kwinrc kscreenlockerrc powerdevilrc powermanagementprofilesrc kcminputrc \
               kglobalshortcutsrc ksplashrc baloofilerc kwalletrc kwinoutputconfig.json; do
         [ -f "$KDE_CFG_SRC/$f" ] && cp "$KDE_CFG_SRC/$f" ~/.config/"$f"
@@ -195,7 +147,6 @@ _flatpak_install \
             io.github.ryubing.Ryujinx \
             org.telegram.desktop \
             org.torproject.torbrowser-launcher \
-            com.spotify.Client \
 			com.obsproject.Studio \
 			org.gnome.eog \
 			org.gnome.Boxes \
@@ -208,6 +159,85 @@ if ! flatpak info --user com.hypixel.HytaleLauncher &>/dev/null; then
     flatpak install --user -y /tmp/hytale.flatpak
     rm -f /tmp/hytale.flatpak
 fi
+
+# Standard-Apps konfigurieren
+mkdir -p ~/.local/share/applications
+mkdir -p ~/.config
+cat <<'EOF' > ~/.config/mimeapps.list
+[Default Applications]
+x-scheme-handler/http=org.mozilla.firefox.desktop
+x-scheme-handler/https=org.mozilla.firefox.desktop
+x-scheme-handler/ftp=org.mozilla.firefox.desktop
+text/html=org.mozilla.firefox.desktop
+application/xhtml+xml=org.mozilla.firefox.desktop
+x-scheme-handler/mailto=org.mozilla.thunderbird_esr.desktop
+x-scheme-handler/tel=org.kde.kdeconnect.handler.desktop
+x-scheme-handler/callto=org.kde.kdeconnect.handler.desktop
+image/jpeg=org.gnome.eog.desktop
+image/png=org.gnome.eog.desktop
+image/gif=org.gnome.eog.desktop
+image/webp=org.gnome.eog.desktop
+image/bmp=org.gnome.eog.desktop
+image/tiff=org.gnome.eog.desktop
+image/svg+xml=org.gnome.eog.desktop
+image/heic=org.gnome.eog.desktop
+image/heif=org.gnome.eog.desktop
+image/avif=org.gnome.eog.desktop
+audio/mpeg=vlc.desktop
+audio/ogg=vlc.desktop
+audio/flac=vlc.desktop
+audio/x-flac=vlc.desktop
+audio/x-wav=vlc.desktop
+audio/mp4=vlc.desktop
+audio/x-m4a=vlc.desktop
+audio/aac=vlc.desktop
+audio/vorbis=vlc.desktop
+video/mp4=vlc.desktop
+video/x-matroska=vlc.desktop
+video/webm=vlc.desktop
+video/mpeg=vlc.desktop
+video/x-msvideo=vlc.desktop
+video/quicktime=vlc.desktop
+video/x-flv=vlc.desktop
+video/3gpp=vlc.desktop
+video/ogg=vlc.desktop
+text/plain=notepadnext.desktop
+application/pdf=org.mozilla.firefox.desktop
+inode/directory=org.kde.dolphin.desktop
+application/zip=org.kde.ark.desktop
+application/x-tar=org.kde.ark.desktop
+application/gzip=org.kde.ark.desktop
+application/x-gzip=org.kde.ark.desktop
+application/x-bzip2=org.kde.ark.desktop
+application/x-7z-compressed=org.kde.ark.desktop
+application/x-rar=org.kde.ark.desktop
+application/x-rar-compressed=org.kde.ark.desktop
+application/x-xz=org.kde.ark.desktop
+application/x-xz-compressed-tar=org.kde.ark.desktop
+application/zstd=org.kde.ark.desktop
+application/x-zstd-compressed-tar=org.kde.ark.desktop
+EOF
+
+update-desktop-database ~/.local/share/applications 2>/dev/null || true
+update-desktop-database ~/.local/share/flatpak/exports/share/applications 2>/dev/null || true
+
+# Favoriten ins Kickoff schreiben
+FAVS="applications:org.mozilla.firefox.desktop,applications:org.kde.dolphin.desktop,applications:com.mitchellh.ghostty.desktop,applications:steam.desktop,applications:com.spotify.Client.desktop,applications:dev.vencord.Vesktop.desktop,applications:org.onlyoffice.desktopeditors.desktop"
+
+dbus-send --session --print-reply --dest=org.kde.plasmashell \
+  /PlasmaShell org.kde.PlasmaShell.evaluateScript \
+  string:"
+let launchers = ['org.kde.plasma.kickoff', 'org.kde.plasma.kicker', 'org.kde.plasma.kickerdash'];
+panels().concat(desktops()).forEach(c => {
+    c.widgets().forEach(w => {
+        if (launchers.includes(w.type)) {
+            w.currentConfigGroup = ['General'];
+            w.writeConfig('favorites', '$FAVS');
+            w.reloadConfig();
+        }
+    });
+});
+" || true
 
 PROTON_DIR="$HOME/.local/share/Steam/compatibilitytools.d"
 mkdir -p "$PROTON_DIR"
