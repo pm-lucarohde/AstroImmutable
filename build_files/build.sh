@@ -195,6 +195,10 @@ cp -r /ctx/config /usr/share/astroimmutable/config
 install -Dm644 /ctx/wallpaper/mars.jpg /usr/share/astroimmutable/wallpaper/mars.jpg
 install -Dm644 /ctx/avatar/katzenhai.png /usr/share/astroimmutable/avatar/katzenhai.png
 
+mkdir -p /var/lib/cosmic-greeter/.local/state/cosmic-comp/
+cp -r /ctx/outputs.ron /var/lib/cosmic-greeter/.local/state/cosmic-comp/outputs.ron
+chown -R cosmic-greeter:cosmic-greeter /var/lib/cosmic-greeter/.local
+
 mkdir -p /usr/libexec/astroimmutable
 install -m755 /ctx/firstlogin-setup.sh /usr/libexec/astroimmutable/firstlogin-setup.sh
 install -Dm644 /ctx/astroimmutable-firstlogin.service /usr/lib/systemd/user/astroimmutable-firstlogin.service
