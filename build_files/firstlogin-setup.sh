@@ -69,6 +69,19 @@ application/zstd=org.kde.ark.desktop
 application/x-zstd-compressed-tar=org.kde.ark.desktop
 EOF
 
+# KDE-Konfiguration aus dem System-Image übernehmen
+KDE_CFG_SRC="/usr/share/astroimmutable/config"
+if [ -d "$KDE_CFG_SRC" ]; then
+    mkdir -p ~/.config/KDE ~/.config/kdedefaults
+    for f in kdeglobals plasmarc plasmashellrc plasma-org.kde.plasma.desktop-appletsrc \
+              kwinrc kscreenlockerrc powerdevilrc powermanagementprofilesrc kcminputrc \
+              kglobalshortcutsrc ksplashrc baloofilerc kwalletrc kwinoutputconfig.json; do
+        [ -f "$KDE_CFG_SRC/$f" ] && cp "$KDE_CFG_SRC/$f" ~/.config/"$f"
+    done
+    [ -d "$KDE_CFG_SRC/KDE" ]         && cp -r "$KDE_CFG_SRC/KDE/."         ~/.config/KDE/
+    [ -d "$KDE_CFG_SRC/kdedefaults" ] && cp -r "$KDE_CFG_SRC/kdedefaults/." ~/.config/kdedefaults/
+fi
+
 # Region erkennen und Locale + Tastaturlayout automatisch setzen
 COUNTRY=$(curl -sf --max-time 5 "https://ipapi.co/country/" 2>/dev/null | tr -d '[:space:]' || true)
 if [ -n "$COUNTRY" ]; then

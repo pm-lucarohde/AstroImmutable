@@ -1,0 +1,7 @@
+[Daemon]
+Autolock=false
+Timeout=0
+
+[Greeter][Wallpaper][org.kde.image][General]
+Image=file:///home/lr/Bilder/Planets_Mars_Black_background_534885_2560x1440.jpg
+PreviewImage=file:///home/lr/Bilder/Planets_Mars_Black_background_534885_2560x1440.jpg
