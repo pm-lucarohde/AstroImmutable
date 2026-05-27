@@ -35,6 +35,7 @@ _retry dnf5 copr enable -y copr.fedorainfracloud.org/ublue-os/packages
 
 dnf5 config-manager setopt fedora-multimedia.priority=1
 dnf5 config-manager setopt fedora-steam.priority=10
+dnf5 config-manager setopt excludepkgs="kernel,kernel-core,kernel-modules,kernel-modules-extra,kernel-modules-core,kernel-devel,kernel-headers"
 
 dnf5 remove -y firefox
 dnf5 remove -y kwrite
