@@ -35,7 +35,6 @@ _retry dnf5 copr enable -y copr.fedorainfracloud.org/ublue-os/packages
 
 dnf5 config-manager setopt fedora-multimedia.priority=1
 dnf5 config-manager setopt fedora-steam.priority=10
-dnf5 config-manager setopt excludepkgs="kernel,kernel-core,kernel-modules,kernel-modules-extra,kernel-modules-core,kernel-devel,kernel-headers"
 
 dnf5 remove -y firefox
 dnf5 remove -y kwrite
@@ -91,8 +90,6 @@ _dnf5_install \
 	kvantum\
 	xdg-desktop-portal-kde\
 	xdg-desktop-portal-gtk\
-	akmod-xone.x86_64\
-	kmod-xone.x86_64\
 	docker\
 	distrobox\
 	vlc\
@@ -105,7 +102,11 @@ _dnf5_install \
 	bleachbit\
 	wine\
 	lutris\
-	bazaar
+	bazaar\
+	kmodtool\
+	xone-kmod-common
+
+_retry dnf5 install -y --nodeps akmod-xone.x86_64 kmod-xone.x86_64
 
 dnf5 remove -y fcitx5
 dnf5 remove -y --noautoremove \
