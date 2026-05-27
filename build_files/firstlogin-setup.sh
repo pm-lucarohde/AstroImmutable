@@ -173,7 +173,7 @@ _flatpak_install() {
 _flatpak_install \
             org.mozilla.firefox \
             com.ktechpit.whatsie \
-            org.mozilla.Thunderbird \
+            org.mozilla.thunderbird_esr \
             org.qbittorrent.qBittorrent \
             org.prismlauncher.PrismLauncher \
             net.blockbench.Blockbench \
