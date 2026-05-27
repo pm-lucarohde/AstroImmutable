@@ -69,6 +69,10 @@ application/zstd=org.kde.ark.desktop
 application/x-zstd-compressed-tar=org.kde.ark.desktop
 EOF
 
+# Profilbild setzen
+cp /usr/share/astroimmutable/avatar/katzenhai.png ~/.face.icon
+chmod 644 ~/.face.icon
+
 # KDE-Konfiguration aus dem System-Image übernehmen
 KDE_CFG_SRC="/usr/share/astroimmutable/config"
 if [ -d "$KDE_CFG_SRC" ]; then

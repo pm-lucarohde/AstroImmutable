@@ -22,7 +22,7 @@ DialogWidth=2560
 [Containments][1][Wallpaper][org.kde.image][General]
 DynamicMode=1
 FillMode=0
-Image=file:///home/lr/Bilder/Planets_Mars_Black_background_534885_2560x1440.jpg
+Image=file:///usr/share/astroimmutable/wallpaper/mars.jpg
 SlidePaths=/usr/share/wallpapers/
 
 [Containments][2]
@@ -49,7 +49,7 @@ sortMode=-1
 [Containments][2][Wallpaper][org.kde.image][General]
 DynamicMode=1
 FillMode=0
-Image=file:///home/lr/Bilder/Planets_Mars_Black_background_534885_2560x1440.jpg
+Image=file:///usr/share/astroimmutable/wallpaper/mars.jpg
 SlidePaths=/usr/share/wallpapers/
 
 [Containments][28]
