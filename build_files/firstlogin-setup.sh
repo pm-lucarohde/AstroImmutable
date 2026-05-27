@@ -130,19 +130,11 @@ window-height = "32"
 gtk-single-instance = "false"
 EOF
 
-mkdir -p ~/.config/Kvantum/KvKonqiDark
+mkdir -p ~/.config/Kvantum
 cat <<EOF > ~/.config/Kvantum/kvantum.kvconfig
 [General]
 theme=KvKonqiDark
 EOF
-
-cp /usr/share/Kvantum/KvKonqiDark/KvKonqiDark.kvconfig ~/.config/Kvantum/KvKonqiDark/KvKonqiDark.kvconfig
-sed -i 's/^reduce_window_opacity=.*/reduce_window_opacity=18/' ~/.config/Kvantum/KvKonqiDark/KvKonqiDark.kvconfig
-sed -i 's/^reduce_menu_opacity=.*/reduce_menu_opacity=75/' ~/.config/Kvantum/KvKonqiDark/KvKonqiDark.kvconfig
-sed -i 's/^contrast=.*/contrast=1.30/' ~/.config/Kvantum/KvKonqiDark/KvKonqiDark.kvconfig
-sed -i 's/^intensity=.*/intensity=1.10/' ~/.config/Kvantum/KvKonqiDark/KvKonqiDark.kvconfig
-sed -i 's/^saturation=.*/saturation=1.20/' ~/.config/Kvantum/KvKonqiDark/KvKonqiDark.kvconfig
-sed -i 's/^shadowless_popup=.*/shadowless_popup=false/' ~/.config/Kvantum/KvKonqiDark/KvKonqiDark.kvconfig
 
 kwriteconfig6 --file kdeglobals --group KDE --key widgetStyle kvantum-dark
 
