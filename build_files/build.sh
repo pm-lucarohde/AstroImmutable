@@ -194,6 +194,7 @@ install -Dm644 /ctx/user.js /usr/share/astroimmutable/user.js
 cp -r /ctx/config /usr/share/astroimmutable/config
 install -Dm644 /ctx/wallpaper/mars.jpg /usr/share/astroimmutable/wallpaper/mars.jpg
 install -Dm644 /ctx/avatar/katzenhai.png /usr/share/astroimmutable/avatar/katzenhai.png
+install -Dm644 /ctx/wallpaper/mars.jpg /usr/share/backgrounds/cosmic/orion_nebula_nasa_heic0601a.jpg
 
 mkdir -p /var/lib/cosmic-greeter/.local/state/cosmic-comp/
 cp -r /ctx/outputs.ron /var/lib/cosmic-greeter/.local/state/cosmic-comp/outputs.ron
