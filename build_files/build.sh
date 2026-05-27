@@ -102,11 +102,10 @@ _dnf5_install \
 	bleachbit\
 	wine\
 	lutris\
-	bazaar\
-	kmodtool\
-	xone-kmod-common
+	bazaar
 
-_retry dnf5 install -y --nodeps akmod-xone.x86_64 kmod-xone.x86_64
+_retry dnf5 download --destdir=/tmp/xone akmod-xone.x86_64 kmod-xone.x86_64 kmodtool xone-kmod-common
+rpm -ivh --nodeps /tmp/xone/*.rpm
 
 dnf5 remove -y fcitx5
 dnf5 remove -y --noautoremove \
