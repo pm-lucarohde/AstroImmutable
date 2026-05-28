@@ -266,27 +266,27 @@ install -Dm644 /ctx/avatar/katzenhai.png /usr/share/astroimmutable/avatar/katzen
 # /var/lib/cosmic-greeter wird zur Laufzeit via tmpfiles.d angelegt;
 # die Konfiguration wird hier direkt ins Image geschrieben.
 
-#GREETER_BG="/var/lib/cosmic-greeter/.config/cosmic/com.system76.CosmicBackground/v1"
-#mkdir -p "$GREETER_BG"
+GREETER_BG="/var/lib/cosmic-greeter/.config/cosmic/com.system76.CosmicBackground/v1"
+mkdir -p "$GREETER_BG"
 
-#cat <<'EOF' > "$GREETER_BG/all"
-#(
-#    output: "all",
-#    source: Path("/usr/share/astroimmutable/wallpaper/mars.jpg"),
-#    filter_by_theme: false,
-#    rotation_frequency: 300,
-#    filter_method: Lanczos,
-#    scaling_mode: Zoom,
-#    sampling_method: Alphanumeric,
-#)
-#EOF
+cat <<'EOF' > "$GREETER_BG/all"
+(
+    output: "all",
+    source: Path("/usr/share/astroimmutable/wallpaper/mars.jpg"),
+    filter_by_theme: false,
+    rotation_frequency: 300,
+    filter_method: Lanczos,
+    scaling_mode: Zoom,
+    sampling_method: Alphanumeric,
+)
+EOF
 
-#echo '["all"]' > "$GREETER_BG/backgrounds"
-#chown -R cosmic-greeter:cosmic-greeter /var/lib/cosmic-greeter/.config
+echo '["all"]' > "$GREETER_BG/backgrounds"
+chown -R cosmic-greeter:cosmic-greeter /var/lib/cosmic-greeter/.config
 
-#mkdir -p /var/lib/cosmic-greeter/.local/state/cosmic-comp/
-#cp -r /ctx/outputs.ron /var/lib/cosmic-greeter/.local/state/cosmic-comp/outputs.ron
-#chown -R cosmic-greeter:cosmic-greeter /var/lib/cosmic-greeter/.local
+mkdir -p /var/lib/cosmic-greeter/.local/state/cosmic-comp/
+cp -r /ctx/outputs.ron /var/lib/cosmic-greeter/.local/state/cosmic-comp/outputs.ron
+chown -R cosmic-greeter:cosmic-greeter /var/lib/cosmic-greeter/.local
 
 # ---------------------------------------------------------------------------
 # First-Login-Service einrichten
