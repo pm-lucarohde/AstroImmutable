@@ -154,12 +154,6 @@ _flatpak_install \
 			org.kde.kcalc \
 			org.fedoraproject.MediaWriter
 
-if ! flatpak info --user com.hypixel.HytaleLauncher &>/dev/null; then
-    curl -fL --retry 3 --retry-delay 30 "https://launcher.hytale.com/builds/release/linux/amd64/hytale-launcher-latest.flatpak" -o /tmp/hytale.flatpak
-    flatpak install --user -y /tmp/hytale.flatpak
-    rm -f /tmp/hytale.flatpak
-fi
-
 # Flatpak-Apps umbenennen: Vesktop -> Discord, WhatSie -> WhatsApp
 FP_EXPORTS="$HOME/.local/share/flatpak/exports/share/applications"
 mkdir -p ~/.local/share/applications
@@ -256,19 +250,6 @@ panels().concat(desktops()).forEach(c => {
     });
 });
 " || true
-
-PROTON_DIR="$HOME/.local/share/Steam/compatibilitytools.d"
-mkdir -p "$PROTON_DIR"
-PROTON_URL=$(curl -s --retry 3 --retry-delay 30 https://api.github.com/repos/CachyOS/proton-cachyos/releases/latest \
-  | grep "browser_download_url" | grep "x86_64\.tar\.xz" | cut -d '"' -f 4 || true)
-if [ -z "$PROTON_URL" ]; then
-  echo "WARNING: Could not fetch Proton-CachyOS URL, skipping"
-else
-  PROTON_FILE=$(basename "$PROTON_URL")
-  curl -fL --retry 3 --retry-delay 30 "$PROTON_URL" -o "$PROTON_DIR/$PROTON_FILE"
-  tar -xf "$PROTON_DIR/$PROTON_FILE" -C "$PROTON_DIR/"
-  rm -f "$PROTON_DIR/$PROTON_FILE"
-fi
 
 FIREFOX_DIST="$HOME/.local/share/flatpak/app/org.mozilla.firefox/current/active/files/lib/firefox/distribution"
 mkdir -p "$FIREFOX_DIST"
@@ -426,6 +407,25 @@ cat <<EOF >> "$FF_DIR/profiles.ini"
 Default=Standard.Profile
 Locked=1
 EOF
+
+if ! flatpak info --user com.hypixel.HytaleLauncher &>/dev/null; then
+    curl -fL --retry 3 --retry-delay 30 "https://launcher.hytale.com/builds/release/linux/amd64/hytale-launcher-latest.flatpak" -o /tmp/hytale.flatpak
+    flatpak install --user -y /tmp/hytale.flatpak
+    rm -f /tmp/hytale.flatpak
+fi
+
+PROTON_DIR="$HOME/.local/share/Steam/compatibilitytools.d"
+mkdir -p "$PROTON_DIR"
+PROTON_URL=$(curl -s --retry 3 --retry-delay 30 https://api.github.com/repos/CachyOS/proton-cachyos/releases/latest \
+  | grep "browser_download_url" | grep "x86_64\.tar\.xz" | cut -d '"' -f 4 || true)
+if [ -z "$PROTON_URL" ]; then
+  echo "WARNING: Could not fetch Proton-CachyOS URL, skipping"
+else
+  PROTON_FILE=$(basename "$PROTON_URL")
+  curl -fL --retry 3 --retry-delay 30 "$PROTON_URL" -o "$PROTON_DIR/$PROTON_FILE"
+  tar -xf "$PROTON_DIR/$PROTON_FILE" -C "$PROTON_DIR/"
+  rm -f "$PROTON_DIR/$PROTON_FILE"
+fi
 
 # Erstellt die Box und installiert CurseForge
 distrobox create --yes --image ubuntu:26.04 --name ubuntu --nvidia
