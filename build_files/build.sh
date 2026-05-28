@@ -312,6 +312,26 @@ visudo -cf /etc/sudoers.d/pwfeedback
 systemctl enable podman.socket
 
 # ---------------------------------------------------------------------------
+# Swap, ZRAM & ZSWAP Tuning (OSTree / Vendor Defaults)
+# ---------------------------------------------------------------------------
+
+# 1. Swappiness anpassen
+mkdir -p /usr/lib/sysctl.d
+echo "vm.swappiness=16" > /usr/lib/sysctl.d/99-swappiness.conf
+
+# 2. ZRAM-Config anlegen
+mkdir -p /usr/lib/systemd
+cat <<EOF > /usr/lib/systemd/zram-generator.conf
+[zram0]
+zram-size = ram / 2
+compression-algorithm = lz4
+EOF
+
+# 3. ZSWAP hart deaktivieren via sysfs
+mkdir -p /usr/lib/tmpfiles.d
+echo "w /sys/module/zswap/parameters/enabled - - - - N" > /usr/lib/tmpfiles.d/disable-zswap.conf
+
+# ---------------------------------------------------------------------------
 # DNF-Cache leeren
 # ---------------------------------------------------------------------------
 

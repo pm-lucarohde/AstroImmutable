@@ -1,3 +1,15 @@
 [[customizations.filesystem]]
 mountpoint = "/"
+minsize = "30 GiB"
+
+[[customizations.filesystem]]
+mountpoint = "/boot"
+minsize = "2 GiB"
+
+[[customizations.filesystem]]
+mountpoint = "/boot/efi"
+minsize = "256 MiB"
+
+[[customizations.filesystem]]
+mountpoint = "/home"
 minsize = "20 GiB"
