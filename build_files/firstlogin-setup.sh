@@ -12,16 +12,6 @@ if [ -f "$STATE_FILE" ]; then
     exit 0
 fi
 
-# ---------------------------------------------------------------------------
-# Warten auf Plasmashell (max. 60 s)
-# ---------------------------------------------------------------------------
-
-for i in $(seq 1 60); do
-    dbus-send --session --dest=org.kde.plasmashell --print-reply \
-        /PlasmaShell org.freedesktop.DBus.Peer.Ping &>/dev/null && break
-    sleep 1
-done
-
 mkdir -p "${STATE_DIR}"
 
 # ---------------------------------------------------------------------------
