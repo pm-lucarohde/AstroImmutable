@@ -4,28 +4,43 @@ set -euo pipefail
 STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/astroimmutable"
 STATE_FILE="${STATE_DIR}/setup_done"
 
-# Prüfen, ob das Skript schon mal lief
+# ---------------------------------------------------------------------------
+# Guard: Setup läuft nur einmal
+# ---------------------------------------------------------------------------
+
 if [ -f "$STATE_FILE" ]; then
     exit 0
 fi
 
-# Warten bis Plasmashell auf DBus antwortet (max 60s)
+# ---------------------------------------------------------------------------
+# Warten auf Plasmashell (max. 60 s)
+# ---------------------------------------------------------------------------
+
 for i in $(seq 1 60); do
     dbus-send --session --dest=org.kde.plasmashell --print-reply \
-      /PlasmaShell org.freedesktop.DBus.Peer.Ping &>/dev/null && break
+        /PlasmaShell org.freedesktop.DBus.Peer.Ping &>/dev/null && break
     sleep 1
 done
 
 mkdir -p "${STATE_DIR}"
 
-# Wallpaper live setzen
+# ---------------------------------------------------------------------------
+# Hintergrundbild setzen
+# ---------------------------------------------------------------------------
+
 plasma-apply-wallpaperimage /usr/share/astroimmutable/wallpaper/mars.jpg || true
 
+# ---------------------------------------------------------------------------
 # Profilbild setzen
+# ---------------------------------------------------------------------------
+
 cp /usr/share/astroimmutable/avatar/katzenhai.png ~/.face.icon
 chmod 644 ~/.face.icon
 
-# KDE-Konfiguration aus dem System-Image übernehmen
+# ---------------------------------------------------------------------------
+# KDE-Konfiguration aus dem Image übernehmen
+# ---------------------------------------------------------------------------
+
 KDE_CFG_SRC="/usr/share/astroimmutable/config"
 if [ -d "$KDE_CFG_SRC" ]; then
     mkdir -p ~/.config/KDE ~/.config/kdedefaults
@@ -38,7 +53,10 @@ if [ -d "$KDE_CFG_SRC" ]; then
     [ -d "$KDE_CFG_SRC/kdedefaults" ] && cp -r "$KDE_CFG_SRC/kdedefaults/." ~/.config/kdedefaults/
 fi
 
-# Region erkennen und Locale + Tastaturlayout automatisch setzen
+# ---------------------------------------------------------------------------
+# Region erkennen und Locale & Tastaturlayout setzen
+# ---------------------------------------------------------------------------
+
 COUNTRY=$(curl -sf --max-time 5 "https://ipapi.co/country/" 2>/dev/null | tr -d '[:space:]' || true)
 if [ -n "$COUNTRY" ]; then
     case "$COUNTRY" in
@@ -80,7 +98,10 @@ if [ -n "$COUNTRY" ]; then
     kwriteconfig6 --file kxkbrc --group Layout --key Use        true
 fi
 
-# KDE Standard-Terminal setzen
+# ---------------------------------------------------------------------------
+# Ghostty als Standard-Terminal einrichten
+# ---------------------------------------------------------------------------
+
 kwriteconfig6 --file kdeglobals --group General --key TerminalService com.mitchellh.ghostty.desktop
 mkdir -p ~/.local/share/applications
 cp /usr/share/applications/com.mitchellh.ghostty.desktop ~/.local/share/applications/
@@ -99,6 +120,10 @@ window-height = "32"
 gtk-single-instance = "false"
 EOF
 
+# ---------------------------------------------------------------------------
+# Kvantum-Theme aktivieren
+# ---------------------------------------------------------------------------
+
 mkdir -p ~/.config/Kvantum
 cat <<EOF > ~/.config/Kvantum/kvantum.kvconfig
 [General]
@@ -106,6 +131,10 @@ theme=KvKonqiDark
 EOF
 
 kwriteconfig6 --file kdeglobals --group KDE --key widgetStyle kvantum-dark
+
+# ---------------------------------------------------------------------------
+# Desktop: Papierkorb-Verknüpfung erstellen
+# ---------------------------------------------------------------------------
 
 DESKTOP_DIR="$(xdg-user-dir DESKTOP)"
 mkdir -p "$DESKTOP_DIR"
@@ -117,6 +146,10 @@ Name=Papierkorb
 Type=Link
 URL[$e]=trash:/
 EOF
+
+# ---------------------------------------------------------------------------
+# Flatpak einrichten und Apps installieren
+# ---------------------------------------------------------------------------
 
 flatpak config --user --set languages "de;en"
 flatpak remote-add --if-not-exists --user flathub https://flathub.org/repo/flathub.flatpakrepo
@@ -132,29 +165,32 @@ _flatpak_install() {
 }
 
 _flatpak_install \
-            org.mozilla.firefox \
-            com.ktechpit.whatsie \
-            org.mozilla.thunderbird_esr \
-            org.qbittorrent.qBittorrent \
-            org.prismlauncher.PrismLauncher \
-            net.blockbench.Blockbench \
-            org.azahar_emu.Azahar \
-            org.gimp.GIMP \
-			com.heroicgameslauncher.hgl \
-			dev.vencord.Vesktop \
-            org.onlyoffice.desktopeditors \
-            com.pokemmo.PokeMMO \
-            io.github.ryubing.Ryujinx \
-            org.telegram.desktop \
-            org.torproject.torbrowser-launcher \
-			com.obsproject.Studio \
-			org.gnome.eog \
-			org.gnome.Boxes \
-			net.davidotek.pupgui2 \
-			org.kde.kcalc \
-			org.fedoraproject.MediaWriter
+    org.mozilla.firefox \
+    com.ktechpit.whatsie \
+    org.mozilla.thunderbird_esr \
+    org.qbittorrent.qBittorrent \
+    org.prismlauncher.PrismLauncher \
+    net.blockbench.Blockbench \
+    org.azahar_emu.Azahar \
+    org.gimp.GIMP \
+    com.heroicgameslauncher.hgl \
+    dev.vencord.Vesktop \
+    org.onlyoffice.desktopeditors \
+    com.pokemmo.PokeMMO \
+    io.github.ryubing.Ryujinx \
+    org.telegram.desktop \
+    org.torproject.torbrowser-launcher \
+    com.obsproject.Studio \
+    org.gnome.eog \
+    org.gnome.Boxes \
+    net.davidotek.pupgui2 \
+    org.kde.kcalc \
+    org.fedoraproject.MediaWriter
 
-# Flatpak-Apps umbenennen: Vesktop -> Discord, WhatSie -> WhatsApp
+# ---------------------------------------------------------------------------
+# App-Anzeigenamen anpassen: Vesktop → Discord, WhatSie → WhatsApp
+# ---------------------------------------------------------------------------
+
 FP_EXPORTS="$HOME/.local/share/flatpak/exports/share/applications"
 mkdir -p ~/.local/share/applications
 
@@ -172,9 +208,11 @@ fi
 
 update-desktop-database ~/.local/share/applications 2>/dev/null || true
 
-# Standard-Apps konfigurieren
-mkdir -p ~/.local/share/applications
-mkdir -p ~/.config
+# ---------------------------------------------------------------------------
+# Standard-Apps festlegen (mimeapps.list)
+# ---------------------------------------------------------------------------
+
+mkdir -p ~/.local/share/applications ~/.config
 cat <<'EOF' > ~/.config/mimeapps.list
 [Default Applications]
 x-scheme-handler/http=org.mozilla.firefox.desktop
@@ -233,12 +271,15 @@ EOF
 update-desktop-database ~/.local/share/applications 2>/dev/null || true
 update-desktop-database ~/.local/share/flatpak/exports/share/applications 2>/dev/null || true
 
-# Favoriten ins Kickoff schreiben
+# ---------------------------------------------------------------------------
+# Kickoff-Favoriten setzen (via Plasma-Scripting-API)
+# ---------------------------------------------------------------------------
+
 FAVS="applications:systemsettings.desktop,applications:com.mitchellh.ghostty.desktop,applications:dev.vencord.Vesktop.desktop,applications:org.mozilla.firefox.desktop"
 
 dbus-send --session --print-reply --dest=org.kde.plasmashell \
-  /PlasmaShell org.kde.PlasmaShell.evaluateScript \
-  string:"
+    /PlasmaShell org.kde.PlasmaShell.evaluateScript \
+    string:"
 let launchers = ['org.kde.plasma.kickoff', 'org.kde.plasma.kicker', 'org.kde.plasma.kickerdash'];
 panels().concat(desktops()).forEach(c => {
     c.widgets().forEach(w => {
@@ -250,6 +291,10 @@ panels().concat(desktops()).forEach(c => {
     });
 });
 " || true
+
+# ---------------------------------------------------------------------------
+# Firefox: Unternehmensrichtlinien (Erweiterungen, Suche, Datenschutz)
+# ---------------------------------------------------------------------------
 
 FIREFOX_DIST="$HOME/.local/share/flatpak/app/org.mozilla.firefox/current/active/files/lib/firefox/distribution"
 mkdir -p "$FIREFOX_DIST"
@@ -366,15 +411,19 @@ cat <<'JSON' > "$FIREFOX_DIST/policies.json"
 }
 JSON
 
+# ---------------------------------------------------------------------------
+# Firefox-Profil anlegen und Standard-Profil erzwingen
+# ---------------------------------------------------------------------------
+# Firefox wird einmal headless gestartet, damit installs.ini angelegt wird;
+# anschließend wird profiles.ini auf das vorkonfigurierte Standard-Profil zeigen.
+
 FF_DIR="$HOME/.var/app/org.mozilla.firefox/config/mozilla/firefox"
 mkdir -p "$FF_DIR/Standard.Profile"
-
 cp /usr/share/astroimmutable/user.js "$FF_DIR/Standard.Profile/user.js"
 
 flatpak run org.mozilla.firefox --headless --no-remote &
 FF_PID=$!
 
-# Warten bis installs.ini existiert, max 30 Sekunden
 for i in $(seq 1 30); do
     [ -f "$FF_DIR/installs.ini" ] && break
     sleep 1
@@ -408,26 +457,39 @@ Default=Standard.Profile
 Locked=1
 EOF
 
+# ---------------------------------------------------------------------------
+# Hytale-Launcher installieren (nur wenn noch nicht vorhanden)
+# ---------------------------------------------------------------------------
+
 if ! flatpak info --user com.hypixel.HytaleLauncher &>/dev/null; then
-    curl -fL --retry 3 --retry-delay 30 "https://launcher.hytale.com/builds/release/linux/amd64/hytale-launcher-latest.flatpak" -o /tmp/hytale.flatpak
+    curl -fL --retry 3 --retry-delay 30 \
+        "https://launcher.hytale.com/builds/release/linux/amd64/hytale-launcher-latest.flatpak" \
+        -o /tmp/hytale.flatpak
     flatpak install --user -y /tmp/hytale.flatpak
     rm -f /tmp/hytale.flatpak
 fi
 
+# ---------------------------------------------------------------------------
+# Proton-CachyOS installieren
+# ---------------------------------------------------------------------------
+
 PROTON_DIR="$HOME/.local/share/Steam/compatibilitytools.d"
 mkdir -p "$PROTON_DIR"
 PROTON_URL=$(curl -s --retry 3 --retry-delay 30 https://api.github.com/repos/CachyOS/proton-cachyos/releases/latest \
-  | grep "browser_download_url" | grep "x86_64\.tar\.xz" | cut -d '"' -f 4 || true)
+    | grep "browser_download_url" | grep "x86_64\.tar\.xz" | cut -d '"' -f 4 || true)
 if [ -z "$PROTON_URL" ]; then
-  echo "WARNING: Could not fetch Proton-CachyOS URL, skipping"
+    echo "WARNING: Could not fetch Proton-CachyOS URL, skipping"
 else
-  PROTON_FILE=$(basename "$PROTON_URL")
-  curl -fL --retry 3 --retry-delay 30 "$PROTON_URL" -o "$PROTON_DIR/$PROTON_FILE"
-  tar -xf "$PROTON_DIR/$PROTON_FILE" -C "$PROTON_DIR/"
-  rm -f "$PROTON_DIR/$PROTON_FILE"
+    PROTON_FILE=$(basename "$PROTON_URL")
+    curl -fL --retry 3 --retry-delay 30 "$PROTON_URL" -o "$PROTON_DIR/$PROTON_FILE"
+    tar -xf "$PROTON_DIR/$PROTON_FILE" -C "$PROTON_DIR/"
+    rm -f "$PROTON_DIR/$PROTON_FILE"
 fi
 
-# Erstellt die Box und installiert CurseForge
+# ---------------------------------------------------------------------------
+# Distrobox: Ubuntu-Container mit CurseForge
+# ---------------------------------------------------------------------------
+
 distrobox create --yes --image ubuntu:26.04 --name ubuntu --nvidia
 distrobox enter ubuntu -- bash -c 'sudo apt update && sudo apt upgrade -y && sudo apt install -y libasound2t64'
 distrobox enter ubuntu -- bash -c '
@@ -437,6 +499,12 @@ distrobox enter ubuntu -- bash -c '
     && distrobox-export --app curseforge \
     || echo "WARNING: CurseForge install failed, skipping"
 '
+
+# ---------------------------------------------------------------------------
+# SDKMAN und Java (GraalVM Community Edition)
+# ---------------------------------------------------------------------------
+# set -euo pipefail muss temporär deaktiviert werden, da sdkman-init.sh
+# nicht POSIX-konform ist und unter strict mode Fehler wirft.
 
 if [ ! -d "$HOME/.sdkman" ]; then
     curl -s --retry 3 --retry-delay 30 "https://get.sdkman.io" | bash
@@ -448,5 +516,8 @@ echo "n" | sdk install java 21.0.2-graalce
 sdk default java 25.0.2-graalce
 set -euo pipefail
 
-# Status-Datei anlegen, damit es beim nächsten Login übersprungen wird
+# ---------------------------------------------------------------------------
+# Setup abgeschlossen – beim nächsten Login wird dieses Skript übersprungen
+# ---------------------------------------------------------------------------
+
 touch "$STATE_FILE"

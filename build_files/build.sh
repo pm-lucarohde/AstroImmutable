@@ -2,6 +2,10 @@
 
 set -ouex pipefail
 
+# ---------------------------------------------------------------------------
+# Hilfsfunktionen
+# ---------------------------------------------------------------------------
+
 _retry() {
     local attempt
     for attempt in 1 2 3; do
@@ -16,11 +20,17 @@ _dnf5_install() {
     _retry dnf5 install -y "$@"
 }
 
-_dnf5_install \
-  https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm
-_dnf5_install \
-  https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
+# ---------------------------------------------------------------------------
+# Paketquellen einrichten
+# ---------------------------------------------------------------------------
 
+# RPMFusion (Free + Non-Free) für Codec- und Multimedia-Pakete
+_dnf5_install \
+    https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm
+_dnf5_install \
+    https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
+
+# negativo17 (Multimedia und Steam) – nur hinzufügen, wenn noch nicht vorhanden
 for repo_url in \
     "https://negativo17.org/repos/fedora-multimedia.repo" \
     "https://negativo17.org/repos/fedora-steam.repo"; do
@@ -30,106 +40,142 @@ for repo_url in \
     fi
 done
 
+# COPR: Ghostty Terminal und ublue-os Hilfspakete
 _retry dnf5 copr enable -y scottames/ghostty
 _retry dnf5 copr enable -y copr.fedorainfracloud.org/ublue-os/packages
 
+# Prioritäten setzen: Multimedia übersteuert Standard-Repos, Steam hat niedrigere Priorität
 dnf5 config-manager setopt fedora-multimedia.priority=1
 dnf5 config-manager setopt fedora-steam.priority=10
 
+# ---------------------------------------------------------------------------
+# Unerwünschte Pakete entfernen
+# ---------------------------------------------------------------------------
+
+# Standardbrowser und -editoren werden durch eigene Flatpaks ersetzt
 dnf5 remove -y firefox
 dnf5 remove -y kwrite
 dnf5 remove -y kate
+
+# SDDM durch cosmic-greeter ersetzen
 dnf5 remove -y plasma-login-manager
 dnf5 remove -y sddm
 dnf5 remove -y filelight
 dnf5 remove -y plasma-discover
 _dnf5_install cosmic-greeter
+
+# Nicht benötigte COSMIC-Komponenten entfernen (nur der Greeter wird genutzt)
 dnf5 remove -y --noautoremove \
-  cosmic-session \
-  cosmic-files \
-  cosmic-term \
-  cosmic-screenshot \
-  cosmic-app-library \
-  cosmic-applets \
-  cosmic-panel \
-  cosmic-initial-setup \
-  cosmic-workspaces \
-  cosmic-notifications \
-  cosmic-osd \
-  cosmic-idle \
-  cutecosmic-qt6 \
-  cosmic-bg \
-  cosmic-launcher \
-  cosmic-randr \
-  cosmic-settings-daemon \
-  xdg-desktop-portal-cosmic \
-  pop-launcher \
-  pop-sound-theme \
-  gvfs \
-  gvfs-client \
-  gvfs-fuse \
-  gvfs-nfs \
-  gvfs-smb \
-  wsdd \
-  nm-connection-editor \
-  playerctl \
-  playerctl-libs
+    cosmic-session \
+    cosmic-files \
+    cosmic-term \
+    cosmic-screenshot \
+    cosmic-app-library \
+    cosmic-applets \
+    cosmic-panel \
+    cosmic-initial-setup \
+    cosmic-workspaces \
+    cosmic-notifications \
+    cosmic-osd \
+    cosmic-idle \
+    cutecosmic-qt6 \
+    cosmic-bg \
+    cosmic-launcher \
+    cosmic-randr \
+    cosmic-settings-daemon \
+    xdg-desktop-portal-cosmic \
+    pop-launcher \
+    pop-sound-theme \
+    gvfs \
+    gvfs-client \
+    gvfs-fuse \
+    gvfs-nfs \
+    gvfs-smb \
+    wsdd \
+    nm-connection-editor \
+    playerctl \
+    playerctl-libs
 
 systemctl enable cosmic-greeter.service
 
+# ---------------------------------------------------------------------------
+# Pakete installieren
+# ---------------------------------------------------------------------------
+
 _dnf5_install \
-	--exclude=wine-core.i686 \
-	git\
-	htop\
-	flatpak\
-	ffmpeg\
-	ffmpeg-libs\
-	fdk-aac\
-	libavcodec\
-	pipewire-libs-extra\
-	kvantum\
-	xdg-desktop-portal-kde\
-	xdg-desktop-portal-gtk\
-	docker\
-	distrobox\
-	vlc\
-	7zip\
-	podman\
-	fastfetch\
-	steam\
-	ghostty\
-	gamemode\
-	bleachbit\
-	wine\
-	lutris\
-	spotify\
-	bazaar
+    --exclude=wine-core.i686 \
+    git \
+    htop \
+    flatpak \
+    ffmpeg \
+    ffmpeg-libs \
+    fdk-aac \
+    libavcodec \
+    pipewire-libs-extra \
+    kvantum \
+    xdg-desktop-portal-kde \
+    xdg-desktop-portal-gtk \
+    docker \
+    distrobox \
+    vlc \
+    7zip \
+    podman \
+    fastfetch \
+    steam \
+    ghostty \
+    gamemode \
+    bleachbit \
+    wine \
+    lutris \
+    spotify \
+    bazaar
+
+# ---------------------------------------------------------------------------
+# Xbox-One-Controller-Treiber (xone)
+# ---------------------------------------------------------------------------
+# RPMs werden manuell heruntergeladen und ohne %post-Scriptlets installiert,
+# da akmods den Kernel-Build im Container-Kontext nicht durchführen kann.
 
 _retry dnf5 download --destdir=/tmp/xone akmod-xone.x86_64 kmod-xone.x86_64 kmodtool xone-kmod-common
 find /tmp/xone -name "*.rpm" ! -name "*.src.rpm" | xargs rpm -ivh --nodeps --noscripts
 
+# ---------------------------------------------------------------------------
+# Weitere unerwünschte Pakete entfernen
+# ---------------------------------------------------------------------------
+
 dnf5 remove -y fcitx5
 dnf5 remove -y --noautoremove \
-qt6ct \
-qt5ct \
-dosbox \
-kcharselect
+    qt6ct \
+    qt5ct \
+    dosbox \
+    kcharselect
+
+# ---------------------------------------------------------------------------
+# Kvantum-Theme (KvKonqiDark)
+# ---------------------------------------------------------------------------
 
 mkdir -p /usr/share/Kvantum
 KVKONQI_URL=$(curl -s --retry 3 --retry-delay 30 https://api.github.com/repos/Niru2169/KvKonqi/releases/latest \
-  | grep -o '"browser_download_url": "[^"]*KvKonqiDark\.tar\.gz"' \
-  | cut -d'"' -f4)
+    | grep -o '"browser_download_url": "[^"]*KvKonqiDark\.tar\.gz"' \
+    | cut -d'"' -f4)
 curl -fL --retry 3 --retry-delay 30 "$KVKONQI_URL" | tar -xz -C /usr/share/Kvantum/
 
+# Theme-Parameter auf gewünschte Werte setzen
 sed -i 's/^reduce_window_opacity=.*/reduce_window_opacity=18/' /usr/share/Kvantum/KvKonqiDark/KvKonqiDark.kvconfig
 sed -i 's/^reduce_menu_opacity=.*/reduce_menu_opacity=75/' /usr/share/Kvantum/KvKonqiDark/KvKonqiDark.kvconfig
 sed -i 's/^contrast=.*/contrast=1.30/' /usr/share/Kvantum/KvKonqiDark/KvKonqiDark.kvconfig
 sed -i 's/^intensity=.*/intensity=1.10/' /usr/share/Kvantum/KvKonqiDark/KvKonqiDark.kvconfig
 sed -i 's/^saturation=.*/saturation=1.20/' /usr/share/Kvantum/KvKonqiDark/KvKonqiDark.kvconfig
 sed -i 's/^shadowless_popup=.*/shadowless_popup=false/' /usr/share/Kvantum/KvKonqiDark/KvKonqiDark.kvconfig
+# noninteger_translucency: setzen falls vorhanden, sonst unter [Hacks] einfügen
 grep -q '^noninteger_translucency=' /usr/share/Kvantum/KvKonqiDark/KvKonqiDark.kvconfig \
     && sed -i 's/^noninteger_translucency=.*/noninteger_translucency=false/' /usr/share/Kvantum/KvKonqiDark/KvKonqiDark.kvconfig \
     || sed -i '/^\[Hacks\]/a noninteger_translucency=false' /usr/share/Kvantum/KvKonqiDark/KvKonqiDark.kvconfig
+
+# ---------------------------------------------------------------------------
+# Flatpak-System-Remotes bereinigen
+# ---------------------------------------------------------------------------
+# Standard-Remotes entfernen; der Nutzer richtet Flathub beim ersten Login ein.
 
 for remote in fedora flathub; do
     if flatpak --system remotes | awk '{print $1}' | grep -qx "$remote"; then
@@ -137,33 +183,43 @@ for remote in fedora flathub; do
     fi
 done
 
+# ---------------------------------------------------------------------------
+# JetBrains Toolbox
+# ---------------------------------------------------------------------------
+
 mkdir -p /opt/jetbrains-toolbox
 JB_URL=$(curl -s --retry 3 --retry-delay 30 "https://data.services.jetbrains.com/products/releases?code=TBA&latest=true&type=release" \
-  | grep -o '"link":"https://download\.jetbrains\.com/toolbox/jetbrains-toolbox-[0-9.]*\.tar\.gz"' \
-  | head -1 \
-  | grep -o 'https://[^"]*' || true)
+    | grep -o '"link":"https://download\.jetbrains\.com/toolbox/jetbrains-toolbox-[0-9.]*\.tar\.gz"' \
+    | head -1 \
+    | grep -o 'https://[^"]*' || true)
 if [ -z "$JB_URL" ]; then
-  echo "WARNING: Could not fetch JetBrains Toolbox URL, skipping"
+    echo "WARNING: Could not fetch JetBrains Toolbox URL, skipping"
 else
-  curl -fL --retry 3 --retry-delay 30 "$JB_URL" | tar -xz --strip-components=1 -C /opt/jetbrains-toolbox/
-  cp /ctx/bin/jetbrains-toolbox.desktop /opt/jetbrains-toolbox/
-  cp /ctx/bin/toolbox-tray-color.png /opt/jetbrains-toolbox/
+    curl -fL --retry 3 --retry-delay 30 "$JB_URL" | tar -xz --strip-components=1 -C /opt/jetbrains-toolbox/
+    cp /ctx/bin/jetbrains-toolbox.desktop /opt/jetbrains-toolbox/
+    cp /ctx/bin/toolbox-tray-color.png /opt/jetbrains-toolbox/
 
-  JB_BIN=$(find /opt/jetbrains-toolbox -name "jetbrains-toolbox" -type f | head -1)
-  chmod +x "$JB_BIN"
+    JB_BIN=$(find /opt/jetbrains-toolbox -name "jetbrains-toolbox" -type f | head -1)
+    chmod +x "$JB_BIN"
 
-  ln -sf "$JB_BIN" /usr/bin/jetbrains-toolbox
+    ln -sf "$JB_BIN" /usr/bin/jetbrains-toolbox
 
-  cp /opt/jetbrains-toolbox/jetbrains-toolbox.desktop /usr/share/applications/
-  sed -i "s|^Exec=.*|Exec=${JB_BIN}|" /usr/share/applications/jetbrains-toolbox.desktop
-  sed -i 's|^Icon=.*|Icon=/opt/jetbrains-toolbox/toolbox-tray-color.png|' /usr/share/applications/jetbrains-toolbox.desktop
+    cp /opt/jetbrains-toolbox/jetbrains-toolbox.desktop /usr/share/applications/
+    sed -i "s|^Exec=.*|Exec=${JB_BIN}|" /usr/share/applications/jetbrains-toolbox.desktop
+    sed -i 's|^Icon=.*|Icon=/opt/jetbrains-toolbox/toolbox-tray-color.png|' /usr/share/applications/jetbrains-toolbox.desktop
 fi
+
+# ---------------------------------------------------------------------------
+# NotepadNext
+# ---------------------------------------------------------------------------
 
 install -m755 /ctx/notepadnext /usr/bin/notepadnext
 chmod +x /usr/bin/notepadnext
 
 mkdir -p /usr/share/icons/hicolor/512x512/apps
-curl -fL --retry 3 --retry-delay 30 "https://raw.githubusercontent.com/dail8859/NotepadNext/master/src/icons/NotepadNext.png" -o /usr/share/icons/hicolor/512x512/apps/notepadnext.png
+curl -fL --retry 3 --retry-delay 30 \
+    "https://raw.githubusercontent.com/dail8859/NotepadNext/master/src/icons/NotepadNext.png" \
+    -o /usr/share/icons/hicolor/512x512/apps/notepadnext.png
 gtk-update-icon-cache /usr/share/icons/hicolor
 
 cat <<EOF > /usr/share/applications/notepadnext.desktop
@@ -177,26 +233,39 @@ Comment=A cross-platform reimplementation of Notepad++
 Terminal=false
 EOF
 
-# 1. Haupt-Desktop-Datei fixen (hast du schon teilweise, aber hier nochmal sauber)
+# ---------------------------------------------------------------------------
+# Ghostty anpassen
+# ---------------------------------------------------------------------------
+
 if [ -f /usr/share/applications/com.mitchellh.ghostty.desktop ]; then
+    # Anzeigename vereinfachen und lokalisierte Varianten entfernen
     sed -i 's/^Name=.*/Name=Terminal/' /usr/share/applications/com.mitchellh.ghostty.desktop
     sed -i '/^Name\[/d' /usr/share/applications/com.mitchellh.ghostty.desktop
+    # Aktuelles Verzeichnis als Startpfad übergeben
     sed -i 's|^Exec=ghostty$|Exec=ghostty --working-directory=%f|' /usr/share/applications/com.mitchellh.ghostty.desktop
+    # Einzelinstanz deaktivieren, damit mehrere Fenster möglich sind
     sed -i 's/--gtk-single-instance=true/--gtk-single-instance=false/g' /usr/share/applications/com.mitchellh.ghostty.desktop
 fi
 
-# Ghostty Service Menu entfernen, um Dopplungen in Dolphin zu vermeiden
+# Ghostty-Eintrag im Dolphin-Kontextmenü entfernen (verhindert Duplikate)
 rm -f /usr/share/kio/servicemenus/com.mitchellh.ghostty.desktop
 
-# Kopiert die user.js aus deinem Repo fest ins System-Image
+# ---------------------------------------------------------------------------
+# AstroImmutable-Ressourcen ins System-Image einbetten
+# ---------------------------------------------------------------------------
+
 mkdir -p /usr/share/astroimmutable
 install -Dm644 /ctx/user.js /usr/share/astroimmutable/user.js
-
 cp -r /ctx/config /usr/share/astroimmutable/config
 install -Dm644 /ctx/wallpaper/mars.jpg /usr/share/astroimmutable/wallpaper/mars.jpg
 install -Dm644 /ctx/avatar/katzenhai.png /usr/share/astroimmutable/avatar/katzenhai.png
 
-# cosmic-greeter Hintergrundbild setzen
+# ---------------------------------------------------------------------------
+# cosmic-greeter: Hintergrundbild und Monitorlayout
+# ---------------------------------------------------------------------------
+# /var/lib/cosmic-greeter wird zur Laufzeit via tmpfiles.d angelegt;
+# die Konfiguration wird hier direkt ins Image geschrieben.
+
 GREETER_BG="/var/lib/cosmic-greeter/.config/cosmic/com.system76.CosmicBackground/v1"
 mkdir -p "$GREETER_BG"
 
@@ -213,12 +282,15 @@ cat <<'EOF' > "$GREETER_BG/all"
 EOF
 
 echo '["all"]' > "$GREETER_BG/backgrounds"
-
 chown -R cosmic-greeter:cosmic-greeter /var/lib/cosmic-greeter/.config
 
 mkdir -p /var/lib/cosmic-greeter/.local/state/cosmic-comp/
 cp -r /ctx/outputs.ron /var/lib/cosmic-greeter/.local/state/cosmic-comp/outputs.ron
 chown -R cosmic-greeter:cosmic-greeter /var/lib/cosmic-greeter/.local
+
+# ---------------------------------------------------------------------------
+# First-Login-Service einrichten
+# ---------------------------------------------------------------------------
 
 mkdir -p /usr/libexec/astroimmutable
 install -m755 /ctx/firstlogin-setup.sh /usr/libexec/astroimmutable/firstlogin-setup.sh
@@ -226,13 +298,21 @@ install -Dm644 /ctx/astroimmutable-firstlogin.service /usr/lib/systemd/user/astr
 
 mkdir -p /etc/systemd/user/default.target.wants
 ln -sf /usr/lib/systemd/user/astroimmutable-firstlogin.service \
-  /etc/systemd/user/default.target.wants/astroimmutable-firstlogin.service
+    /etc/systemd/user/default.target.wants/astroimmutable-firstlogin.service
 
-# sudo: Sternchen-Feedback bei Passworteingabe aktivieren
+# ---------------------------------------------------------------------------
+# Systemeinstellungen
+# ---------------------------------------------------------------------------
+
+# Passwort-Feedback (Sternchen) bei sudo aktivieren
 echo 'Defaults pwfeedback' > /etc/sudoers.d/pwfeedback
 chmod 0440 /etc/sudoers.d/pwfeedback
 visudo -cf /etc/sudoers.d/pwfeedback
 
-dnf5 clean all -y
-
 systemctl enable podman.socket
+
+# ---------------------------------------------------------------------------
+# DNF-Cache leeren
+# ---------------------------------------------------------------------------
+
+dnf5 clean all -y
