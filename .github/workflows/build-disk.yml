@@ -3,6 +3,12 @@ name: Build disk images
 
 on:
   workflow_dispatch:
+  workflow_run:
+    workflows: ["Build container image"]
+    branches:
+      - main
+    types:
+      - completed
   pull_request:
     branches:
       - main
@@ -24,6 +30,7 @@ jobs:
   build:
     name: Build disk images
     runs-on: ubuntu-24.04
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     permissions:
       contents: read
       packages: read
