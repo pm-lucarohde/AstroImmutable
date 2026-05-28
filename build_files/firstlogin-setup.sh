@@ -240,7 +240,7 @@ update-desktop-database ~/.local/share/applications 2>/dev/null || true
 update-desktop-database ~/.local/share/flatpak/exports/share/applications 2>/dev/null || true
 
 # Favoriten ins Kickoff schreiben
-FAVS="applications:org.mozilla.firefox.desktop,applications:org.kde.dolphin.desktop,applications:com.mitchellh.ghostty.desktop,applications:steam.desktop,applications:com.spotify.Client.desktop,applications:dev.vencord.Vesktop.desktop,applications:org.onlyoffice.desktopeditors.desktop"
+FAVS="applications:systemsettings.desktop,applications:com.mitchellh.ghostty.desktop,applications:dev.vencord.Vesktop.desktop,applications:org.mozilla.firefox.desktop"
 
 dbus-send --session --print-reply --dest=org.kde.plasmashell \
   /PlasmaShell org.kde.PlasmaShell.evaluateScript \
