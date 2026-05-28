@@ -342,12 +342,16 @@ cat <<'EOF' > /usr/libexec/astroimmutable/apply-btrfs-opts.sh
 #!/bin/bash
 OPTS="noatime,compress=no,space_cache=v2,discard=async"
 
+# Nur für BTRFS ausführen – bei ext4 o.ä. sofort beenden
+HOME_MP=$(findmnt -n -o TARGET -t btrfs /var/home 2>/dev/null || \
+          findmnt -n -o TARGET -t btrfs /home 2>/dev/null || true)
+[ -z "$HOME_MP" ] && exit 0
+
 # fstab patchen (idempotent: nur wenn noch nicht gesetzt)
 sed -i "s|subvol=home,compress=zstd:[0-9]*|subvol=home,${OPTS}|" /etc/fstab || true
 
-# Aktuell gemountetes /var/home sofort remounten
-mount -o "remount,${OPTS}" /var/home 2>/dev/null || \
-mount -o "remount,${OPTS}" /home 2>/dev/null || true
+# Aktuell gemountetes Home sofort remounten
+mount -o "remount,${OPTS}" "$HOME_MP" 2>/dev/null || true
 EOF
 chmod 755 /usr/libexec/astroimmutable/apply-btrfs-opts.sh
 
