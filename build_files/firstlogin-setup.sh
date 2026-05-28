@@ -160,6 +160,24 @@ if ! flatpak info --user com.hypixel.HytaleLauncher &>/dev/null; then
     rm -f /tmp/hytale.flatpak
 fi
 
+# Flatpak-Apps umbenennen: Vesktop -> Discord, WhatSie -> WhatsApp
+FP_EXPORTS="$HOME/.local/share/flatpak/exports/share/applications"
+mkdir -p ~/.local/share/applications
+
+if [ -f "$FP_EXPORTS/dev.vencord.Vesktop.desktop" ]; then
+    cp "$FP_EXPORTS/dev.vencord.Vesktop.desktop" ~/.local/share/applications/
+    sed -i '0,/^\[Desktop Action/{s/^Name=.*/Name=Discord/; /^Name\[/d}' \
+        ~/.local/share/applications/dev.vencord.Vesktop.desktop
+fi
+
+if [ -f "$FP_EXPORTS/com.ktechpit.whatsie.desktop" ]; then
+    cp "$FP_EXPORTS/com.ktechpit.whatsie.desktop" ~/.local/share/applications/
+    sed -i '0,/^\[Desktop Action/{s/^Name=.*/Name=WhatsApp/; /^Name\[/d}' \
+        ~/.local/share/applications/com.ktechpit.whatsie.desktop
+fi
+
+update-desktop-database ~/.local/share/applications 2>/dev/null || true
+
 # Standard-Apps konfigurieren
 mkdir -p ~/.local/share/applications
 mkdir -p ~/.config
