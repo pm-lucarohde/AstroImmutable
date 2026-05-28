@@ -332,6 +332,42 @@ mkdir -p /usr/lib/tmpfiles.d
 echo "w /sys/module/zswap/parameters/enabled - - - - N" > /usr/lib/tmpfiles.d/disable-zswap.conf
 
 # ---------------------------------------------------------------------------
+# BTRFS-Mountoptionen (noatime, compress=no)
+# ---------------------------------------------------------------------------
+# bootc-fstab-edit.service überschreibt die fstab beim ersten Boot, daher
+# werden die Optionen per Service nach dem Mounten gesetzt und für Folgeboots
+# in die fstab geschrieben.
+
+cat <<'EOF' > /usr/libexec/astroimmutable/apply-btrfs-opts.sh
+#!/bin/bash
+OPTS="noatime,compress=no,space_cache=v2,discard=async"
+
+# fstab patchen (idempotent: nur wenn noch nicht gesetzt)
+sed -i "s|subvol=home,compress=zstd:[0-9]*|subvol=home,${OPTS}|" /etc/fstab || true
+
+# Aktuell gemountetes /var/home sofort remounten
+mount -o "remount,${OPTS}" /var/home 2>/dev/null || \
+mount -o "remount,${OPTS}" /home 2>/dev/null || true
+EOF
+chmod 755 /usr/libexec/astroimmutable/apply-btrfs-opts.sh
+
+cat <<'EOF' > /usr/lib/systemd/system/astroimmutable-btrfs-opts.service
+[Unit]
+Description=Apply custom BTRFS mount options
+After=local-fs.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/libexec/astroimmutable/apply-btrfs-opts.sh
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+systemctl enable astroimmutable-btrfs-opts.service
+
+# ---------------------------------------------------------------------------
 # DNF-Cache leeren
 # ---------------------------------------------------------------------------
 
