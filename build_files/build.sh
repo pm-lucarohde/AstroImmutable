@@ -347,8 +347,11 @@ HOME_MP=$(findmnt -n -o TARGET -t btrfs /var/home 2>/dev/null || \
           findmnt -n -o TARGET -t btrfs /home 2>/dev/null || true)
 [ -z "$HOME_MP" ] && exit 0
 
-# fstab patchen (idempotent: nur wenn noch nicht gesetzt)
-sed -i "s|subvol=home,compress=zstd:[0-9]*|subvol=home,${OPTS}|" /etc/fstab || true
+# fstab patchen (idempotent, positionsunabhängig)
+# compress=zstd:X ersetzen, egal wo es in der Zeile steht
+sed -i '/\bsubvol=home\b/s|compress=zstd:[0-9]*|compress=no,space_cache=v2,discard=async|' /etc/fstab || true
+# noatime hinzufügen falls noch nicht vorhanden
+sed -i '/\bsubvol=home\b/{/noatime/!s|\bsubvol=home\b|subvol=home,noatime|}' /etc/fstab || true
 
 # Aktuell gemountetes Home sofort remounten
 mount -o "remount,${OPTS}" "$HOME_MP" 2>/dev/null || true
