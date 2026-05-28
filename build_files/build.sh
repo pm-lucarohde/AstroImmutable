@@ -209,6 +209,11 @@ mkdir -p /etc/systemd/user/default.target.wants
 ln -sf /usr/lib/systemd/user/astroimmutable-firstlogin.service \
   /etc/systemd/user/default.target.wants/astroimmutable-firstlogin.service
 
+# sudo: Sternchen-Feedback bei Passworteingabe aktivieren
+echo 'Defaults pwfeedback' > /etc/sudoers.d/pwfeedback
+chmod 0440 /etc/sudoers.d/pwfeedback
+visudo -cf /etc/sudoers.d/pwfeedback
+
 dnf5 clean all -y
 
 systemctl enable podman.socket

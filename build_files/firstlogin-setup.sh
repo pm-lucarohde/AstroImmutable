@@ -31,7 +31,7 @@ if [ -d "$KDE_CFG_SRC" ]; then
     mkdir -p ~/.config/KDE ~/.config/kdedefaults
     for f in kdeglobals plasmarc plasmashellrc \
               kwinrc kscreenlockerrc powerdevilrc powermanagementprofilesrc kcminputrc \
-              kglobalshortcutsrc ksplashrc baloofilerc kwalletrc kwinoutputconfig.json; do
+              kglobalshortcutsrc dolphinrc ksplashrc baloofilerc kwalletrc kwinoutputconfig.json; do
         [ -f "$KDE_CFG_SRC/$f" ] && cp "$KDE_CFG_SRC/$f" ~/.config/"$f"
     done
     [ -d "$KDE_CFG_SRC/KDE" ]         && cp -r "$KDE_CFG_SRC/KDE/."         ~/.config/KDE/
@@ -358,7 +358,10 @@ cat <<'JSON' > "$FIREFOX_DIST/policies.json"
       "browser.safebrowsing.malware.enabled": {"Value": false, "Status": "default"},
       "browser.safebrowsing.phishing.enabled": {"Value": false, "Status": "default"},
       "browser.safebrowsing.blockedURIs.enabled": {"Value": false, "Status": "default"},
-      "browser.safebrowsing.downloads.enabled": {"Value": false, "Status": "default"}
+      "browser.safebrowsing.downloads.enabled": {"Value": false, "Status": "default"},
+      "font.name.sans-serif.x-western": {"Value": "Noto Sans", "Status": "default"},
+      "font.name.serif.x-western": {"Value": "Noto Sans", "Status": "default"},
+      "font.name.monospace.x-western": {"Value": "Noto Sans Mono", "Status": "default"}
     }
   }
 }

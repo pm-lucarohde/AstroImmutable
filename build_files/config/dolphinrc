@@ -1,0 +1,24 @@
+MenuBar=Disabled
+
+[ExtractDialog]
+2560x1440 screen: Height=720
+2560x1440 screen: Width=1574
+
+[General]
+RememberOpenedTabs=false
+Version=202
+ViewPropsTimestamp=2025,12,19,17,48,30.132
+
+[KFileDialog Settings]
+Places Icons Auto-resize=false
+Places Icons Static Size=22
+
+[MainWindow]
+MenuBar=Disabled
+
+[Notification Messages]
+ConfirmRenameFileType=false
+warnAboutRisksBeforeActingAsAdmin=false
+
+[PreviewSettings]
+Plugins=comicbookthumbnail,cursorthumbnail,directorythumbnail,djvuthumbnail,ebookthumbnail,exrthumbnail,imagethumbnail,jpegthumbnail,kraorathumbnail,opendocumentthumbnail,svgthumbnail,windowsexethumbnail,windowsimagethumbnail,fontthumbnail,ffmpegthumbs,audiothumbnail,gsf-office
