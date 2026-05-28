@@ -195,7 +195,26 @@ install -Dm644 /ctx/user.js /usr/share/astroimmutable/user.js
 cp -r /ctx/config /usr/share/astroimmutable/config
 install -Dm644 /ctx/wallpaper/mars.jpg /usr/share/astroimmutable/wallpaper/mars.jpg
 install -Dm644 /ctx/avatar/katzenhai.png /usr/share/astroimmutable/avatar/katzenhai.png
-install -Dm644 /ctx/wallpaper/mars.jpg /usr/share/backgrounds/cosmic/orion_nebula_nasa_heic0601a.jpg
+
+# cosmic-greeter Hintergrundbild setzen
+GREETER_BG="/var/lib/cosmic-greeter/.config/cosmic/com.system76.CosmicBackground/v1"
+mkdir -p "$GREETER_BG"
+
+cat <<'EOF' > "$GREETER_BG/all"
+(
+    output: "all",
+    source: Path("/usr/share/astroimmutable/wallpaper/mars.jpg"),
+    filter_by_theme: false,
+    rotation_frequency: 300,
+    filter_method: Lanczos,
+    scaling_mode: Zoom,
+    sampling_method: Alphanumeric,
+)
+EOF
+
+echo '["all"]' > "$GREETER_BG/backgrounds"
+
+chown -R cosmic-greeter:cosmic-greeter /var/lib/cosmic-greeter/.config
 
 mkdir -p /var/lib/cosmic-greeter/.local/state/cosmic-comp/
 cp -r /ctx/outputs.ron /var/lib/cosmic-greeter/.local/state/cosmic-comp/outputs.ron
