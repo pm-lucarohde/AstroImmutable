@@ -15,12 +15,6 @@ fi
 mkdir -p "${STATE_DIR}"
 
 # ---------------------------------------------------------------------------
-# Hintergrundbild setzen
-# ---------------------------------------------------------------------------
-
-plasma-apply-wallpaperimage /usr/share/astroimmutable/wallpaper/mars.jpg || true
-
-# ---------------------------------------------------------------------------
 # Profilbild setzen
 # ---------------------------------------------------------------------------
 
@@ -262,27 +256,6 @@ update-desktop-database ~/.local/share/applications 2>/dev/null || true
 update-desktop-database ~/.local/share/flatpak/exports/share/applications 2>/dev/null || true
 
 # ---------------------------------------------------------------------------
-# Kickoff-Favoriten setzen (via Plasma-Scripting-API)
-# ---------------------------------------------------------------------------
-
-FAVS="applications:systemsettings.desktop,applications:com.mitchellh.ghostty.desktop,applications:dev.vencord.Vesktop.desktop,applications:org.mozilla.firefox.desktop"
-
-dbus-send --session --print-reply --dest=org.kde.plasmashell \
-    /PlasmaShell org.kde.PlasmaShell.evaluateScript \
-    string:"
-let launchers = ['org.kde.plasma.kickoff', 'org.kde.plasma.kicker', 'org.kde.plasma.kickerdash'];
-panels().concat(desktops()).forEach(c => {
-    c.widgets().forEach(w => {
-        if (launchers.includes(w.type)) {
-            w.currentConfigGroup = ['General'];
-            w.writeConfig('favorites', '$FAVS');
-            w.reloadConfig();
-        }
-    });
-});
-" || true
-
-# ---------------------------------------------------------------------------
 # Firefox: Unternehmensrichtlinien (Erweiterungen, Suche, Datenschutz)
 # ---------------------------------------------------------------------------
 
@@ -505,6 +478,40 @@ sdk install java 25.0.2-graalce
 echo "n" | sdk install java 21.0.2-graalce
 sdk default java 25.0.2-graalce
 set -euo pipefail
+
+# ---------------------------------------------------------------------------
+# Plasma-Live-Anpassungen (Hintergrundbild + Kickoff-Favoriten)
+# ---------------------------------------------------------------------------
+# Diese Schritte laufen über D-Bus und brauchen ein laufendes Plasmashell,
+# daher erst hier am Ende – nach allen dateibasierten Configs – und nach
+# einem kurzen Warteloop auf Plasmashell.
+
+for i in $(seq 1 60); do
+    dbus-send --session --dest=org.kde.plasmashell --print-reply \
+        /PlasmaShell org.freedesktop.DBus.Peer.Ping &>/dev/null && break
+    sleep 1
+done
+
+# Hintergrundbild setzen
+plasma-apply-wallpaperimage /usr/share/astroimmutable/wallpaper/mars.jpg || true
+
+# Kickoff-Favoriten setzen
+FAVS="applications:systemsettings.desktop,applications:com.mitchellh.ghostty.desktop,applications:dev.vencord.Vesktop.desktop,applications:org.mozilla.firefox.desktop"
+
+dbus-send --session --print-reply --dest=org.kde.plasmashell \
+    /PlasmaShell org.kde.PlasmaShell.evaluateScript \
+    string:"
+let launchers = ['org.kde.plasma.kickoff', 'org.kde.plasma.kicker', 'org.kde.plasma.kickerdash'];
+panels().concat(desktops()).forEach(c => {
+    c.widgets().forEach(w => {
+        if (launchers.includes(w.type)) {
+            w.currentConfigGroup = ['General'];
+            w.writeConfig('favorites', '$FAVS');
+            w.reloadConfig();
+        }
+    });
+});
+" || true
 
 # ---------------------------------------------------------------------------
 # Setup abgeschlossen – beim nächsten Login wird dieses Skript übersprungen
