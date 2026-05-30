@@ -143,6 +143,20 @@ URL[$e]=trash:/
 EOF
 
 # ---------------------------------------------------------------------------
+# Hintergrundbild setzen (D-Bus, braucht laufendes Plasmashell)
+# ---------------------------------------------------------------------------
+# Vor den (langwierigen) Flatpak-Installs, damit das Wallpaper früh erscheint.
+# Wartet auf Plasmashell, da plasma-apply-wallpaperimage es sonst nicht erreicht.
+
+for i in $(seq 1 60); do
+    dbus-send --session --dest=org.kde.plasmashell --print-reply \
+        /PlasmaShell org.freedesktop.DBus.Peer.Ping &>/dev/null && break
+    sleep 1
+done
+
+plasma-apply-wallpaperimage /usr/share/astroimmutable/wallpaper/mars.jpg || true
+
+# ---------------------------------------------------------------------------
 # Flatpak einrichten und Apps installieren
 # ---------------------------------------------------------------------------
 
@@ -491,22 +505,10 @@ sdk default java 25.0.2-graalce
 set -euo pipefail
 
 # ---------------------------------------------------------------------------
-# Plasma-Live-Anpassungen (Hintergrundbild + Kickoff-Favoriten)
+# Kickoff-Favoriten in die KActivityManager-DB seeden
 # ---------------------------------------------------------------------------
-# Laufen erst hier am Ende, nach allen dateibasierten Configs, und nach einem
-# Warteloop auf Plasmashell. Beide brauchen laufende Dienste (Plasmashell bzw.
-# kactivitymanagerd).
-
-for i in $(seq 1 60); do
-    dbus-send --session --dest=org.kde.plasmashell --print-reply \
-        /PlasmaShell org.freedesktop.DBus.Peer.Ping &>/dev/null && break
-    sleep 1
-done
-
-# Hintergrundbild setzen
-plasma-apply-wallpaperimage /usr/share/astroimmutable/wallpaper/mars.jpg || true
-
-# Kickoff-Favoriten: Mitgliedschaft in der KActivityManager-DB anlegen.
+# Am Ende, nach den Flatpak-Installs (Apps existieren) und mit laufendem
+# kactivitymanagerd. Mitgliedschaft in der KActivityManager-DB anlegen.
 # Die Reihenfolge kommt aus der kopierten appletsrc (favorites=); hier wird
 # nur die Mitgliedschaft gesetzt, da Plasma 6 die Favoriten in KAStats hält.
 QDBUS=$(command -v qdbus6 || command -v qdbus-qt6 || command -v qdbus || true)
