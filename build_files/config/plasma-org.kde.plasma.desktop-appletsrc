@@ -70,6 +70,7 @@ popupHeight=509
 popupWidth=677
 
 [Containments][28][Applets][29][Configuration][General]
+favorites=applications:systemsettings.desktop,applications:com.mitchellh.ghostty.desktop,applications:dev.vencord.Vesktop.desktop,applications:org.mozilla.firefox.desktop
 favoritesPortedToKAstats=false
 icon=start-here
 
@@ -208,6 +209,7 @@ popupHeight=509
 popupWidth=677
 
 [Containments][74][Applets][75][Configuration][General]
+favorites=applications:systemsettings.desktop,applications:com.mitchellh.ghostty.desktop,applications:dev.vencord.Vesktop.desktop,applications:org.mozilla.firefox.desktop
 favoritesPortedToKAstats=false
 icon=start-here
 
