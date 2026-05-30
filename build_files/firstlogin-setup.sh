@@ -28,7 +28,7 @@ chmod 644 ~/.face.icon
 KDE_CFG_SRC="/usr/share/astroimmutable/config"
 if [ -d "$KDE_CFG_SRC" ]; then
     mkdir -p ~/.config/KDE ~/.config/kdedefaults
-    for f in kdeglobals plasmarc plasmashellrc plasma-org.kde.plasma.desktop-appletsrc \
+    for f in kdeglobals plasmarc plasmashellrc plasma-org.kde.plasma.desktop-appletsrc plasmaparc \
               kwinrc kscreenlockerrc powerdevilrc powermanagementprofilesrc kcminputrc \
               kglobalshortcutsrc dolphinrc ksplashrc baloofilerc kwalletrc kwinoutputconfig.json; do
         [ -f "$KDE_CFG_SRC/$f" ] && cp "$KDE_CFG_SRC/$f" ~/.config/"$f"
