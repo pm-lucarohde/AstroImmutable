@@ -480,11 +480,11 @@ sdk default java 25.0.2-graalce
 set -euo pipefail
 
 # ---------------------------------------------------------------------------
-# Hintergrundbild setzen (D-Bus, braucht laufendes Plasmashell)
+# Plasma-Live-Anpassungen (Hintergrundbild + Kickoff-Favoriten)
 # ---------------------------------------------------------------------------
-# Läuft erst hier am Ende, nach allen dateibasierten Configs, und nach einem
-# kurzen Warteloop auf Plasmashell. Die Favoriten kommen dagegen über die
-# kopierte appletsrc (favoritesPortedToKAstats=false), nicht über D-Bus.
+# Laufen erst hier am Ende, nach allen dateibasierten Configs, und nach einem
+# Warteloop auf Plasmashell. Beide brauchen laufende Dienste (Plasmashell bzw.
+# kactivitymanagerd).
 
 for i in $(seq 1 60); do
     dbus-send --session --dest=org.kde.plasmashell --print-reply \
@@ -492,7 +492,24 @@ for i in $(seq 1 60); do
     sleep 1
 done
 
+# Hintergrundbild setzen
 plasma-apply-wallpaperimage /usr/share/astroimmutable/wallpaper/mars.jpg || true
+
+# Kickoff-Favoriten: Mitgliedschaft in der KActivityManager-DB anlegen.
+# Die Reihenfolge kommt aus der kopierten appletsrc (favorites=); hier wird
+# nur die Mitgliedschaft gesetzt, da Plasma 6 die Favoriten in KAStats hält.
+QDBUS=$(command -v qdbus6 || command -v qdbus-qt6 || command -v qdbus || true)
+if [ -n "$QDBUS" ]; then
+    for app in \
+        applications:systemsettings.desktop \
+        applications:com.mitchellh.ghostty.desktop \
+        applications:dev.vencord.Vesktop.desktop \
+        applications:org.mozilla.firefox.desktop; do
+        "$QDBUS" org.kde.ActivityManager /ActivityManager/Resources/Linking \
+            org.kde.ActivityManager.ResourcesLinking.LinkResourceToActivity \
+            "org.kde.plasma.favorites.applications" "$app" ":global" || true
+    done
+fi
 
 # ---------------------------------------------------------------------------
 # Setup abgeschlossen – beim nächsten Login wird dieses Skript übersprungen
