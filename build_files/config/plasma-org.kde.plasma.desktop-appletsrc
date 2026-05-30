@@ -70,7 +70,7 @@ popupHeight=509
 popupWidth=677
 
 [Containments][28][Applets][29][Configuration][General]
-favoritesPortedToKAstats=true
+favoritesPortedToKAstats=false
 icon=start-here
 
 [Containments][28][Applets][30]
@@ -208,7 +208,7 @@ popupHeight=509
 popupWidth=677
 
 [Containments][74][Applets][75][Configuration][General]
-favoritesPortedToKAstats=true
+favoritesPortedToKAstats=false
 icon=start-here
 
 [Containments][74][Applets][76]

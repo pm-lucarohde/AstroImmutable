@@ -480,11 +480,11 @@ sdk default java 25.0.2-graalce
 set -euo pipefail
 
 # ---------------------------------------------------------------------------
-# Plasma-Live-Anpassungen (Hintergrundbild + Kickoff-Favoriten)
+# Hintergrundbild setzen (D-Bus, braucht laufendes Plasmashell)
 # ---------------------------------------------------------------------------
-# Diese Schritte laufen über D-Bus und brauchen ein laufendes Plasmashell,
-# daher erst hier am Ende – nach allen dateibasierten Configs – und nach
-# einem kurzen Warteloop auf Plasmashell.
+# Läuft erst hier am Ende, nach allen dateibasierten Configs, und nach einem
+# kurzen Warteloop auf Plasmashell. Die Favoriten kommen dagegen über die
+# kopierte appletsrc (favoritesPortedToKAstats=false), nicht über D-Bus.
 
 for i in $(seq 1 60); do
     dbus-send --session --dest=org.kde.plasmashell --print-reply \
@@ -492,26 +492,7 @@ for i in $(seq 1 60); do
     sleep 1
 done
 
-# Hintergrundbild setzen
 plasma-apply-wallpaperimage /usr/share/astroimmutable/wallpaper/mars.jpg || true
-
-# Kickoff-Favoriten setzen
-FAVS="applications:systemsettings.desktop,applications:com.mitchellh.ghostty.desktop,applications:dev.vencord.Vesktop.desktop,applications:org.mozilla.firefox.desktop"
-
-dbus-send --session --print-reply --dest=org.kde.plasmashell \
-    /PlasmaShell org.kde.PlasmaShell.evaluateScript \
-    string:"
-let launchers = ['org.kde.plasma.kickoff', 'org.kde.plasma.kicker', 'org.kde.plasma.kickerdash'];
-panels().concat(desktops()).forEach(c => {
-    c.widgets().forEach(w => {
-        if (launchers.includes(w.type)) {
-            w.currentConfigGroup = ['General'];
-            w.writeConfig('favorites', '$FAVS');
-            w.reloadConfig();
-        }
-    });
-});
-" || true
 
 # ---------------------------------------------------------------------------
 # Setup abgeschlossen – beim nächsten Login wird dieses Skript übersprungen
