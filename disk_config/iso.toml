@@ -1,9 +1,8 @@
 [customizations.installer.kickstart]
 contents = """
-# Sprache und Tastatur vorbelegen
+# Installer-Sprache vorbelegen; Tastatur und Zeitzone lässt Anaconda
+# automatisch per Geolocation (GeoIP) ermitteln, daher kein keyboard/timezone.
 lang de_DE.UTF-8
-keyboard de
-timezone Europe/Berlin
 
 # Boot Partitionen
 part /boot/efi --fstype=efi --size=256
@@ -28,6 +27,7 @@ enable = [
   "org.fedoraproject.Anaconda.Modules.Security",
   "org.fedoraproject.Anaconda.Modules.Services",
   "org.fedoraproject.Anaconda.Modules.Users",
+  "org.fedoraproject.Anaconda.Modules.Localization",
   "org.fedoraproject.Anaconda.Modules.Timezone"
 ]
 
