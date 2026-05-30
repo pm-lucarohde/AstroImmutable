@@ -79,9 +79,7 @@ dnf5 remove -y --noautoremove \
     cosmic-osd \
     cosmic-idle \
     cutecosmic-qt6 \
-    cosmic-bg \
     cosmic-launcher \
-    cosmic-randr \
     cosmic-settings-daemon \
     xdg-desktop-portal-cosmic \
     pop-launcher \

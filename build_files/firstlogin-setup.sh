@@ -5,6 +5,17 @@ STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/astroimmutable"
 STATE_FILE="${STATE_DIR}/setup_done"
 
 # ---------------------------------------------------------------------------
+# Guard: nur für echte Benutzer, nicht für System-User
+# ---------------------------------------------------------------------------
+# Der Service liegt in default.target.wants und würde sonst auch in der
+# Session des cosmic-greeter-Users (UID < 1000) laufen und dessen Home mit
+# KDE-Configs, Flatpaks etc. zumüllen.
+
+if [ "$(id -u)" -lt 1000 ]; then
+    exit 0
+fi
+
+# ---------------------------------------------------------------------------
 # Guard: Setup läuft nur einmal
 # ---------------------------------------------------------------------------
 
