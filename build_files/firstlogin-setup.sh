@@ -156,25 +156,6 @@ done
 
 plasma-apply-wallpaperimage /usr/share/astroimmutable/wallpaper/mars.jpg || true
 
-# Kickoff-Favoriten: Mitgliedschaft in der KActivityManager-DB anlegen.
-# Früh – vor den langwierigen/fehleranfälligen Installs – damit ein Abbruch
-# weiter unten die Favoriten nicht verhindert. Die Reihenfolge kommt aus der
-# kopierten appletsrc (favorites=); hier nur die Mitgliedschaft, da Plasma 6
-# die Favoriten in KAStats hält. Die referenzierten Apps müssen noch nicht
-# installiert sein – Kickoff löst die .desktop-IDs erst beim Anzeigen auf.
-QDBUS=$(command -v qdbus6 || command -v qdbus-qt6 || command -v qdbus || true)
-if [ -n "$QDBUS" ]; then
-    for app in \
-        applications:systemsettings.desktop \
-        applications:com.mitchellh.ghostty.desktop \
-        applications:dev.vencord.Vesktop.desktop \
-        applications:org.mozilla.firefox.desktop; do
-        "$QDBUS" org.kde.ActivityManager /ActivityManager/Resources/Linking \
-            org.kde.ActivityManager.ResourcesLinking.LinkResourceToActivity \
-            "org.kde.plasma.favorites.applications" "$app" ":global" || true
-    done
-fi
-
 # ---------------------------------------------------------------------------
 # Flatpak einrichten und Apps installieren
 # ---------------------------------------------------------------------------
@@ -298,6 +279,27 @@ EOF
 
 update-desktop-database ~/.local/share/applications 2>/dev/null || true
 update-desktop-database ~/.local/share/flatpak/exports/share/applications 2>/dev/null || true
+
+# ---------------------------------------------------------------------------
+# Kickoff-Favoriten in die KActivityManager-DB seeden
+# ---------------------------------------------------------------------------
+# Hier – nach den Flatpak-Installs (Apps existieren, werden also sofort
+# angezeigt), aber vor dem fragilen Distrobox/SDKMAN-Teil, damit ein Abbruch
+# dort die Favoriten nicht verhindert. Die Reihenfolge kommt aus der kopierten
+# appletsrc (favorites=); hier nur die Mitgliedschaft, da Plasma 6 die
+# Favoriten in KAStats hält.
+QDBUS=$(command -v qdbus6 || command -v qdbus-qt6 || command -v qdbus || true)
+if [ -n "$QDBUS" ]; then
+    for app in \
+        applications:systemsettings.desktop \
+        applications:com.mitchellh.ghostty.desktop \
+        applications:dev.vencord.Vesktop.desktop \
+        applications:org.mozilla.firefox.desktop; do
+        "$QDBUS" org.kde.ActivityManager /ActivityManager/Resources/Linking \
+            org.kde.ActivityManager.ResourcesLinking.LinkResourceToActivity \
+            "org.kde.plasma.favorites.applications" "$app" ":global" || true
+    done
+fi
 
 # ---------------------------------------------------------------------------
 # Firefox: Unternehmensrichtlinien (Erweiterungen, Suche, Datenschutz)
