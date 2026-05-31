@@ -156,6 +156,25 @@ done
 
 plasma-apply-wallpaperimage /usr/share/astroimmutable/wallpaper/mars.jpg || true
 
+# Kickoff-Favoriten: Mitgliedschaft in der KActivityManager-DB anlegen.
+# Früh – vor den langwierigen/fehleranfälligen Installs – damit ein Abbruch
+# weiter unten die Favoriten nicht verhindert. Die Reihenfolge kommt aus der
+# kopierten appletsrc (favorites=); hier nur die Mitgliedschaft, da Plasma 6
+# die Favoriten in KAStats hält. Die referenzierten Apps müssen noch nicht
+# installiert sein – Kickoff löst die .desktop-IDs erst beim Anzeigen auf.
+QDBUS=$(command -v qdbus6 || command -v qdbus-qt6 || command -v qdbus || true)
+if [ -n "$QDBUS" ]; then
+    for app in \
+        applications:systemsettings.desktop \
+        applications:com.mitchellh.ghostty.desktop \
+        applications:dev.vencord.Vesktop.desktop \
+        applications:org.mozilla.firefox.desktop; do
+        "$QDBUS" org.kde.ActivityManager /ActivityManager/Resources/Linking \
+            org.kde.ActivityManager.ResourcesLinking.LinkResourceToActivity \
+            "org.kde.plasma.favorites.applications" "$app" ":global" || true
+    done
+fi
+
 # ---------------------------------------------------------------------------
 # Flatpak einrichten und Apps installieren
 # ---------------------------------------------------------------------------
@@ -478,8 +497,12 @@ fi
 # Distrobox: Ubuntu-Container mit CurseForge
 # ---------------------------------------------------------------------------
 
+# Non-fatal: Fehler im Container dürfen das restliche Setup nicht abbrechen.
+set +e
+
 distrobox create --yes --image ubuntu:26.04 --name ubuntu --nvidia
-distrobox enter ubuntu -- bash -c 'sudo apt update && sudo apt upgrade -y && sudo apt install -y libasound2t64'
+# dpkg ggf. reparieren, falls eine vorherige apt-Operation unterbrochen wurde
+distrobox enter ubuntu -- bash -c 'sudo dpkg --configure -a; sudo apt update && sudo apt upgrade -y && sudo apt install -y libasound2t64'
 distrobox enter ubuntu -- bash -c '
     curl -fL --retry 3 --retry-delay 30 "https://curseforge.overwolf.com/downloads/curseforge-latest-linux.deb" -o ~/curseforge.deb \
     && sudo apt install -y ~/curseforge.deb \
@@ -487,6 +510,8 @@ distrobox enter ubuntu -- bash -c '
     && distrobox-export --app curseforge \
     || echo "WARNING: CurseForge install failed, skipping"
 '
+
+set -e
 
 # ---------------------------------------------------------------------------
 # SDKMAN und Java (GraalVM Community Edition)
@@ -503,26 +528,6 @@ sdk install java 25.0.2-graalce
 echo "n" | sdk install java 21.0.2-graalce
 sdk default java 25.0.2-graalce
 set -euo pipefail
-
-# ---------------------------------------------------------------------------
-# Kickoff-Favoriten in die KActivityManager-DB seeden
-# ---------------------------------------------------------------------------
-# Am Ende, nach den Flatpak-Installs (Apps existieren) und mit laufendem
-# kactivitymanagerd. Mitgliedschaft in der KActivityManager-DB anlegen.
-# Die Reihenfolge kommt aus der kopierten appletsrc (favorites=); hier wird
-# nur die Mitgliedschaft gesetzt, da Plasma 6 die Favoriten in KAStats hält.
-QDBUS=$(command -v qdbus6 || command -v qdbus-qt6 || command -v qdbus || true)
-if [ -n "$QDBUS" ]; then
-    for app in \
-        applications:systemsettings.desktop \
-        applications:com.mitchellh.ghostty.desktop \
-        applications:dev.vencord.Vesktop.desktop \
-        applications:org.mozilla.firefox.desktop; do
-        "$QDBUS" org.kde.ActivityManager /ActivityManager/Resources/Linking \
-            org.kde.ActivityManager.ResourcesLinking.LinkResourceToActivity \
-            "org.kde.plasma.favorites.applications" "$app" ":global" || true
-    done
-fi
 
 # ---------------------------------------------------------------------------
 # Setup abgeschlossen – beim nächsten Login wird dieses Skript übersprungen
