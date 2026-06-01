@@ -267,6 +267,13 @@ install -Dm644 /ctx/avatar/katzenhai.png /usr/share/astroimmutable/avatar/katzen
 # Login als User in firstlogin-setup.sh angelegt (gekeyt auf die echten
 # Output-Namen), nicht hier im Image.
 
+# Monitor-Layout des Greeters (Auflösung/120Hz/Position) – cosmic-comp-State
+# des cosmic-greeter-Users. /var/lib/cosmic-greeter wird via tmpfiles.d zur
+# Laufzeit angelegt; der Inhalt wird beim Erst-Install aus dem Image geseedet.
+mkdir -p /var/lib/cosmic-greeter/.local/state/cosmic-comp/
+cp /ctx/outputs.ron /var/lib/cosmic-greeter/.local/state/cosmic-comp/outputs.ron
+chown -R cosmic-greeter:cosmic-greeter /var/lib/cosmic-greeter/.local
+
 # ---------------------------------------------------------------------------
 # First-Login-Service einrichten
 # ---------------------------------------------------------------------------
