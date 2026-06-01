@@ -47,9 +47,9 @@ if [ -d "$KDE_CFG_SRC" ]; then
     [ -d "$KDE_CFG_SRC/KDE" ]         && cp -r "$KDE_CFG_SRC/KDE/."         ~/.config/KDE/
     [ -d "$KDE_CFG_SRC/kdedefaults" ] && cp -r "$KDE_CFG_SRC/kdedefaults/." ~/.config/kdedefaults/
 
-    # Dolphin-Fensterzustand (Terminal-Panel aus) liegt in ~/.local/state,
-    # nicht ~/.config. Gekeyt auf "2 screens:" – greift auf Dual-Monitor-Setups;
-    # bei abweichender Bildschirmanzahl fällt Dolphin auf seinen Default zurück.
+    # Dolphin-Panel-Layout (nur Orte-Panel; Ordner/Info/Terminal aus) liegt in
+    # ~/.local/state, nicht ~/.config. Nur die globale State=-Zeile (ohne
+    # "screens:"-Prefix), daher bildschirm-unabhängig.
     if [ -f "$KDE_CFG_SRC/dolphinstaterc" ]; then
         mkdir -p ~/.local/state
         cp "$KDE_CFG_SRC/dolphinstaterc" ~/.local/state/dolphinstaterc
