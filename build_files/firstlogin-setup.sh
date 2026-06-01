@@ -383,7 +383,16 @@ cat <<'JSON' > "$FIREFOX_DIST/policies.json"
       "Locked": false
     },
     "SearchEngines": {
-      "Default": "DuckDuckGo"
+      "Default": "Startpage",
+      "Add": [
+        {
+          "Name": "Startpage",
+          "URLTemplate": "https://www.startpage.com/sp/search?query={searchTerms}",
+          "Method": "GET",
+          "IconURL": "https://www.startpage.com/favicon.ico",
+          "Alias": "startpage"
+        }
+      ]
     },
     "HttpsOnlyMode": "enabled",
     "DNSOverHTTPS": {
