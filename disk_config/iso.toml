@@ -1,8 +1,5 @@
 [customizations.installer.kickstart]
 contents = """
-# Installer-Sprache vorbelegen; Tastatur und Zeitzone lässt Anaconda
-# automatisch per Geolocation (GeoIP) ermitteln, daher kein keyboard/timezone.
-lang de_DE.UTF-8
 
 # Boot Partitionen
 part /boot/efi --fstype=efi --size=256
