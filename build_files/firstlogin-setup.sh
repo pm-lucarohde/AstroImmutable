@@ -32,6 +32,14 @@ mkdir -p "${STATE_DIR}"
 cp /usr/share/astroimmutable/avatar/katzenhai.png ~/.face.icon
 chmod 644 ~/.face.icon
 
+# Avatar auch in AccountsService setzen – das lesen die Systemeinstellungen
+# und der Anmeldebildschirm (~/.face.icon allein reicht nur für Kickoff).
+# Polkit erlaubt dem User, sein eigenes Icon zu setzen; AccountsService kopiert
+# es nach /var/lib/AccountsService/icons/<user>.
+dbus-send --system --print-reply --dest=org.freedesktop.Accounts \
+    "/org/freedesktop/Accounts/User$(id -u)" \
+    org.freedesktop.Accounts.User.SetIconFile "string:$HOME/.face.icon" &>/dev/null || true
+
 # ---------------------------------------------------------------------------
 # KDE-Konfiguration aus dem Image übernehmen
 # ---------------------------------------------------------------------------
