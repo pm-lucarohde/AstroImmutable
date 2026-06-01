@@ -186,12 +186,6 @@ mkdir -p "$BG_STATE_DIR"
 } > "$BG_STATE_DIR/wallpapers"
 
 # ---------------------------------------------------------------------------
-# Spotify die nötigen Berechtigungen geben
-# ---------------------------------------------------------------------------
-journalctl -b | grep -i spotify | audit2allow -M spotify_fix
-semodule -i spotify_fix.pp
-
-# ---------------------------------------------------------------------------
 # Flatpak einrichten und Apps installieren
 # ---------------------------------------------------------------------------
 
