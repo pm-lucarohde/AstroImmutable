@@ -298,6 +298,16 @@ visudo -cf /etc/sudoers.d/pwfeedback
 systemctl enable podman.socket
 
 # ---------------------------------------------------------------------------
+# SELinux: Spotify execmem erlauben
+# ---------------------------------------------------------------------------
+# Spotify löst ein process:execmem-Denial aus. Das Modul wird hier zur
+# Build-Zeit (als root) kompiliert und fest in die Policy gebacken.
+rpm -q checkpolicy >/dev/null 2>&1 || _dnf5_install checkpolicy
+checkmodule -M -m -o /tmp/spotify_fix.mod /ctx/spotify_fix.te
+semodule_package -o /tmp/spotify_fix.pp -m /tmp/spotify_fix.mod
+semodule -i /tmp/spotify_fix.pp
+
+# ---------------------------------------------------------------------------
 # Swap, ZRAM & ZSWAP Tuning (OSTree / Vendor Defaults)
 # ---------------------------------------------------------------------------
 
