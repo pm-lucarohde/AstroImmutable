@@ -171,17 +171,6 @@ grep -q '^noninteger_translucency=' /usr/share/Kvantum/KvKonqiDark/KvKonqiDark.k
     || sed -i '/^\[Hacks\]/a noninteger_translucency=false' /usr/share/Kvantum/KvKonqiDark/KvKonqiDark.kvconfig
 
 # ---------------------------------------------------------------------------
-# Flatpak-System-Remotes bereinigen
-# ---------------------------------------------------------------------------
-# Standard-Remotes entfernen; der Nutzer richtet Flathub beim ersten Login ein.
-
-for remote in fedora flathub; do
-    if flatpak --system remotes | awk '{print $1}' | grep -qx "$remote"; then
-        flatpak --system remote-delete "$remote" --force
-    fi
-done
-
-# ---------------------------------------------------------------------------
 # JetBrains Toolbox
 # ---------------------------------------------------------------------------
 
