@@ -295,6 +295,10 @@ echo 'Defaults pwfeedback' > /etc/sudoers.d/pwfeedback
 chmod 0440 /etc/sudoers.d/pwfeedback
 visudo -cf /etc/sudoers.d/pwfeedback
 
+# Standard-Hostname (statt "fedora"); per hostnamectl jederzeit überschreibbar.
+# Die Netzwerk-Domain (z.B. .fritz.box) hängt der Router separat an die FQDN.
+echo "astroimmutable" > /etc/hostname
+
 systemctl enable podman.socket
 
 # ---------------------------------------------------------------------------
