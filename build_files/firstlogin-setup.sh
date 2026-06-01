@@ -157,6 +157,33 @@ done
 plasma-apply-wallpaperimage /usr/share/astroimmutable/wallpaper/mars.jpg || true
 
 # ---------------------------------------------------------------------------
+# cosmic-greeter: Login-Screen-Wallpaper
+# ---------------------------------------------------------------------------
+# Der cosmic-greeter-Daemon spiegelt das Wallpaper aus der cosmic-bg-State des
+# Users: ~/.local/state/cosmic/com.system76.CosmicBackground/v1/wallpapers im
+# RON-Format Vec<(output_name, Source)>. Der Greeter matcht den Output-Namen
+# exakt, daher pro verbundenem Output (aus /sys/class/drm) einen Eintrag.
+BG_STATE_DIR="$HOME/.local/state/cosmic/com.system76.CosmicBackground/v1"
+WALL="/usr/share/astroimmutable/wallpaper/mars.jpg"
+mkdir -p "$BG_STATE_DIR"
+{
+    echo "["
+    for s in /sys/class/drm/card*-*/status; do
+        [ "$(cat "$s" 2>/dev/null)" = "connected" ] || continue
+        conn=$(basename "$(dirname "$s")")   # z.B. card1-eDP-1
+        name=${conn#card*-}                  # -> eDP-1
+        printf '    ("%s", Path("%s")),\n' "$name" "$WALL"
+    done
+    echo "]"
+} > "$BG_STATE_DIR/wallpapers"
+
+# ---------------------------------------------------------------------------
+# Spotify die nötigen Berechtigungen geben
+# ---------------------------------------------------------------------------
+journalctl -b | grep -i spotify | audit2allow -M spotify_fix
+semodule -i spotify_fix.pp
+
+# ---------------------------------------------------------------------------
 # Flatpak einrichten und Apps installieren
 # ---------------------------------------------------------------------------
 
