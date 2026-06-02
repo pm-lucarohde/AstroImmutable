@@ -124,7 +124,7 @@ mkdir -p ~/.config/ghostty
 cat <<EOF > ~/.config/ghostty/config.ghostty
 theme = "Breeze"
 font-family = "Noto Sans Mono"
-background-opacity = "0.8"
+background-opacity = "0.7"
 background-blur = "true"
 window-width = "128"
 window-height = "32"
