@@ -199,6 +199,7 @@ mkdir -p "$BG_STATE_DIR"
 
 flatpak config --user --set languages "de;en"
 flatpak remote-add --if-not-exists --user flathub https://flathub.org/repo/flathub.flatpakrepo
+flatpak remote-modify --user --prio=10 flathub
 
 _flatpak_install() {
     local attempt

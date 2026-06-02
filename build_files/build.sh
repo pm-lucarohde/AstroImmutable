@@ -364,6 +364,52 @@ EOF
 systemctl enable astroimmutable-btrfs-opts.service
 
 # ---------------------------------------------------------------------------
+# NetworkManager: Cloudflare-DNS global erzwingen (hardware-unabhängig)
+# ---------------------------------------------------------------------------
+# Globale DNS-Config, die für ALLE Verbindungen (Ethernet, WLAN, …) gilt und
+# das per DHCP gelieferte DNS übersteuert. Greift erst im fertig gebauten Image.
+mkdir -p /etc/NetworkManager/conf.d
+cat <<'EOF' > /etc/NetworkManager/conf.d/10-cloudflare-dns.conf
+[global-dns-domain-*]
+servers=1.1.1.2,2606:4700:4700::1111
+EOF
+
+# ---------------------------------------------------------------------------
+# Kernel Parameter (bootc kargs)
+# ---------------------------------------------------------------------------
+mkdir -p /usr/lib/bootc/kargs.d
+cat <<EOF > /usr/lib/bootc/kargs.d/01-custom.toml
+kargs = [
+    "quiet",
+    "splash",
+    "loglevel=3",
+    "no-console-sysrq",
+    "console=tty0",
+    "8250.nr_uarts=0"
+]
+EOF
+
+# ---------------------------------------------------------------------------
+# GRUB Menu Auto-Hide (First-Boot Service)
+# ---------------------------------------------------------------------------
+cat <<'EOF' > /usr/lib/systemd/system/astroimmutable-grub-hide.service
+[Unit]
+Description=Hide GRUB menu on first boot
+ConditionFirstBoot=yes
+After=local-fs.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/grub2-editenv - set menu_auto_hide=1
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+systemctl enable astroimmutable-grub-hide.service
+
+# ---------------------------------------------------------------------------
 # DNF-Cache leeren
 # ---------------------------------------------------------------------------
 

@@ -70,9 +70,12 @@ popupHeight=509
 popupWidth=677
 
 [Containments][28][Applets][29][Configuration][General]
+alphaSort=true
 favorites=applications:systemsettings.desktop,applications:com.mitchellh.ghostty.desktop,applications:dev.vencord.Vesktop.desktop,applications:org.mozilla.firefox.desktop
 favoritesPortedToKAstats=true
 icon=start-here
+showRecentApps=false
+systemFavorites=suspend,hibernate,reboot,shutdown
 
 [Containments][28][Applets][30]
 immutability=1
@@ -209,9 +212,12 @@ popupHeight=509
 popupWidth=677
 
 [Containments][74][Applets][75][Configuration][General]
+alphaSort=true
 favorites=applications:systemsettings.desktop,applications:com.mitchellh.ghostty.desktop,applications:dev.vencord.Vesktop.desktop,applications:org.mozilla.firefox.desktop
 favoritesPortedToKAstats=true
 icon=start-here
+showRecentApps=false
+systemFavorites=suspend,hibernate,reboot,shutdown
 
 [Containments][74][Applets][76]
 immutability=1
