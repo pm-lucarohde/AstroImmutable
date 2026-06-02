@@ -443,6 +443,7 @@ cat <<'JSON' > "$FIREFOX_DIST/policies.json"
       "browser.link.open_newwindow": {"Value": 3, "Status": "default"},
       "layout.spellcheckDefault": {"Value": 0, "Status": "default"},
       "media.eme.enabled": {"Value": true, "Status": "default"},
+      "media.videocontrols.picture-in-picture.video-toggle.enabled": {"Value": false, "Status": "default"},
       "browser.preferences.defaultPerformanceSettings.enabled": {"Value": true, "Status": "default"},
       "browser.urlbar.showSearchTerms.enabled": {"Value": false, "Status": "default"},
       "browser.search.separatePrivateDefault": {"Value": false, "Status": "default"},
