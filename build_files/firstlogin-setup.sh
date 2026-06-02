@@ -213,7 +213,7 @@ _flatpak_install() {
 
 _flatpak_install \
     org.mozilla.firefox \
-    com.ktechpit.whatsie \
+    com.rtosta.zapzap \
     org.mozilla.thunderbird_esr \
     org.qbittorrent.qBittorrent \
     org.prismlauncher.PrismLauncher \
@@ -235,7 +235,7 @@ _flatpak_install \
     org.fedoraproject.MediaWriter
 
 # ---------------------------------------------------------------------------
-# App-Anzeigenamen anpassen: Vesktop → Discord, WhatSie → WhatsApp
+# App-Anzeigenamen anpassen: Vesktop → Discord, ZapZap → WhatsApp
 # ---------------------------------------------------------------------------
 
 FP_EXPORTS="$HOME/.local/share/flatpak/exports/share/applications"
@@ -247,10 +247,10 @@ if [ -f "$FP_EXPORTS/dev.vencord.Vesktop.desktop" ]; then
         ~/.local/share/applications/dev.vencord.Vesktop.desktop
 fi
 
-if [ -f "$FP_EXPORTS/com.ktechpit.whatsie.desktop" ]; then
-    cp "$FP_EXPORTS/com.ktechpit.whatsie.desktop" ~/.local/share/applications/
+if [ -f "$FP_EXPORTS/com.rtosta.zapzap.desktop" ]; then
+    cp "$FP_EXPORTS/com.rtosta.zapzap.desktop" ~/.local/share/applications/
     sed -i '0,/^\[Desktop Action/{s/^Name=.*/Name=WhatsApp/; /^Name\[/d}' \
-        ~/.local/share/applications/com.ktechpit.whatsie.desktop
+        ~/.local/share/applications/com.rtosta.zapzap.desktop
 fi
 
 update-desktop-database ~/.local/share/applications 2>/dev/null || true
