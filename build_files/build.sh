@@ -364,17 +364,6 @@ EOF
 systemctl enable astroimmutable-btrfs-opts.service
 
 # ---------------------------------------------------------------------------
-# NetworkManager: Cloudflare-DNS global erzwingen (hardware-unabhängig)
-# ---------------------------------------------------------------------------
-# Globale DNS-Config, die für ALLE Verbindungen (Ethernet, WLAN, …) gilt und
-# das per DHCP gelieferte DNS übersteuert. Greift erst im fertig gebauten Image.
-mkdir -p /etc/NetworkManager/conf.d
-cat <<'EOF' > /etc/NetworkManager/conf.d/10-cloudflare-dns.conf
-[global-dns-domain-*]
-servers=1.1.1.2,2606:4700:4700::1111
-EOF
-
-# ---------------------------------------------------------------------------
 # Kernel Parameter (bootc kargs)
 # ---------------------------------------------------------------------------
 mkdir -p /usr/lib/bootc/kargs.d
