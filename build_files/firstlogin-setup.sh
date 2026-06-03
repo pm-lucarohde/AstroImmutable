@@ -159,14 +159,29 @@ URL[$e]=trash:/
 EOF
 
 # ---------------------------------------------------------------------------
-# Hintergrundbild setzen (D-Bus, braucht laufendes Plasmashell)
+# Hintergrundbild setzen (D-Bus, braucht ein WIRKLICH bereites Plasmashell)
 # ---------------------------------------------------------------------------
-# Vor den (langwierigen) Flatpak-Installs, damit das Wallpaper früh erscheint.
-# Wartet auf Plasmashell, da plasma-apply-wallpaperimage es sonst nicht erreicht.
+# Wichtig: Das Wallpaper kann NICHT über die ausgelieferte appletsrc gesetzt
+# werden – deren Desktop-Container hängen an einer festen activityId, die es
+# auf einer Neuinstallation nicht gibt (jede Installation würfelt eine neue
+# Activity-UUID). plasmashell verwirft die Container dann und legt leere neue
+# an. Daher ID-unabhängig per plasma-apply-wallpaperimage zur Laufzeit.
+#
+# Peer.Ping als Bereitschaftscheck reicht NICHT: plasmashell registriert sich
+# am Bus, bevor es die Desktop-Container erzeugt hat – plasma-apply läuft dann
+# ins Leere. Stattdessen warten, bis desktops() mindestens einen Container
+# meldet (das ist genau der Zustand, in dem plasma-apply greift).
 
-for i in $(seq 1 60); do
-    dbus-send --session --dest=org.kde.plasmashell --print-reply \
-        /PlasmaShell org.freedesktop.DBus.Peer.Ping &>/dev/null && break
+QDBUS=$(command -v qdbus6 || command -v qdbus-qt6 || command -v qdbus || true)
+for i in $(seq 1 90); do
+    if [ -n "$QDBUS" ]; then
+        n=$("$QDBUS" org.kde.plasmashell /PlasmaShell \
+            org.kde.PlasmaShell.evaluateScript 'print(desktops().length)' 2>/dev/null)
+        [ -n "$n" ] && [ "$n" -ge 1 ] 2>/dev/null && break
+    else
+        dbus-send --session --dest=org.kde.plasmashell --print-reply \
+            /PlasmaShell org.freedesktop.DBus.Peer.Ping &>/dev/null && break
+    fi
     sleep 1
 done
 
