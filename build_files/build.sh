@@ -379,13 +379,17 @@ kargs = [
 EOF
 
 # ---------------------------------------------------------------------------
-# GRUB Menu Auto-Hide (First-Boot Service)
+# GRUB Menu Auto-Hide
 # ---------------------------------------------------------------------------
+# WICHTIG: NICHT ConditionFirstBoot verwenden – auf bootc/ostree feuert die
+# nicht (Anaconda/ostree befüllen /etc + machine-id anders als ein klassischer
+# Erstboot, daher gilt der Boot nie als "first boot"). Stattdessen bei jedem
+# Boot setzen; grub2-editenv set ist idempotent und vernachlässigbar billig.
 cat <<'EOF' > /usr/lib/systemd/system/astroimmutable-grub-hide.service
 [Unit]
-Description=Hide GRUB menu on first boot
-ConditionFirstBoot=yes
+Description=Hide GRUB menu (set menu_auto_hide)
 After=local-fs.target
+ConditionPathExists=/usr/bin/grub2-editenv
 
 [Service]
 Type=oneshot
