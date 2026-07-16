@@ -7,7 +7,7 @@ FROM ghcr.io/ublue-os/kinoite-main:latest
 
 COPY --from=ghcr.io/ublue-os/akmods-nvidia-lts:main-44 / /tmp/akmods-nvidia
 RUN dnf install -y /tmp/akmods-nvidia/rpms/ublue-os/ublue-os-nvidia*.rpm \
-    && dnf install -y /tmp/akmods-nvidia/rpms/kmods/kmod-nvidia*.rpm \
+    && dnf install -y /tmp/akmods-nvidia/rpms/kmods/kmod-nvidia*.rpm --exclude=akmod-nvidia \
     && rm -rf /tmp/akmods-nvidia
 
 ## Other possible base images include:
