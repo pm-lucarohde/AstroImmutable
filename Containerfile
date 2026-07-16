@@ -5,7 +5,7 @@ COPY build_files /
 # Base Image
 FROM ghcr.io/ublue-os/kinoite-main:latest
 
-COPY --from=ghcr.io/ublue-os/akmods-nvidia-lts:main-44 / /tmp/akmods-nvidia
+COPY --from=ghcr.io/ublue-os/akmods-nvidia-open:main-44 / /tmp/akmods-nvidia
 
 RUN dnf install -y /tmp/akmods-nvidia/rpms/nvidia/*.rpm \
                   /tmp/akmods-nvidia/rpms/ublue-os/*.rpm \
