@@ -7,8 +7,10 @@ FROM ghcr.io/ublue-os/kinoite-main:latest
 
 COPY --from=ghcr.io/ublue-os/akmods-nvidia-lts:main-44 / /tmp/akmods-nvidia
 
-# Debug: Zeig uns die Ordnerstruktur und wo die RPMs wirklich sind
-RUN find /tmp/akmods-nvidia -name "*.rpm"
+RUN dnf install -y /tmp/akmods-nvidia/rpms/nvidia/*.rpm \
+                  /tmp/akmods-nvidia/rpms/ublue-os/*.rpm \
+                  /tmp/akmods-nvidia/rpms/kmods/*.rpm \
+    && rm -rf /tmp/akmods-nvidia
 
 ## Other possible base images include:
 # FROM ghcr.io/ublue-os/bazzite:latest
