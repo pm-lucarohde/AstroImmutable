@@ -3,14 +3,7 @@ FROM scratch AS ctx
 COPY build_files /
 
 # Base Image
-FROM ghcr.io/ublue-os/kinoite-main:latest
-
-COPY --from=ghcr.io/ublue-os/akmods-nvidia-open:main-44 / /tmp/akmods-nvidia
-
-RUN dnf install -y /tmp/akmods-nvidia/rpms/nvidia/*.rpm \
-                  /tmp/akmods-nvidia/rpms/ublue-os/*.rpm \
-                  /tmp/akmods-nvidia/rpms/kmods/*.rpm \
-    && rm -rf /tmp/akmods-nvidia
+FROM quay.io/fedora-ostree-desktops/kinoite:44
 
 ## Other possible base images include:
 # FROM ghcr.io/ublue-os/bazzite:latest

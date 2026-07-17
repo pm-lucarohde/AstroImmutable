@@ -48,6 +48,8 @@ _retry dnf5 copr enable -y copr.fedorainfracloud.org/ublue-os/packages
 dnf5 config-manager setopt fedora-multimedia.priority=1
 dnf5 config-manager setopt fedora-steam.priority=10
 
+dnf5 install -y akmod-nvidia xorg-x11-drv-nvidia-cuda
+
 # ---------------------------------------------------------------------------
 # Unerwünschte Pakete entfernen
 # ---------------------------------------------------------------------------
