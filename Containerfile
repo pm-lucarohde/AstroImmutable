@@ -1,18 +1,18 @@
 FROM scratch AS ctx
 COPY build_files /
 
-# ---- Builder-Stage: Kernel-Treiber unprivilegiert kompilieren ----
+# ---- Builder-Stage: Kernel-Treiber kompilieren ----
 FROM quay.io/fedora-ostree-desktops/kinoite:44 AS builder
 RUN dnf5 install -y https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-44.noarch.rpm \
                      https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-44.noarch.rpm \
     && dnf5 config-manager addrepo --from-repofile=https://negativo17.org/repos/fedora-multimedia.repo
 RUN dnf5 install -y --setopt=tsflags=noscripts kernel-devel gcc make akmod-nvidia xorg-x11-drv-nvidia-cuda
-RUN useradd -m akmodsbuild || true
-RUN chown -R akmodsbuild /var/cache/akmods
-RUN runuser -u akmodsbuild -- akmods --kernels $(rpm -q kernel --qf '%{version}-%{release}.%{arch}\n') --force
+
+# akmods als Root starten (die Compilierung intern läuft unprivilegiert)
+RUN akmods --kernels $(rpm -q kernel --qf '%{version}-%{release}.%{arch}\n') --force
 RUN find /var/cache/akmods -name "*.rpm"
 
-# ---- Ziel-Image (kein AS-Name nötig, wird nirgendwo referenziert) ----
+# ---- Ziel-Image (kein AS-Name nĂ¶tig, wird nirgendwo referenziert) ----
 FROM quay.io/fedora-ostree-desktops/kinoite:44
 
 RUN dnf5 install -y https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-44.noarch.rpm \
