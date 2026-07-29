@@ -26,6 +26,30 @@ fi
 mkdir -p "${STATE_DIR}"
 
 # ---------------------------------------------------------------------------
+# Fehlerdiagnose
+# ---------------------------------------------------------------------------
+# Bricht das Skript ab, meldet systemd nur "status=1/FAILURE". Befehle, die
+# ohne Ausgabe mit 1 enden (etwa grep ohne Treffer), sterben unter set -e
+# spurlos – im Journal steht dann keine einzige Zeile des Skripts. Der Trap
+# nennt Zeile, Befehl und Exitcode. Zusätzlich in eine Logdatei, weil das
+# Skript nach einem Fehlschlag erst beim nächsten Login erneut läuft und das
+# Journal der abgebrochenen Session dann nicht mehr zur Hand ist.
+
+LOG_FILE="${STATE_DIR}/firstlogin.log"
+
+_fail() {
+    printf '[%s] ABBRUCH Zeile %s: >>%s<< (exit %s)\n' \
+        "$(date '+%F %T')" "$2" "$3" "$1" | tee -a "$LOG_FILE" >&2 || true
+}
+
+# Abgesicherte Konstrukte ([ x ] && y, cmd || true) lösen den Trap nicht aus.
+# In den bewusst fehlertoleranten Abschnitten weiter unten wird er trotzdem
+# abgeschaltet, weil er dort auch unter "set +e" noch feuern würde.
+_trap_on() { trap '_fail "$?" "$LINENO" "$BASH_COMMAND"' ERR; }
+_trap_off() { trap - ERR; }
+_trap_on
+
+# ---------------------------------------------------------------------------
 # Profilbild setzen
 # ---------------------------------------------------------------------------
 
@@ -564,6 +588,7 @@ fi
 
 # Non-fatal: Fehler im Container dürfen das restliche Setup nicht abbrechen.
 set +e
+_trap_off
 
 distrobox create --yes --image ubuntu:26.04 --name ubuntu --nvidia
 # dpkg ggf. reparieren, falls eine vorherige apt-Operation unterbrochen wurde
@@ -576,6 +601,7 @@ distrobox enter ubuntu -- bash -c '
     || echo "WARNING: CurseForge install failed, skipping"
 '
 
+_trap_on
 set -e
 
 # ---------------------------------------------------------------------------
@@ -588,11 +614,13 @@ if [ ! -d "$HOME/.sdkman" ]; then
     curl -s --retry 3 --retry-delay 30 "https://get.sdkman.io" | bash
 fi
 set +euo pipefail
+_trap_off
 source "$HOME/.sdkman/bin/sdkman-init.sh"
 sdk install java 25.0.2-graalce
 echo "n" | sdk install java 21.0.2-graalce
 sdk default java 25.0.2-graalce
 set -euo pipefail
+_trap_on
 
 # ---------------------------------------------------------------------------
 # Setup abgeschlossen – beim nächsten Login wird dieses Skript übersprungen
