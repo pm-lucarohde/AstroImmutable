@@ -24,6 +24,9 @@ RUN dnf5 install -y /tmp/akmods-nvidia/*.rpm && rm -rf /tmp/akmods-nvidia
 
 RUN dnf5 install -y --exclude=akmod-nvidia xorg-x11-drv-nvidia-cuda
 
+RUN mkdir -p /usr/lib/bootc/kargs.d && \
+    printf 'kargs = ["nvidia-drm.modeset=1"]\n' > /usr/lib/bootc/kargs.d/nvidia.toml
+
 ### [IM]MUTABLE /opt
 RUN rm /opt && mkdir /opt
 
