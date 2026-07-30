@@ -37,6 +37,12 @@ ARG GHOSTTY_KEY=RWQlAjJC23149WL2sEpT/l0QKy7hMIFhYdQOFy0Z7z7PbneUgvlsnYcV
 RUN dnf5 install -y gtk4-devel gtk4-layer-shell-devel libadwaita-devel \
     gettext pkgconf minisign tar xz curl
 
+# Auf der ostree-Basis zeigen /opt, /usr/local, /root und weitere ins leere
+# /var – die Symlinks sind im Container-Build alle tot. HOME=/root ist damit
+# unbenutzbar, und Zig scheitert beim Anlegen von /root/.cache/zig. Das
+# Zielverzeichnis anlegen, damit der Build ein echtes HOME hat.
+RUN mkdir -p /var/roothome
+
 # Zig als statisches Binary von ziglang.org, nicht als Fedora-Paket: sonst
 # läuft die Zig-Version beim nächsten Fedora-Update von der gepinnten weg.
 # WICHTIG: weder nach /opt noch nach /usr/local entpacken – auf der
