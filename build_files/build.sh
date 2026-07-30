@@ -40,8 +40,10 @@ for repo_url in \
     fi
 done
 
-# COPR: Ghostty Terminal und ublue-os Hilfspakete
-_retry dnf5 copr enable -y scottames/ghostty
+# COPR: ublue-os Hilfspakete
+# Ghostty kommt nicht mehr aus scottames/ghostty, sondern wird im Containerfile
+# aus dem tip-Zweig gebaut – das COPR liefert nur 1.3.1 und damit ein Ghostty
+# ohne ext-background-effect-v1, also ohne Blur unter KWin 6.7.
 _retry dnf5 copr enable -y copr.fedorainfracloud.org/ublue-os/packages
 
 # Prioritäten setzen: Multimedia übersteuert Standard-Repos, Steam hat niedrigere Priorität
@@ -120,7 +122,6 @@ _dnf5_install \
     podman \
     fastfetch \
     steam \
-    ghostty \
     gamemode \
     bleachbit \
     wine \

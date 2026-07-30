@@ -20,6 +20,59 @@ RUN dnf5 install -y --setopt=tsflags=noscripts kernel-devel gcc make akmod-nvidi
 RUN akmods --kernels $(rpm -q kernel --qf '%{version}-%{release}.%{arch}\n') --force
 RUN find /var/cache/akmods -name "*.rpm"
 
+# ---- Builder-Stage: Ghostty aus dem tip-Zweig bauen ----
+# Das COPR scottames/ghostty liefert nur 1.3.1. Darin fehlt die Unterstützung
+# für ext-background-effect-v1, und KWin 6.7 hat das alte org_kde_kwin_blur
+# ersatzlos entfernt – background-blur ist mit dem Release-Paket daher
+# wirkungslos. Der Fix liegt bis zum 1.4-Release (September) nur in tip; die
+# Ghostty-Maintainer nennen genau das als Zwischenlösung. Gleiche Basis wie das
+# Zielimage, damit GTK- und glibc-Versionen zusammenpassen.
+FROM quay.io/fedora-ostree-desktops/kinoite:44 AS ghostty-builder
+
+# Ghostty ist hart auf eine Zig-Version gepinnt (0.15.2 für 1.3.x und tip).
+ARG ZIG_VERSION=0.15.2
+# Öffentlicher minisign-Schlüssel des Ghostty-Projekts
+ARG GHOSTTY_KEY=RWQlAjJC23149WL2sEpT/l0QKy7hMIFhYdQOFy0Z7z7PbneUgvlsnYcV
+
+RUN dnf5 install -y gtk4-devel gtk4-layer-shell-devel libadwaita-devel \
+    gettext pkgconf minisign tar xz curl
+
+# Zig als statisches Binary von ziglang.org, nicht als Fedora-Paket: sonst
+# läuft die Zig-Version beim nächsten Fedora-Update von der gepinnten weg.
+RUN curl -fL --retry 3 --retry-delay 30 \
+    "https://ziglang.org/download/${ZIG_VERSION}/zig-x86_64-linux-${ZIG_VERSION}.tar.xz" \
+    | tar -xJ -C /opt \
+    && ln -s "/opt/zig-x86_64-linux-${ZIG_VERSION}/zig" /usr/local/bin/zig
+
+# Quell-Tarball (nicht der Git-Checkout – der Tarball enthält vorgenerierte
+# Dateien und braucht weniger Werkzeuge). Das oberste Verzeichnis trägt den
+# jeweiligen Snapshot-Namen, daher --strip-components=1.
+WORKDIR /src
+RUN mkdir -p ghostty \
+    && curl -fL --retry 3 --retry-delay 30 -O \
+    "https://github.com/ghostty-org/ghostty/releases/download/tip/ghostty-source.tar.gz" \
+    && curl -fL --retry 3 --retry-delay 30 -O \
+    "https://github.com/ghostty-org/ghostty/releases/download/tip/ghostty-source.tar.gz.minisig" \
+    && minisign -Vm ghostty-source.tar.gz -P "${GHOSTTY_KEY}" \
+    && tar -xf ghostty-source.tar.gz --strip-components=1 -C ghostty
+
+WORKDIR /src/ghostty
+RUN zig build -p /out/usr -Doptimize=ReleaseFast
+
+# Absicherung gegen ein stilles Fehlschlagen des eigentlichen Zwecks: benennt
+# tip das Protokoll um oder fällt die Unterstützung weg, soll der Build hart
+# scheitern statt wieder ein Ghostty ohne Blur auszuliefern. Die Desktop-Datei
+# wird von build.sh und firstlogin-setup.sh unter genau diesem Namen erwartet.
+RUN if ! grep -q ext_background_effect /out/usr/bin/ghostty; then \
+    echo "FEHLER: gebautes Ghostty kennt ext-background-effect-v1 nicht"; \
+    exit 1; \
+    fi; \
+    if [ ! -f /out/usr/share/applications/com.mitchellh.ghostty.desktop ]; then \
+    echo "FEHLER: com.mitchellh.ghostty.desktop fehlt"; \
+    ls -la /out/usr/share/applications; \
+    exit 1; \
+    fi
+
 # ---- Ziel-Image (kein AS-Name nĂ¶tig, wird nirgendwo referenziert) ----
 FROM quay.io/fedora-ostree-desktops/kinoite:44
 
@@ -52,6 +105,13 @@ RUN dnf5 install -y --exclude=akmod-nvidia \
 RUN mkdir -p /usr/lib/bootc/kargs.d && \
     printf 'kargs = ["nvidia-drm.modeset=1", "rd.driver.blacklist=nouveau", "modprobe.blacklist=nouveau", "nouveau.modeset=0"]\n' \
     > /usr/lib/bootc/kargs.d/nvidia.toml
+
+# ---- Ghostty aus der Builder-Stage übernehmen ----
+# Die Runtime-Bibliotheken müssen hier mit installiert werden; die
+# Builder-Stage hatte nur die -devel-Pakete. Alle drei liegen in Fedora selbst,
+# das COPR scottames/ghostty wird dadurch nicht mehr gebraucht.
+COPY --from=ghostty-builder /out/usr /usr
+RUN dnf5 install -y gtk4 gtk4-layer-shell libadwaita
 
 ### [IM]MUTABLE /opt
 RUN rm /opt && mkdir /opt
