@@ -29,8 +29,11 @@ RUN find /var/cache/akmods -name "*.rpm"
 # Zielimage, damit GTK- und glibc-Versionen zusammenpassen.
 FROM quay.io/fedora-ostree-desktops/kinoite:44 AS ghostty-builder
 
-# Ghostty ist hart auf eine Zig-Version gepinnt (0.15.2 für 1.3.x und tip).
-ARG ZIG_VERSION=0.15.2
+# Ghostty ist hart auf eine Zig-Version gepinnt. Achtung: die Doku nennt für
+# "1.3.x and tip" noch 0.15.2, tip verlangt aber inzwischen 0.16.0. Bei einem
+# Versionssprung in tip bricht der Build unten mit einer eindeutigen Meldung
+# ("does not meet the required build version of vX") ab – dann hier anheben.
+ARG ZIG_VERSION=0.16.0
 # Öffentlicher minisign-Schlüssel des Ghostty-Projekts
 ARG GHOSTTY_KEY=RWQlAjJC23149WL2sEpT/l0QKy7hMIFhYdQOFy0Z7z7PbneUgvlsnYcV
 
