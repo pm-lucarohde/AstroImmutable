@@ -39,10 +39,16 @@ RUN dnf5 install -y gtk4-devel gtk4-layer-shell-devel libadwaita-devel \
 
 # Zig als statisches Binary von ziglang.org, nicht als Fedora-Paket: sonst
 # läuft die Zig-Version beim nächsten Fedora-Update von der gepinnten weg.
-RUN curl -fL --retry 3 --retry-delay 30 \
+# WICHTIG: weder nach /opt noch nach /usr/local entpacken – auf der
+# ostree-Basis sind beides Symlinks nach /var (/opt -> var/opt,
+# /usr/local -> ../var/usrlocal), und /var ist im Build leer. Deshalb ein
+# eigenes Verzeichnis und PATH statt eines Symlinks in /usr/local/bin.
+# --strip-components=1 macht den versionierten Ordnernamen im Tarball egal.
+RUN mkdir -p /zig \
+    && curl -fL --retry 3 --retry-delay 30 \
     "https://ziglang.org/download/${ZIG_VERSION}/zig-x86_64-linux-${ZIG_VERSION}.tar.xz" \
-    | tar -xJ -C /opt \
-    && ln -s "/opt/zig-x86_64-linux-${ZIG_VERSION}/zig" /usr/local/bin/zig
+    | tar -xJ -C /zig --strip-components=1
+ENV PATH="/zig:${PATH}"
 
 # Quell-Tarball (nicht der Git-Checkout – der Tarball enthält vorgenerierte
 # Dateien und braucht weniger Werkzeuge). Das oberste Verzeichnis trägt den
