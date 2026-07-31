@@ -199,8 +199,13 @@ EOF
 QDBUS=$(command -v qdbus6 || command -v qdbus-qt6 || command -v qdbus || true)
 for i in $(seq 1 90); do
     if [ -n "$QDBUS" ]; then
+        # "|| true" ist hier zwingend: solange plasmashell noch nicht auf dem
+        # Bus ist, endet qdbus mit einem Fehler. Eine Zuweisung mit
+        # fehlschlagender Kommandosubstitution bricht unter set -e das ganze
+        # Skript ab – und wegen 2>/dev/null völlig lautlos. Genau daran ist das
+        # Skript in der VM gestorben: Papierkorb angelegt, Wallpaper nie.
         n=$("$QDBUS" org.kde.plasmashell /PlasmaShell \
-            org.kde.PlasmaShell.evaluateScript 'print(desktops().length)' 2>/dev/null)
+            org.kde.PlasmaShell.evaluateScript 'print(desktops().length)' 2>/dev/null || true)
         [ -n "$n" ] && [ "$n" -ge 1 ] 2>/dev/null && break
     else
         dbus-send --session --dest=org.kde.plasmashell --print-reply \
@@ -538,19 +543,28 @@ StartWithLastProfile=1
 Version=2
 EOF
 
-HASH=$(grep -o '^\[.*\]' "$FF_DIR/installs.ini" | tr -d '[]')
-cat <<EOF > "$FF_DIR/installs.ini"
+# Dieselbe Falle wie oben: legt Firefox die installs.ini nicht innerhalb der
+# 30 Sekunden an, scheitert grep, mit pipefail die ganze Pipeline und damit das
+# Skript. Ein leerer HASH würde außerdem nur kaputte []-Abschnitte schreiben,
+# deshalb wird der Block ganz übersprungen.
+HASH=$(grep -o '^\[.*\]' "$FF_DIR/installs.ini" 2>/dev/null | tr -d '[]' || true)
+
+if [ -n "$HASH" ]; then
+    cat <<EOF > "$FF_DIR/installs.ini"
 [$HASH]
 Default=Standard.Profile
 Locked=1
 EOF
 
-cat <<EOF >> "$FF_DIR/profiles.ini"
+    cat <<EOF >> "$FF_DIR/profiles.ini"
 
 [Install${HASH}]
 Default=Standard.Profile
 Locked=1
 EOF
+else
+    echo "WARNING: installs.ini fehlt, Firefox-Standardprofil nicht erzwungen"
+fi
 
 # ---------------------------------------------------------------------------
 # Hytale-Launcher installieren (nur wenn noch nicht vorhanden)
