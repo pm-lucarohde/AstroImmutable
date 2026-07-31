@@ -404,7 +404,14 @@ EOF
 systemctl enable astroimmutable-grub-hide.service
 
 # ---------------------------------------------------------------------------
-# DNF-Cache leeren
+# DNF-Reste aus /var entfernen
 # ---------------------------------------------------------------------------
-
+# Auf bootc gehört /var nicht ins Image – es wird beim Erst-Install einmalig
+# aus dem Image geseedet und danach nie wieder angefasst. Alles, was der Build
+# dort ablegt, ist also totes Gewicht, und "bootc container lint" meldet es als
+# var-tmpfiles. Der Paket-Cache selbst landet dank der Cache-Mounts im
+# Containerfile gar nicht erst in einer Layer; /var/lib/dnf liegt außerhalb
+# davon und wird hier entfernt. Gefahrlos: die RPM-Datenbank liegt unter
+# /usr/share/rpm, /var/lib/rpm ist nur ein Symlink dorthin.
 dnf5 clean all -y
+rm -rf /var/lib/dnf

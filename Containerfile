@@ -97,7 +97,8 @@ RUN if ! grep -q ext_background_effect /out/usr/bin/ghostty; then \
 # ---- Ziel-Image (kein AS-Name nĂ¶tig, wird nirgendwo referenziert) ----
 FROM quay.io/fedora-ostree-desktops/kinoite:44
 
-RUN dnf5 install -y https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-44.noarch.rpm \
+RUN --mount=type=cache,dst=/var/cache \
+    dnf5 install -y https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-44.noarch.rpm \
                      https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-44.noarch.rpm \
     && dnf5 config-manager addrepo --from-repofile=https://negativo17.org/repos/fedora-multimedia.repo
 
@@ -106,7 +107,8 @@ RUN dnf5 config-manager setopt fedora-multimedia.priority=1 \
     && dnf5 config-manager setopt fedora-multimedia.excludepkgs='*nvidia*'
 
 COPY --from=builder /var/cache/akmods/nvidia/*.rpm /tmp/akmods-nvidia/
-RUN dnf5 install -y /tmp/akmods-nvidia/*.rpm && rm -rf /tmp/akmods-nvidia
+RUN --mount=type=cache,dst=/var/cache \
+    dnf5 install -y /tmp/akmods-nvidia/*.rpm && rm -rf /tmp/akmods-nvidia
 
 # xone (Xbox-Controller) auf demselben Weg. Vorher wurden die RPMs in build.sh
 # mit "rpm -ivh --nodeps --noscripts" installiert – das überspringt den
@@ -114,7 +116,8 @@ RUN dnf5 install -y /tmp/akmods-nvidia/*.rpm && rm -rf /tmp/akmods-nvidia
 # Die Dongle-Firmware und /usr/lib/modprobe.d/xone.conf bringt das als
 # Abhängigkeit nachgezogene xone-kmod-common mit.
 COPY --from=builder /var/cache/akmods/xone/*.rpm /tmp/akmods-xone/
-RUN dnf5 install -y /tmp/akmods-xone/*.rpm && rm -rf /tmp/akmods-xone
+RUN --mount=type=cache,dst=/var/cache \
+    dnf5 install -y /tmp/akmods-xone/*.rpm && rm -rf /tmp/akmods-xone
 
 # VirtualBox aus RPM Fusion, nicht aus dem Oracle-Repo: dessen RPM baut die
 # Module beim Installieren per /sbin/vboxconfig, was auf bootc nie stattfindet.
@@ -124,13 +127,15 @@ RUN dnf5 install -y /tmp/akmods-xone/*.rpm && rm -rf /tmp/akmods-xone
 # Das Extension Pack (USB 2.0/3.0, RDP, NVMe, PXE) ist proprietär und bleibt
 # bewusst draußen; es darf nicht in ein veröffentlichtes Image.
 COPY --from=builder /var/cache/akmods/VirtualBox/*.rpm /tmp/akmods-vbox/
-RUN dnf5 install -y /tmp/akmods-vbox/*.rpm VirtualBox && rm -rf /tmp/akmods-vbox
+RUN --mount=type=cache,dst=/var/cache \
+    dnf5 install -y /tmp/akmods-vbox/*.rpm VirtualBox && rm -rf /tmp/akmods-vbox
 
 # Userspace-Treiber. Ohne xorg-x11-drv-nvidia-libs gibt es kein libEGL_nvidia und
 # kein GBM-Backend – KWin Wayland kann dann gar nicht auf der Karte rendern,
 # selbst wenn das Kernelmodul geladen ist. Die -cuda-Pakete reichen dafür nicht.
 # Die i686-Variante wird für 32-Bit-Titel unter Steam/Proton/Wine gebraucht.
-RUN dnf5 install -y --exclude=akmod-nvidia \
+RUN --mount=type=cache,dst=/var/cache \
+    dnf5 install -y --exclude=akmod-nvidia \
         xorg-x11-drv-nvidia \
         xorg-x11-drv-nvidia-libs \
         xorg-x11-drv-nvidia-libs.i686 \
@@ -150,7 +155,8 @@ RUN mkdir -p /usr/lib/bootc/kargs.d && \
 # Builder-Stage hatte nur die -devel-Pakete. Alle drei liegen in Fedora selbst,
 # das COPR scottames/ghostty wird dadurch nicht mehr gebraucht.
 COPY --from=ghostty-builder /out/usr /usr
-RUN dnf5 install -y gtk4 gtk4-layer-shell libadwaita
+RUN --mount=type=cache,dst=/var/cache \
+    dnf5 install -y gtk4 gtk4-layer-shell libadwaita
 
 ### [IM]MUTABLE /opt
 RUN rm /opt && mkdir /opt
