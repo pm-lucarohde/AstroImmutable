@@ -80,6 +80,21 @@ RUN mkdir -p ghostty \
 WORKDIR /src/ghostty
 RUN zig build -p /out/usr -Doptimize=ReleaseFast
 
+# "zig build -p PREFIX" schreibt den Build-Prefix in alle erzeugten Dateien:
+# TryExec/Exec in der .desktop-Datei und Exec in der D-Bus-Service-Datei zeigen
+# danach auf /out/usr/bin/ghostty. Im Zielimage existiert /out nicht – und ein
+# TryExec, das nicht auflösbar ist, bedeutet laut Desktop-Entry-Spec "nicht
+# installiert": KService verwirft den Eintrag, Ghostty verschwindet aus
+# Startmenü und KRunner. Die Binary selbst ist dabei völlig in Ordnung, was den
+# Fehler schwer zuzuordnen macht. Deshalb den Build-Prefix auf den späteren
+# Installationsort umschreiben.
+# -I schließt Binärdateien aus: /out/usr auf /usr zu kürzen verschiebt alles
+# dahinter um 4 Bytes und würde ein ELF unbrauchbar machen. Aktuell enthält nur
+# die .desktop- und die D-Bus-Service-Datei den Prefix; taucht er später doch in
+# der Binary auf, schlägt stattdessen die Prüfung unten fehl statt sie zu
+# zerstören.
+RUN grep -rlZI '/out/usr' /out | xargs -0 -r sed -i 's|/out/usr|/usr|g'
+
 # Absicherung gegen ein stilles Fehlschlagen des eigentlichen Zwecks: benennt
 # tip das Protokoll um oder fällt die Unterstützung weg, soll der Build hart
 # scheitern statt wieder ein Ghostty ohne Blur auszuliefern. Die Desktop-Datei
@@ -91,6 +106,15 @@ RUN if ! grep -q ext_background_effect /out/usr/bin/ghostty; then \
     if [ ! -f /out/usr/share/applications/com.mitchellh.ghostty.desktop ]; then \
     echo "FEHLER: com.mitchellh.ghostty.desktop fehlt"; \
     ls -la /out/usr/share/applications; \
+    exit 1; \
+    fi; \
+    if grep -rq '/out/usr' /out; then \
+    echo "FEHLER: Build-Prefix /out/usr noch enthalten in:"; \
+    grep -rl '/out/usr' /out; \
+    exit 1; \
+    fi; \
+    if [ ! -x /out/usr/bin/ghostty ]; then \
+    echo "FEHLER: /out/usr/bin/ghostty fehlt oder ist nicht ausführbar"; \
     exit 1; \
     fi
 
