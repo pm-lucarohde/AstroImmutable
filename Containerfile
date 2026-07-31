@@ -15,15 +15,16 @@ RUN dnf5 config-manager setopt fedora-multimedia.priority=1 \
     && dnf5 config-manager setopt fedora-multimedia.excludepkgs='*nvidia*'
 
 RUN dnf5 install -y --setopt=tsflags=noscripts kernel-devel gcc make \
-    akmod-nvidia akmod-xone
+    akmod-nvidia akmod-xone akmod-VirtualBox
 
 # akmods als Root starten (die Compilierung intern läuft unprivilegiert).
-# Ohne --kmod baut akmods alle installierten akmods, also NVIDIA und xone.
+# Ohne --kmod baut akmods alle installierten akmods: NVIDIA, xone, VirtualBox.
 RUN akmods --kernels $(rpm -q kernel --qf '%{version}-%{release}.%{arch}\n') --force
 
-# Beide müssen ein RPM erzeugt haben. ls scheitert bei leerem Glob, dadurch
+# Alle drei müssen ein RPM erzeugt haben. ls scheitert bei leerem Glob, dadurch
 # bricht der Build hier ab statt erst beim COPY im Zielimage.
-RUN ls /var/cache/akmods/nvidia/*.rpm /var/cache/akmods/xone/*.rpm
+RUN ls /var/cache/akmods/nvidia/*.rpm /var/cache/akmods/xone/*.rpm \
+    /var/cache/akmods/VirtualBox/*.rpm
 
 # ---- Builder-Stage: Ghostty aus dem tip-Zweig bauen ----
 # Das COPR scottames/ghostty liefert nur 1.3.1. Darin fehlt die Unterstützung
@@ -114,6 +115,16 @@ RUN dnf5 install -y /tmp/akmods-nvidia/*.rpm && rm -rf /tmp/akmods-nvidia
 # Abhängigkeit nachgezogene xone-kmod-common mit.
 COPY --from=builder /var/cache/akmods/xone/*.rpm /tmp/akmods-xone/
 RUN dnf5 install -y /tmp/akmods-xone/*.rpm && rm -rf /tmp/akmods-xone
+
+# VirtualBox aus RPM Fusion, nicht aus dem Oracle-Repo: dessen RPM baut die
+# Module beim Installieren per /sbin/vboxconfig, was auf bootc nie stattfindet.
+# Das gebaute kmod und der Userspace in einer Transaktion, damit dnf5 die
+# Abhängigkeiten auflöst – VirtualBox zieht VirtualBox-server nach, und das
+# bringt vboxdrv.service, die vboxusers-Gruppe und /usr/lib/modprobe.d mit.
+# Das Extension Pack (USB 2.0/3.0, RDP, NVMe, PXE) ist proprietär und bleibt
+# bewusst draußen; es darf nicht in ein veröffentlichtes Image.
+COPY --from=builder /var/cache/akmods/VirtualBox/*.rpm /tmp/akmods-vbox/
+RUN dnf5 install -y /tmp/akmods-vbox/*.rpm VirtualBox && rm -rf /tmp/akmods-vbox
 
 # Userspace-Treiber. Ohne xorg-x11-drv-nvidia-libs gibt es kein libEGL_nvidia und
 # kein GBM-Backend – KWin Wayland kann dann gar nicht auf der Karte rendern,

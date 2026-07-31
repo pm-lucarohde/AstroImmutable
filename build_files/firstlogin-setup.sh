@@ -268,7 +268,6 @@ _flatpak_install \
     org.torproject.torbrowser-launcher \
     com.obsproject.Studio \
     org.gnome.eog \
-    org.gnome.Boxes \
     net.davidotek.pupgui2 \
     org.kde.kcalc \
     org.fedoraproject.MediaWriter

@@ -282,6 +282,15 @@ echo "astroimmutable" > /etc/hostname
 
 systemctl enable podman.socket
 
+# VirtualBox: lädt beim Boot vboxdrv/vboxnetflt/vboxnetadp. Das Kernelmodul
+# selbst entsteht in der Builder-Stage (siehe Containerfile). Explizit
+# aktivieren, weil systemd-Presets im Container-Build nicht angewandt werden.
+# Für USB-Zugriff muss der Benutzer zusätzlich in die Gruppe vboxusers:
+#   sudo usermod -aG vboxusers $USER
+# Das lässt sich hier nicht vorwegnehmen, da der Benutzer zur Build-Zeit noch
+# nicht existiert, und firstlogin-setup.sh läuft ohne root.
+systemctl enable vboxdrv.service
+
 # ---------------------------------------------------------------------------
 # SELinux: Spotify execmem erlauben
 # ---------------------------------------------------------------------------
