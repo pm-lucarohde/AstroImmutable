@@ -130,15 +130,6 @@ _dnf5_install \
     bazaar
 
 # ---------------------------------------------------------------------------
-# Xbox-One-Controller-Treiber (xone)
-# ---------------------------------------------------------------------------
-# RPMs werden manuell heruntergeladen und ohne %post-Scriptlets installiert,
-# da akmods den Kernel-Build im Container-Kontext nicht durchführen kann.
-
-_retry dnf5 download --destdir=/tmp/xone akmod-xone.x86_64 kmod-xone.x86_64 kmodtool xone-kmod-common
-find /tmp/xone -name "*.rpm" ! -name "*.src.rpm" | xargs rpm -ivh --nodeps --noscripts
-
-# ---------------------------------------------------------------------------
 # Weitere unerwünschte Pakete entfernen
 # ---------------------------------------------------------------------------
 

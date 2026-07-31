@@ -14,11 +14,16 @@ RUN dnf5 install -y https://download1.rpmfusion.org/free/fedora/rpmfusion-free-r
 RUN dnf5 config-manager setopt fedora-multimedia.priority=1 \
     && dnf5 config-manager setopt fedora-multimedia.excludepkgs='*nvidia*'
 
-RUN dnf5 install -y --setopt=tsflags=noscripts kernel-devel gcc make akmod-nvidia
+RUN dnf5 install -y --setopt=tsflags=noscripts kernel-devel gcc make \
+    akmod-nvidia akmod-xone
 
-# akmods als Root starten (die Compilierung intern läuft unprivilegiert)
+# akmods als Root starten (die Compilierung intern läuft unprivilegiert).
+# Ohne --kmod baut akmods alle installierten akmods, also NVIDIA und xone.
 RUN akmods --kernels $(rpm -q kernel --qf '%{version}-%{release}.%{arch}\n') --force
-RUN find /var/cache/akmods -name "*.rpm"
+
+# Beide müssen ein RPM erzeugt haben. ls scheitert bei leerem Glob, dadurch
+# bricht der Build hier ab statt erst beim COPY im Zielimage.
+RUN ls /var/cache/akmods/nvidia/*.rpm /var/cache/akmods/xone/*.rpm
 
 # ---- Builder-Stage: Ghostty aus dem tip-Zweig bauen ----
 # Das COPR scottames/ghostty liefert nur 1.3.1. Darin fehlt die Unterstützung
@@ -101,6 +106,14 @@ RUN dnf5 config-manager setopt fedora-multimedia.priority=1 \
 
 COPY --from=builder /var/cache/akmods/nvidia/*.rpm /tmp/akmods-nvidia/
 RUN dnf5 install -y /tmp/akmods-nvidia/*.rpm && rm -rf /tmp/akmods-nvidia
+
+# xone (Xbox-Controller) auf demselben Weg. Vorher wurden die RPMs in build.sh
+# mit "rpm -ivh --nodeps --noscripts" installiert – das überspringt den
+# akmods-Lauf, weshalb nie ein Kernelmodul entstand und der Treiber tot war.
+# Die Dongle-Firmware und /usr/lib/modprobe.d/xone.conf bringt das als
+# Abhängigkeit nachgezogene xone-kmod-common mit.
+COPY --from=builder /var/cache/akmods/xone/*.rpm /tmp/akmods-xone/
+RUN dnf5 install -y /tmp/akmods-xone/*.rpm && rm -rf /tmp/akmods-xone
 
 # Userspace-Treiber. Ohne xorg-x11-drv-nvidia-libs gibt es kein libEGL_nvidia und
 # kein GBM-Backend – KWin Wayland kann dann gar nicht auf der Karte rendern,

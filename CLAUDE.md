@@ -71,8 +71,13 @@ Each of these is a bug that was fixed once — don't reintroduce it.
 - **`bootc-fstab-edit.service` rewrites `/etc/fstab` on first boot**, so BTRFS mount options
   are applied afterwards by `astroimmutable-btrfs-opts.service`, which patches fstab
   idempotently *and* remounts live.
-- **akmods cannot build in the target stage** — hence the separate builder stage for NVIDIA,
-  and hence xone RPMs being installed with `rpm -ivh --nodeps --noscripts`.
+- **akmods cannot build in the target stage** — hence the separate builder stage, which builds
+  both the NVIDIA and the xone kmod. `akmods` without `--kmod` builds every installed akmod, so
+  adding another driver means adding its `akmod-*` package to that one install line.
+  Installing an `akmod-*` RPM with `rpm -ivh --nodeps --noscripts` (as xone used to be) is
+  **not** a workaround: skipping the scriptlets skips the akmods run, so no kernel module is
+  ever produced and the driver silently does nothing. Check with
+  `ls /usr/lib/modules/$(uname -r)/extra/`.
 - **NVIDIA: the kmod alone is not enough, and nouveau must be killed via kargs.** Installing
   only `xorg-x11-drv-nvidia-cuda*` leaves you without `libEGL_nvidia`/GBM, so KWin Wayland
   cannot render on the card — `xorg-x11-drv-nvidia-libs` is required (plus the `.i686` build
