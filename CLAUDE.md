@@ -89,6 +89,19 @@ Each of these is a bug that was fixed once — don't reintroduce it.
   `xorg-x11-drv-nvidia` itself provides `nvidia-kmod-common`, so the RPM Fusion set is
   self-contained.
 - Kernel args go in `/usr/lib/bootc/kargs.d/*.toml`, not GRUB config.
+- **In a builder stage, `/opt`, `/root`, `/usr/local`, `/home`, `/srv`, `/mnt` and `/media` are
+  all dead symlinks.** The ostree base points them into `/var`, which is empty during the
+  build — that is why the target image does `rm /opt && mkdir /opt`. Anything writing there
+  fails: `tar -C /opt` with *Cannot open*, and `HOME=/root` breaks tools that want a cache
+  dir (Zig: *unable to open global cache directory*). Use a plain top-level directory and
+  `ENV PATH=`, or create the `/var` target first. Check with
+  `find / -maxdepth 1 -type l ! -exec test -e {} \; -print`.
+- **Ghostty is built from the tip tarball, not from the COPR** — see the builder stage in the
+  Containerfile for why. Its Zig version is pinned by `ARG ZIG_VERSION` and must match what
+  tip demands; the upstream build docs lag behind tip (they still said 0.15.2 when tip had
+  moved to 0.16.0). A mismatch fails loudly with *does not meet the required build version*.
+  Fedora's `zig` package is deliberately not used: it tracks its own schedule and old versions
+  disappear from the repos, so a mismatch there cannot be fixed locally.
 
 ## Local iteration
 
