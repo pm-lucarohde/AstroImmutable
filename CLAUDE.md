@@ -93,6 +93,13 @@ Each of these is a bug that was fixed once — don't reintroduce it.
   `fedora-multimedia` — that repo runs at `priority=1` and would otherwise always win.
   `xorg-x11-drv-nvidia` itself provides `nvidia-kmod-common`, so the RPM Fusion set is
   self-contained.
+- **The NVIDIA VA-API driver is called `libva-nvidia-driver` in Fedora**, not
+  `nvidia-vaapi-driver` as upstream and every guide name it — searching for the upstream name
+  finds nothing and looks like "not packaged". It lives in the plain `fedora` repo, needs no
+  env vars (libva-drm maps the DRM name `nvidia-drm` to the `nvidia` driver on its own, and the
+  driver's `direct` backend is the default since the EGL one broke on driver ≥ 525) and no extra
+  kargs beyond the `nvidia-drm.modeset=1` already set. Without it the host has no hardware video
+  decoding at all: the base image ships only `libva-intel-media-driver`, which is useless here.
 - Kernel args go in `/usr/lib/bootc/kargs.d/*.toml`, not GRUB config.
 - **In a builder stage, `/opt`, `/root`, `/usr/local`, `/home`, `/srv`, `/mnt` and `/media` are
   all dead symlinks.** The ostree base points them into `/var`, which is empty during the

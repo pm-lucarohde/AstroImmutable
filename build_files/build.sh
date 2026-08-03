@@ -111,6 +111,7 @@ _dnf5_install \
     ffmpeg-libs \
     fdk-aac \
     libavcodec \
+    libva-nvidia-driver \
     pipewire-libs-extra \
     kvantum \
     xdg-desktop-portal-kde \
@@ -139,6 +140,14 @@ dnf5 remove -y --noautoremove \
     qt5ct \
     dosbox \
     kcharselect
+
+# Intel-Videostack aus dem Basisimage: iHD_drv_video.so und libmfx funktionieren nur
+# auf einer Intel-iGPU. Auf NVIDIA und in der virtio-VM sind sie tot, kein Paket
+# benötigt sie und nichts ist dagegen gelinkt (geprüft). Spart ~38 MB.
+# Falls das Image doch mal auf Intel-Grafik booten soll, müssen die beiden hier raus.
+dnf5 remove -y --noautoremove \
+    libva-intel-media-driver \
+    intel-mediasdk
 
 # ---------------------------------------------------------------------------
 # Kvantum-Theme (KvKonqiDark)
