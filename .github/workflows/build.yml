@@ -19,6 +19,9 @@ on:
       - main
     paths-ignore:
       - '**/README.md'
+      # Documentation only — no effect on the image, and a push would otherwise
+      # trigger the full build plus the chained ISO build.
+      - '**/CLAUDE.md'
   workflow_dispatch:
 
 env:
