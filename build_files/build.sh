@@ -149,6 +149,11 @@ dnf5 remove -y --noautoremove \
     libva-intel-media-driver \
     intel-mediasdk
 
+# thermald ist Intels Thermal Daemon für Notebooks. Auf einem Desktop bricht er
+# beim Start mit "Non mobile platform, exiting.." ab; systemd startet ihn
+# fünfmal neu und meldet die Unit dann als failed. Kein Paket benötigt ihn.
+dnf5 remove -y --noautoremove thermald
+
 # ---------------------------------------------------------------------------
 # Kvantum-Theme (KvKonqiDark)
 # ---------------------------------------------------------------------------
@@ -299,6 +304,29 @@ systemctl enable podman.socket
 # Das lässt sich hier nicht vorwegnehmen, da der Benutzer zur Build-Zeit noch
 # nicht existiert, und firstlogin-setup.sh läuft ohne root.
 systemctl enable vboxdrv.service
+
+# ---------------------------------------------------------------------------
+# Units abschalten, die den Boot nur verzögern
+# ---------------------------------------------------------------------------
+
+# dnf-makecache läuft auf ostree nie: die Unit trägt
+# ConditionPathExists=!/run/ostree-booted und wird jeden Boot übersprungen. Ihr
+# "Wants=network-online.target" landet aber trotzdem in der Boot-Transaktion,
+# weil Abhängigkeiten beim Aufbau der Transaktion aufgelöst werden und
+# Conditions erst beim Ausführen greifen. Damit zieht sie
+# NetworkManager-wait-online.service mit (~5,4 s, langsamste Unit im System)
+# für einen Job, der sich sofort wieder beendet. Sie ist die einzige aktivierte
+# Unit, die das Target anfordert; Updates kommen ohnehin über bootc.
+systemctl mask dnf-makecache.timer
+
+# iscsi.service erzeugt eine nutzlose Ordnungsabhängigkeit zwischen
+# network-online und remote-fs.target und verlängert dadurch den Boot (von
+# einem Fedora-Maintainer so beschrieben). Nach Fedora kommt die Unit über
+# libvirt herein, das dieses Image nicht installiert – die Unit ist hier derzeit
+# also gar nicht vorhanden, und "systemctl mask" legt den Symlink dann einfach
+# auf Vorrat an (Rückgabewert 0, bricht den Build nicht ab). Steht hier, damit
+# sie nicht auftaucht, falls jemals libvirt dazukommt.
+systemctl mask iscsi.service
 
 # ---------------------------------------------------------------------------
 # SELinux: Spotify execmem erlauben
