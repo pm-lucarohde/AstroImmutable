@@ -138,8 +138,26 @@ dnf5 remove -y fcitx5
 dnf5 remove -y --noautoremove \
     qt6ct \
     qt5ct \
-    dosbox \
     kcharselect
+
+# DOSBox kommt als Weak Dep von wine herein, fluid-soundfont-gs zusätzlich als
+# Weak Dep von lutris. Das Paket heißt inzwischen dosbox-staging; "dnf5 remove
+# dosbox" lief bisher ins Leere ("No packages to remove for argument: dosbox"),
+# weil dnf5 beim Entfernen nur Paketnamen matcht und nicht das Provides "dosbox",
+# das dosbox-staging mitbringt. Die Abhängigkeiten müssen einzeln aufgezählt
+# werden, weil --noautoremove sie sonst stehen lässt – allein die GM-Soundfont
+# ist 142 MB groß. Alle acht werden ausschließlich von dosbox-staging bzw. den
+# Soundfonts benötigt (mit rpm --whatrequires geprüft). speexdsp bleibt
+# absichtlich drin: vlc-plugins-extra ist dagegen gelinkt. Spart ~162 MB.
+dnf5 remove -y --noautoremove \
+    dosbox-staging \
+    fluid-soundfont-gm \
+    fluid-soundfont-gs \
+    fluid-soundfont-common \
+    fluidsynth-libs \
+    mt32emu \
+    iir1 \
+    SDL2_net
 
 # Intel-Videostack aus dem Basisimage: iHD_drv_video.so und libmfx funktionieren nur
 # auf einer Intel-iGPU. Auf NVIDIA und in der virtio-VM sind sie tot, kein Paket
