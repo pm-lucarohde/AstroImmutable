@@ -7,9 +7,12 @@ on:
   schedule:
     # Fields: minute hour day-of-month month day-of-week. The hour field is
     # 24-hour (0-23), cron has no am/pm — 20 means 20:00 UTC.
-    # Caveat on */3: cron has no notion of "every N days". It matches the days
-    # of the month 1,4,7,…,31, so the interval breaks at every month boundary
-    # (31st → 1st is one day, 28 Feb → 1 Mar is two).
+    # Caveat on */3: cron is stateless and has no notion of "every N days".
+    # */3 is a step over the day-of-month range, i.e. the fixed set
+    # 1,4,7,…,31 — and that set restarts on the 1st of every month. So after a
+    # 31-day month, and after February, the next run follows one day later
+    # instead of three (in a leap year 28 Feb → 1 Mar is two days, because
+    # 29 Feb is not in the set). That is 7 short gaps and 127 runs per year.
     - cron: '07 20 */3 * *'  # 20:07 UTC, every 3rd day of the month
   push:
     branches:
