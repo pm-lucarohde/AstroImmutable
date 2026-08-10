@@ -5,7 +5,12 @@ on:
     branches:
       - main
   schedule:
-    - cron: '05 10 * * *'  # 10:05am UTC everyday
+    # Fields: minute hour day-of-month month day-of-week. The hour field is
+    # 24-hour (0-23), cron has no am/pm — 20 means 20:00 UTC.
+    # Caveat on */3: cron has no notion of "every N days". It matches the days
+    # of the month 1,4,7,…,31, so the interval breaks at every month boundary
+    # (31st → 1st is one day, 28 Feb → 1 Mar is two).
+    - cron: '07 20 */3 * *'  # 20:07 UTC, every 3rd day of the month
   push:
     branches:
       - main
