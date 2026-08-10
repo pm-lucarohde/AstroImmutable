@@ -13,7 +13,7 @@ on:
     # 31-day month, and after February, the next run follows one day later
     # instead of three (in a leap year 28 Feb → 1 Mar is two days, because
     # 29 Feb is not in the set). That is 7 short gaps and 127 runs per year.
-    - cron: '57 19 */3 * *'  # 20:07 UTC, every 3rd day of the month
+    - cron: '57 19 */3 * *'  # 19:57 UTC, every 3rd day of the month
   push:
     branches:
       - main
