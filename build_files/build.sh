@@ -40,6 +40,14 @@ for repo_url in \
     fi
 done
 
+# Brave: offizielles RPM-Repo von Brave Software. Das in der Anleitung genannte
+# dnf-plugins-core entfällt – dnf5 bringt "config-manager" als eingebautes
+# Kommando mit (wird oben für negativo17 genauso benutzt).
+if [ ! -f /etc/yum.repos.d/brave-browser.repo ]; then
+    _retry dnf5 config-manager addrepo \
+        --from-repofile="https://brave-browser-rpm-release.s3.brave.com/brave-browser.repo"
+fi
+
 # COPR: ublue-os Hilfspakete
 # Ghostty kommt nicht mehr aus scottames/ghostty, sondern wird im Containerfile
 # aus dem tip-Zweig gebaut – das COPR liefert nur 1.3.1 und damit ein Ghostty
@@ -54,7 +62,9 @@ dnf5 config-manager setopt fedora-steam.priority=10
 # Unerwünschte Pakete entfernen
 # ---------------------------------------------------------------------------
 
-# Standardbrowser und -editoren werden durch eigene Flatpaks ersetzt
+# Standardbrowser und -editoren werden ersetzt: Firefox durch Brave (RPM, weiter
+# unten installiert), Kate/KWrite durch NotepadNext. Firefox muss trotzdem raus,
+# sonst bliebe das Paket aus dem Basisimage einfach liegen.
 dnf5 remove -y firefox
 dnf5 remove -y kwrite
 dnf5 remove -y kate
@@ -116,6 +126,7 @@ _dnf5_install \
     kvantum \
     xdg-desktop-portal-kde \
     xdg-desktop-portal-gtk \
+    brave-browser \
     docker \
     distrobox \
     vlc \
@@ -266,7 +277,6 @@ rm -f /usr/share/kio/servicemenus/com.mitchellh.ghostty.desktop
 # ---------------------------------------------------------------------------
 
 mkdir -p /usr/share/astroimmutable
-install -Dm644 /ctx/user.js /usr/share/astroimmutable/user.js
 cp -r /ctx/config /usr/share/astroimmutable/config
 install -Dm644 /ctx/wallpaper/mars.jpg /usr/share/astroimmutable/wallpaper/mars.jpg
 install -Dm644 /ctx/avatar/katzenhai.png /usr/share/astroimmutable/avatar/katzenhai.png

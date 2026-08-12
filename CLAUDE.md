@@ -17,9 +17,9 @@ The image is signed with cosign (`cosign.pub`); the private key lives in the
 | --- | --- |
 | `Containerfile` | Two stages: a builder that compiles the NVIDIA akmod against the kernel, then the target image that installs the resulting RPMs and runs `build.sh`. |
 | `build_files/build.sh` | Everything that happens **at build time as root** in the image: repos, package add/remove, themes, systemd units, kargs, SELinux policy, sysctl/zram. |
-| `build_files/firstlogin-setup.sh` | Everything that happens **once per user at first graphical login**: KDE config, Flatpaks, locale, Firefox policies, distrobox, SDKMAN. |
+| `build_files/firstlogin-setup.sh` | Everything that happens **once per user at first graphical login**: KDE config, Flatpaks, locale, Brave GTK fix, distrobox, SDKMAN. |
 | `build_files/config/` | KDE dotfiles baked into `/usr/share/astroimmutable/config`, copied into `~/.config` by the first-login script. |
-| `build_files/{wallpaper,avatar,bin}/`, `user.js`, `outputs.ron`, `spotify_fix.te`, `notepadnext` | Assets embedded into the image. |
+| `build_files/{wallpaper,avatar,bin}/`, `outputs.ron`, `spotify_fix.te`, `notepadnext` | Assets embedded into the image. |
 | `Justfile` | Local build / VM / lint helpers (upstream ublue template, largely untouched). |
 | `disk_config/*.toml` | bootc-image-builder configs for qcow2/raw/ISO. |
 | `.github/workflows/build.yml` | Builds + pushes + signs on push to `main`, PRs, and daily at 10:05 UTC. `build-disk.yml` then builds an Anaconda ISO. |
@@ -65,9 +65,18 @@ Each of these is a bug that was fixed once — don't reintroduce it.
   first login instead — and wait until `evaluateScript 'print(desktops().length)'` reports
   ≥ 1. A D-Bus `Peer.Ping` is *not* a sufficient readiness check: plasmashell registers on
   the bus before its containments exist.
+- **Brave ships two desktop files, and only one of them is the visible entry.**
+  `com.brave.Browser.desktop` carries `NoDisplay=true` and exists purely as an app-id anchor
+  for the XDG portal; the menu/taskbar/mimeapps entry is `brave-browser.desktop`. Its `Exec`
+  is `/usr/bin/brave-browser-stable`, not `/usr/bin/brave-browser`. Separately, Brave's GTK
+  appearance mode reads `gtk-theme-name`, which Plasma never writes into
+  `~/.config/gtk-3.0/settings.ini` — so the UI stays light. Forced per-app via
+  `GTK_THEME=Breeze-Dark` in an overriding desktop file, *not* by editing `settings.ini`
+  (kde-gtk-config rewrites that on every colour-scheme change).
 - **Do not add a NetworkManager `[global-dns-domain-*]` block** in `conf.d`. It killed name
-  resolution in the image. Router DNS plus Firefox DoH (already set in the Firefox policy)
-  is the working setup.
+  resolution in the image. Router DNS is the working setup — resolve it there, not in
+  NetworkManager. (This used to say "router DNS plus Firefox DoH"; the browser is Brave
+  now and the image no longer configures DoH anywhere.)
 - **`bootc-fstab-edit.service` rewrites `/etc/fstab` on first boot**, so BTRFS mount options
   are applied afterwards by `astroimmutable-btrfs-opts.service`, which patches fstab
   idempotently *and* remounts live.

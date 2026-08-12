@@ -256,7 +256,6 @@ _flatpak_install() {
 }
 
 _flatpak_install \
-    org.mozilla.firefox \
     com.rtosta.zapzap \
     org.mozilla.thunderbird_esr \
     org.qbittorrent.qBittorrent \
@@ -320,11 +319,11 @@ update-desktop-database ~/.local/share/applications 2>/dev/null || true
 mkdir -p ~/.local/share/applications ~/.config
 cat <<'EOF' > ~/.config/mimeapps.list
 [Default Applications]
-x-scheme-handler/http=org.mozilla.firefox.desktop
-x-scheme-handler/https=org.mozilla.firefox.desktop
-x-scheme-handler/ftp=org.mozilla.firefox.desktop
-text/html=org.mozilla.firefox.desktop
-application/xhtml+xml=org.mozilla.firefox.desktop
+x-scheme-handler/http=brave-browser.desktop
+x-scheme-handler/https=brave-browser.desktop
+x-scheme-handler/ftp=brave-browser.desktop
+text/html=brave-browser.desktop
+application/xhtml+xml=brave-browser.desktop
 x-scheme-handler/mailto=org.mozilla.thunderbird_esr.desktop
 x-scheme-handler/tel=org.kde.kdeconnect.handler.desktop
 x-scheme-handler/callto=org.kde.kdeconnect.handler.desktop
@@ -357,7 +356,7 @@ video/x-flv=vlc.desktop
 video/3gpp=vlc.desktop
 video/ogg=vlc.desktop
 text/plain=notepadnext.desktop
-application/pdf=org.mozilla.firefox.desktop
+application/pdf=brave-browser.desktop
 inode/directory=org.kde.dolphin.desktop
 application/zip=org.kde.ark.desktop
 application/x-tar=org.kde.ark.desktop
@@ -390,7 +389,7 @@ if [ -n "$QDBUS" ]; then
         applications:systemsettings.desktop \
         applications:com.mitchellh.ghostty.desktop \
         applications:dev.vencord.Vesktop.desktop \
-        applications:org.mozilla.firefox.desktop; do
+        applications:brave-browser.desktop; do
         "$QDBUS" org.kde.ActivityManager /ActivityManager/Resources/Linking \
             org.kde.ActivityManager.ResourcesLinking.LinkResourceToActivity \
             "org.kde.plasma.favorites.applications" "$app" ":global" || true
@@ -398,187 +397,41 @@ if [ -n "$QDBUS" ]; then
 fi
 
 # ---------------------------------------------------------------------------
-# Firefox: Unternehmensrichtlinien (Erweiterungen, Suche, Datenschutz)
+# Brave: Dark-Mode im GTK-Design
 # ---------------------------------------------------------------------------
+# Brave ist Chromium: steht unter brave://settings/appearance das GTK-Design an,
+# holt Brave seine Oberflächenfarben direkt aus GTK statt aus dem Plasma-
+# Farbschema. Als "dunkel" gilt GTK dort aber nur, wenn gtk-theme-name auf ein
+# Dark-Theme zeigt. Plasma schreibt in ~/.config/gtk-3.0/settings.ini gar kein
+# gtk-theme-name (nachgesehen: nur gtk-application-prefer-dark-theme und
+# gtk-icon-theme-name) und färbt stattdessen dynamisch um. Brave liest daraus
+# "hell", also bleibt die Oberfläche weiß, obwohl der Rest des Systems dunkel
+# ist. Mit dem klassischen Design tritt das nicht auf, weil Brave dann seine
+# eigenen Farben nimmt.
+#
+# Erzwungen wird das nur für Brave, per GTK_THEME in einer eigenen .desktop-
+# Datei unter ~/.local/share/applications – die überlagert die gleichnamige aus
+# dem RPM. settings.ini direkt zu setzen wäre der falsche Ort: die Datei gehört
+# kde-gtk-config, das sie bei jedem Farbschema-Wechsel neu schreibt und einen
+# Eintrag dort wieder überbügeln würde.
+#
+# Das Paket bringt zwei .desktop-Dateien mit: com.brave.Browser.desktop trägt
+# NoDisplay=true und ist nur der App-ID-Anker für das XDG-Portal, sichtbar ist
+# brave-browser.desktop. Überlagert wird deshalb ausschließlich letztere.
 
-FIREFOX_DIST="$HOME/.local/share/flatpak/app/org.mozilla.firefox/current/active/files/lib/firefox/distribution"
-mkdir -p "$FIREFOX_DIST"
-cat <<'JSON' > "$FIREFOX_DIST/policies.json"
-{
-  "policies": {
-    "Extensions": {
-      "Install": [
-        "https://addons.mozilla.org/firefox/downloads/latest/ublock-origin/latest.xpi",
-        "https://addons.mozilla.org/firefox/downloads/latest/return-youtube-dislikes/latest.xpi",
-        "https://addons.mozilla.org/firefox/downloads/latest/betterttv/latest.xpi",
-        "https://agrd.io/adguard_extra_firefox_beta"
-      ]
-    },
-    "ExtensionSettings": {
-      "uBlock0@raymondhill.net": {
-        "allowed_in_private_browsing": true
-      },
-      "{762f9885-5a13-4abd-9c77-433dcd38b8fd}": {
-        "allowed_in_private_browsing": true
-      },
-      "firefox@betterttv.net": {
-        "allowed_in_private_browsing": true
-      },
-      "adguardextra@adguard.com": {
-        "allowed_in_private_browsing": true
-      }
-    },
-    "EnableTrackingProtection": {
-      "Value": true,
-      "Category": "strict",
-      "BaselineExceptions": true,
-      "ConvenienceExceptions": false
-    },
-    "3rdparty": {
-      "Extensions": {
-        "uBlock0@raymondhill.net": {
-          "userSettings": [
-            ["advancedUserEnabled", "true"]
-          ],
-          "toOverwrite": {
-            "filterLists": [
-              "ublock-filters",
-              "ublock-badware",
-              "ublock-privacy",
-              "ublock-unbreak",
-              "ublock-quick-fixes",
-              "easylist",
-              "adguard-generic",
-              "easyprivacy",
-              "adguard-spyware-url",
-              "urlhaus-1",
-              "plowe-0",
-              "fanboy-cookiemonster",
-              "ublock-cookies-easylist",
-              "fanboy-social",
-              "easylist-annoyances",
-              "easylist-chat",
-              "fanboy-ai-suggestions",
-              "easylist-newsletters",
-              "easylist-notifications",
-              "ublock-annoyances"
-            ]
-          }
-        }
-      }
-    },
-    "RequestedLocales": ["en-US"],
-    "FirefoxHome": {
-      "Search": true,
-      "TopSites": false,
-      "SponsoredTopSites": false,
-      "Highlights": false,
-      "Pocket": false,
-      "SponsoredPocket": false,
-      "Snippets": false,
-      "Locked": false
-    },
-    "SearchEngines": {
-      "Default": "Startpage",
-      "Add": [
-        {
-          "Name": "Startpage",
-          "URLTemplate": "https://www.startpage.com/sp/search?query={searchTerms}",
-          "Method": "GET",
-          "IconURL": "https://www.startpage.com/favicon.ico",
-          "Alias": "startpage"
-        }
-      ]
-    },
-    "HttpsOnlyMode": "enabled",
-    "DNSOverHTTPS": {
-      "Enabled": true,
-      "ProviderURL": "https://mozilla.cloudflare-dns.com/dns-query",
-      "Fallback": false,
-      "Locked": false
-    },
-    "Preferences": {
-      "browser.link.open_newwindow": {"Value": 3, "Status": "default"},
-      "layout.spellcheckDefault": {"Value": 0, "Status": "default"},
-      "media.eme.enabled": {"Value": true, "Status": "default"},
-      "media.videocontrols.picture-in-picture.video-toggle.enabled": {"Value": false, "Status": "default"},
-      "browser.preferences.defaultPerformanceSettings.enabled": {"Value": true, "Status": "default"},
-      "browser.urlbar.showSearchTerms.enabled": {"Value": false, "Status": "default"},
-      "browser.search.separatePrivateDefault": {"Value": false, "Status": "default"},
-      "browser.urlbar.suggest.bookmark": {"Value": false, "Status": "default"},
-      "browser.urlbar.suggest.openpage": {"Value": false, "Status": "default"},
-      "browser.urlbar.suggest.topsites": {"Value": false, "Status": "default"},
-      "browser.urlbar.suggest.searches": {"Value": false, "Status": "default"},
-      "browser.urlbar.suggest.engines": {"Value": false, "Status": "default"},
-      "browser.urlbar.shortcuts.bookmarks": {"Value": false, "Status": "default"},
-      "browser.urlbar.shortcuts.tabs": {"Value": false, "Status": "default"},
-      "browser.urlbar.shortcuts.history": {"Value": false, "Status": "default"},
-      "browser.urlbar.quickactions.enabled": {"Value": false, "Status": "default"},
-      "browser.safebrowsing.malware.enabled": {"Value": false, "Status": "default"},
-      "browser.safebrowsing.phishing.enabled": {"Value": false, "Status": "default"},
-      "browser.safebrowsing.blockedURIs.enabled": {"Value": false, "Status": "default"},
-      "browser.safebrowsing.downloads.enabled": {"Value": false, "Status": "default"},
-      "font.name.sans-serif.x-western": {"Value": "Noto Sans", "Status": "default"},
-      "font.name.serif.x-western": {"Value": "Noto Sans", "Status": "default"},
-      "font.name.monospace.x-western": {"Value": "Noto Sans Mono", "Status": "default"}
-    }
-  }
-}
-JSON
+BRAVE_DESKTOP="/usr/share/applications/brave-browser.desktop"
+BRAVE_LOCAL="$HOME/.local/share/applications/brave-browser.desktop"
 
-# ---------------------------------------------------------------------------
-# Firefox-Profil anlegen und Standard-Profil erzwingen
-# ---------------------------------------------------------------------------
-# Firefox wird einmal headless gestartet, damit installs.ini angelegt wird;
-# anschließend wird profiles.ini auf das vorkonfigurierte Standard-Profil zeigen.
+if [ -f "$BRAVE_DESKTOP" ]; then
+    cp "$BRAVE_DESKTOP" "$BRAVE_LOCAL"
 
-FF_DIR="$HOME/.var/app/org.mozilla.firefox/config/mozilla/firefox"
-mkdir -p "$FF_DIR/Standard.Profile"
-cp /usr/share/astroimmutable/user.js "$FF_DIR/Standard.Profile/user.js"
-
-flatpak run org.mozilla.firefox --headless --no-remote &
-FF_PID=$!
-
-for i in $(seq 1 30); do
-    [ -f "$FF_DIR/installs.ini" ] && break
-    sleep 1
-done
-
-kill $FF_PID 2>/dev/null || true
-
-cat <<EOF > "$FF_DIR/profiles.ini"
-[Profile0]
-Name=Standard
-IsRelative=1
-Path=Standard.Profile
-Default=1
-
-[General]
-StartWithLastProfile=1
-Version=2
-EOF
-
-# Dieselbe Falle wie oben: legt Firefox die installs.ini nicht innerhalb der
-# 30 Sekunden an, scheitert grep, mit pipefail die ganze Pipeline und damit das
-# Skript. Ein leerer HASH würde außerdem nur kaputte []-Abschnitte schreiben,
-# deshalb wird der Block ganz übersprungen.
-HASH=$(grep -o '^\[.*\]' "$FF_DIR/installs.ini" 2>/dev/null | tr -d '[]' || true)
-
-if [ -n "$HASH" ]; then
-    cat <<EOF > "$FF_DIR/installs.ini"
-[$HASH]
-Default=Standard.Profile
-Locked=1
-EOF
-
-    cat <<EOF >> "$FF_DIR/profiles.ini"
-
-[Install${HASH}]
-Default=Standard.Profile
-Locked=1
-EOF
+    # Greift auf alle drei Exec-Zeilen: Hauptfenster, "Neues Fenster" und
+    # "Neues Inkognito-Fenster".
+    sed -i 's|^Exec=/usr/bin/brave-browser-stable|Exec=env GTK_THEME=Breeze-Dark /usr/bin/brave-browser-stable|' \
+        "$BRAVE_LOCAL"
+    update-desktop-database ~/.local/share/applications 2>/dev/null || true
 else
-    echo "WARNING: installs.ini fehlt, Firefox-Standardprofil nicht erzwungen"
+    echo "WARNING: $BRAVE_DESKTOP fehlt, Dark-Mode-Vorgabe übersprungen"
 fi
 
 # ---------------------------------------------------------------------------
