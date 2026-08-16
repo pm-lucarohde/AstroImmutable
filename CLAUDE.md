@@ -91,8 +91,10 @@ Each of these is a bug that was fixed once — don't reintroduce it.
   probe cannot reproduce this at all — headless skips the onboarding route regardless.
 - **Do not add a NetworkManager `[global-dns-domain-*]` block** in `conf.d`. It killed name
   resolution in the image. Router DNS is the working setup — resolve it there, not in
-  NetworkManager. (This used to say "router DNS plus Firefox DoH"; the browser is Brave
-  now and the image no longer configures DoH anywhere.)
+  NetworkManager. (This used to say "router DNS plus Firefox DoH"; the browser is Brave now,
+  and the only DoH left is the `DnsOverHttpsMode: "automatic"` policy — opportunistic, so it
+  upgrades to the resolver's own DoH endpoint when there is one and stays out of the way
+  otherwise. Nothing forces a third-party resolver.)
 - **`bootc-fstab-edit.service` rewrites `/etc/fstab` on first boot**, so BTRFS mount options
   are applied afterwards by `astroimmutable-btrfs-opts.service`, which patches fstab
   idempotently *and* remounts live.
