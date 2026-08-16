@@ -377,6 +377,28 @@ fi
 rm -f /usr/share/kio/servicemenus/com.mitchellh.ghostty.desktop
 
 # ---------------------------------------------------------------------------
+# Brave: doppelten Eintrag aus den Standard-Anwendungen nehmen
+# ---------------------------------------------------------------------------
+# Das Paket liefert zwei vollständige Desktop-Dateien aus. com.brave.Browser
+# ist laut eigenem Kommentar eine Kopie von brave-browser und existiert nur,
+# damit das XDG-Portal die Anwendung über ihre App-ID wiedererkennt; NoDisplay
+# hält sie aus Startmenü und KRunner heraus.
+#
+# Die KDE-Seite "Standard-Anwendungen" wertet NoDisplay aber nicht aus und
+# listet alles, was x-scheme-handler/http beansprucht – Brave erscheint dort
+# also zweimal. Das ist nicht nur unschön: die Kopie trägt das unveränderte
+# Exec, während firstlogin-setup.sh nur brave-browser.desktop überlagert.
+# Wer versehentlich den zweiten Eintrag wählt, verliert damit GTK_THEME und
+# --force-dark-mode für alle aus anderen Anwendungen geöffneten Links.
+#
+# Ohne MimeType-Zeile taucht die Datei in der Liste nicht mehr auf, bleibt dem
+# Portal aber als App-ID-Anker erhalten – ihr eigentlicher Zweck. Ein sed auf
+# eine bereits entfernte Zeile ist wirkungslos, der Schritt also idempotent.
+if [ -f /usr/share/applications/com.brave.Browser.desktop ]; then
+    sed -i '/^MimeType=/d' /usr/share/applications/com.brave.Browser.desktop
+fi
+
+# ---------------------------------------------------------------------------
 # Brave: Enterprise-Policies
 # ---------------------------------------------------------------------------
 # Brave liest Chromium-Enterprise-Policies aus /etc/brave/policies/managed/.
