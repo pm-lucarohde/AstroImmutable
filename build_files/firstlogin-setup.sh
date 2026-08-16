@@ -418,6 +418,23 @@ fi
 # Das Paket bringt zwei .desktop-Dateien mit: com.brave.Browser.desktop trägt
 # NoDisplay=true und ist nur der App-ID-Anker für das XDG-Portal, sichtbar ist
 # brave-browser.desktop. Überlagert wird deshalb ausschließlich letztere.
+#
+# GTK_THEME allein färbt nur die Oberfläche, nicht den Seiteninhalt. Für
+# prefers-color-scheme fragt Chromium unter Linux nicht das GTK-Theme, sondern
+# den DarkModeManager – und der liefert in einer echten Plasma-Sitzung "hell",
+# egal wie GTK eingestellt ist. Gemessen in der laufenden Sitzung des Hosts,
+# Testseite über --remote-debugging-port ausgelesen:
+#
+#   Standard                              -> hell
+#   system_theme=1, kein GTK_THEME        -> hell
+#   system_theme=1 + GTK_THEME=Breeze-Dark -> hell
+#   --force-dark-mode                     -> dunkel
+#
+# Unter einem nackten Xvfb ohne Portal kommt dagegen auch der GTK-Weg dunkel
+# heraus – dort fällt Chromium mangels Portal auf das Toolkit-Theme zurück. Ein
+# Test ohne Sitzung beweist hier also nichts. Deshalb zusätzlich
+# --force-dark-mode. Der Preis: Brave bleibt dunkel, auch wenn Plasma auf ein
+# helles Farbschema umgestellt wird.
 
 BRAVE_DESKTOP="/usr/share/applications/brave-browser.desktop"
 BRAVE_LOCAL="$HOME/.local/share/applications/brave-browser.desktop"
@@ -427,7 +444,7 @@ if [ -f "$BRAVE_DESKTOP" ]; then
 
     # Greift auf alle drei Exec-Zeilen: Hauptfenster, "Neues Fenster" und
     # "Neues Inkognito-Fenster".
-    sed -i 's|^Exec=/usr/bin/brave-browser-stable|Exec=env GTK_THEME=Breeze-Dark /usr/bin/brave-browser-stable|' \
+    sed -i 's|^Exec=/usr/bin/brave-browser-stable|Exec=env GTK_THEME=Breeze-Dark /usr/bin/brave-browser-stable --force-dark-mode|' \
         "$BRAVE_LOCAL"
     update-desktop-database ~/.local/share/applications 2>/dev/null || true
 else

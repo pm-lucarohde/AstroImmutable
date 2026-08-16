@@ -73,6 +73,14 @@ Each of these is a bug that was fixed once — don't reintroduce it.
   `~/.config/gtk-3.0/settings.ini` — so the UI stays light. Forced per-app via
   `GTK_THEME=Breeze-Dark` in an overriding desktop file, *not* by editing `settings.ini`
   (kde-gtk-config rewrites that on every colour-scheme change).
+- **`GTK_THEME` colours the chrome, not the page — web content needs `--force-dark-mode`.**
+  `prefers-color-scheme` does not come from the GTK theme; in a real Plasma session Chromium's
+  DarkModeManager reports light no matter how GTK is set, so websites keep serving their light
+  variant. Measured in a live session (probe page read back through `--remote-debugging-port`):
+  default → light, `system_theme=1` → light, `system_theme=1` + `GTK_THEME=Breeze-Dark` →
+  light, `--force-dark-mode` → dark. Under a bare Xvfb the GTK route *does* come out dark,
+  because without a portal Chromium falls back to the toolkit theme — so a test without a
+  session proves nothing here, and neither does a headless one.
 - **`brave://welcome` is gated on the `First Run` sentinel, not on
   `brave.has_seen_brave_welcome_page`.** The headless run that seeds the profile never writes
   that empty file (true with *and* without `--no-first-run`), so the first real GUI start
