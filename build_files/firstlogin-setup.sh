@@ -299,6 +299,10 @@ update-desktop-database ~/.local/share/applications 2>/dev/null || true
 # Standard-Apps festlegen (mimeapps.list)
 # ---------------------------------------------------------------------------
 
+# geo: braucht den Eintrag zwingend. kf6-kguiaddons liefert gleich drei
+# Handler mit – Google Maps, OpenStreetMap und wheelmap.org – und ohne eigene
+# Vorgabe gewinnt Google Maps (im Container gegengeprüft: ein frisches Image
+# meldet google-maps-geo-handler.desktop als Standard).
 mkdir -p ~/.local/share/applications ~/.config
 cat <<'EOF' > ~/.config/mimeapps.list
 [Default Applications]
@@ -308,6 +312,7 @@ x-scheme-handler/ftp=brave-browser.desktop
 text/html=brave-browser.desktop
 application/xhtml+xml=brave-browser.desktop
 x-scheme-handler/mailto=org.mozilla.thunderbird_esr.desktop
+x-scheme-handler/geo=openstreetmap-geo-handler.desktop
 image/jpeg=org.gnome.eog.desktop
 image/png=org.gnome.eog.desktop
 image/gif=org.gnome.eog.desktop

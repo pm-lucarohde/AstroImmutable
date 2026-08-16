@@ -159,17 +159,8 @@ dnf5 remove -y fcitx5
 dnf5 remove -y --noautoremove \
     qt6ct \
     qt5ct \
-    kcharselect
-
-# krfb ist die Bildschirmfreigabe per VNC, kwalletmanager5 die Verwaltungs-
-# oberfläche der Brieftasche. krfb-libs muss mit, weil es krfb verlangt und
-# sonst ohne sein Hauptpaket zurückbliebe. An kwalletmanager5 hängt nichts;
-# kf6-kwallet, pam-kwallet und signon-kwallet-extension bleiben unangetastet,
-# die Brieftasche selbst funktioniert also weiter.
-dnf5 remove -y --noautoremove \
-    krfb \
-    krfb-libs \
-    kwalletmanager5
+    kcharselect \
+	konsole
 
 # KDE Connect komplett. Pakete namens kdeconnect-app oder kdeconnect-sms gibt
 # es in Fedora nicht (geprüft: weder als Name noch als Provides) – die beiden
