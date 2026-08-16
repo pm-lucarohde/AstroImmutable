@@ -435,6 +435,77 @@ else
 fi
 
 # ---------------------------------------------------------------------------
+# Brave: Tracker-Blockierung auf "Aggressiv" vorbelegen
+# ---------------------------------------------------------------------------
+# Die Stufe "Aggressiv" ist keine Policy und kein Pref, sondern ein Content-
+# Setting im Profil: Typ cosmeticFilteringV2, Wert ControlType::BLOCK (1);
+# "Standard" ist BLOCK_THIRD_PARTY (2). DefaultBraveAdblockSetting aus den
+# Policies setzt nur den Ads-Teil und lässt diesen Wert unberührt – deshalb
+# muss es hier passieren.
+#
+# Alles darunter ist im Container gegen das Brave aus dem Image geprüft worden:
+#   - Eine vorab hingelegte Minimal-Preferences wird verworfen; Brave füllt die
+#     Datei auf und überschreibt den Eintrag mit {}. Das Profil muss also von
+#     Brave selbst stammen, bevor man es anfasst.
+#   - /opt/brave.com/brave/initial_preferences trägt Content-Settings NICHT in
+#     ein neues Profil, weder mit noch ohne Erstlauf-Logik, auch nicht als
+#     master_preferences. Der Weg existiert für diesen Zweck nicht.
+#   - Patcht man dagegen eine von Brave erzeugte Preferences, übernimmt Brave
+#     den Eintrag beim nächsten Start und schreibt ihn mit eigenem
+#     last_modified-Zeitstempel zurück.
+#
+# Der Wert ist eine Vorbelegung, keine Sperre: du kannst die Stufe in Shields
+# jederzeit ändern.
+
+BRAVE_DIR="$HOME/.config/BraveSoftware/Brave-Browser"
+BRAVE_PREFS="$BRAVE_DIR/Default/Preferences"
+
+if [ ! -f "$BRAVE_PREFS" ]; then
+    # Zwei Fallstricke, beide im Container nachgestellt:
+    #
+    # 1. --user-data-dir ist zwingend. --headless=new benutzt sonst ein eigenes
+    #    Verzeichnis "Brave-Browser-headless" und legt das echte Profil nie an.
+    # 2. Der Prozess beendet sich nicht von selbst – weder mit --dump-dom noch
+    #    mit --disable-extensions (beides gemessen: Rückgabewert 124 nach vollen
+    #    60 s). Deshalb: in eigener Prozessgruppe starten, auf die Datei warten,
+    #    Gruppe abräumen. Ein kill auf die reine PID genügt nicht, die
+    #    Kindprozesse laufen weiter, halten das Profil gesperrt und würden den
+    #    Patch beim Beenden überschreiben.
+    #
+    # So dauert der Schritt rund 12 Sekunden statt 60.
+    setsid brave-browser-stable --headless=new --no-first-run --disable-gpu \
+        --user-data-dir="$BRAVE_DIR" about:blank >/dev/null 2>&1 &
+    BRAVE_PG=$!
+
+    for _ in $(seq 1 90); do
+        if [ -s "$BRAVE_PREFS" ] && jq -e . "$BRAVE_PREFS" >/dev/null 2>&1; then
+            break
+        fi
+        sleep 1
+    done
+
+    kill -TERM -"$BRAVE_PG" 2>/dev/null || true
+    for _ in $(seq 1 30); do
+        pgrep -g "$BRAVE_PG" >/dev/null 2>&1 || break
+        sleep 1
+    done
+fi
+
+if [ -f "$BRAVE_PREFS" ]; then
+    BRAVE_TMP=$(mktemp)
+    if jq '.profile.content_settings.exceptions.cosmeticFilteringV2["*,*"] =
+           {"setting": {"cosmeticFilteringV2": 1}}' "$BRAVE_PREFS" > "$BRAVE_TMP" \
+       && [ -s "$BRAVE_TMP" ]; then
+        mv "$BRAVE_TMP" "$BRAVE_PREFS"
+    else
+        rm -f "$BRAVE_TMP"
+        echo "WARNING: Brave-Preferences nicht patchbar, Aggressiv-Vorgabe übersprungen"
+    fi
+else
+    echo "WARNING: Brave hat kein Profil angelegt, Aggressiv-Vorgabe übersprungen"
+fi
+
+# ---------------------------------------------------------------------------
 # Hytale-Launcher installieren (nur wenn noch nicht vorhanden)
 # ---------------------------------------------------------------------------
 
