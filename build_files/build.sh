@@ -315,20 +315,28 @@ rm -f /usr/share/kio/servicemenus/com.mitchellh.ghostty.desktop
 #   Ein "aggressiv" gibt es als Policy nicht – das bleibt Shields-Einstellung.
 #
 # ExtensionInstallForcelist installiert die drei Erweiterungen beim ersten Start
-# und hält sie aktuell. IDs aus offizieller Quelle: Tampermonkey (stabil, MV3)
-# von tampermonkey.net, Return YouTube Dislike aus dem README des Projekts,
-# BetterTTV aus dessen Web-Store-Eintrag. Die angegebene Google-Update-URL ist
-# die übliche Schreibweise – Brave leitet Erweiterungs-Updates ohnehin über
-# extensionupdater.brave.com um (kExtensionUpdaterDomain in brave-core), Google
-# sieht die Abfragen also nicht. Achtung: erzwungen installierte Erweiterungen
-# lassen sich vom Benutzer nicht entfernen oder abschalten.
+# und hält sie aktuell. IDs aus offizieller Quelle geprüft: AdGuard Extra aus dem
+# Manifest der Erweiterung selbst (Autor "Adguard Software Ltd"), Return YouTube
+# Dislike aus dem README des Projekts, BetterTTV aus dessen Web-Store-Eintrag.
+# Die angegebene Google-Update-URL ist die übliche Schreibweise – Brave leitet
+# Erweiterungs-Updates ohnehin über extensionupdater.brave.com um
+# (kExtensionUpdaterDomain in brave-core), Google sieht die Abfragen also nicht.
 #
-# ManagedBookmarks legt ein verwaltetes Lesezeichen auf das AdGuard-Extra-
-# Userscript. Automatisch installieren lässt es sich nicht: Tampermonkeys
-# Provisioning (managed_schema "jsonImport") erwartet unter "url" kein .user.js,
-# sondern ein Tampermonkey-Export-JSON, und "hash" ist ein Integritäts-Digest im
-# Format 1:<digest>, bei Abweichung bricht der Import ab. Dafür müsste man ein
-# eigenes Export-Dokument hosten. Das Lesezeichen macht daraus einen Klick.
+# AdGuard Extra gibt es auch als Userscript für Tampermonkey; die Erweiterung
+# ist hier der einfachere Weg, weil sie sich per Policy ausrollen lässt. Ein
+# Userscript ließe sich nicht automatisch installieren: Tampermonkeys
+# Provisioning erwartet ein selbst gehostetes Export-JSON samt Integritäts-
+# Digest, kein .user.js.
+#
+# ExtensionSettings heftet dieselben drei Erweiterungen in die Symbolleiste.
+# "default_pinned" zeigt sie ab Werk an, lässt sie aber abnehmbar; "force_pinned"
+# wäre die gesperrte Variante.
+#
+# RestoreOnStartup 4 = "bestimmte Seiten öffnen", die Liste steht in
+# RestoreOnStartupURLs.
+#
+# Achtung: erzwungen installierte Erweiterungen lassen sich vom Benutzer nicht
+# entfernen oder abschalten.
 #
 # Datei gehört root und ist nur für root schreibbar – sonst könnte ein Benutzer
 # die Vorgaben einfach überschreiben.
@@ -382,19 +390,37 @@ install -m 644 /dev/stdin /etc/brave/policies/managed/astroimmutable-policies.js
     "DefaultBrowserSettingEnabled": false,
     "DnsOverHttpsMode": "automatic",
     "ExtensionInstallForcelist": [
-        "dhdgffkkebhmkfjojejmpbldmpobfkfo;https://clients2.google.com/service/update2/crx",
+        "mglpocjcjbekdckiahfhagndealpkpbj;https://clients2.google.com/service/update2/crx",
         "gebbhagfogifgggkldgodflihgfeippi;https://clients2.google.com/service/update2/crx",
         "ajopnjidmegmdimjlfnijceegpefgped;https://clients2.google.com/service/update2/crx"
     ],
-    "ManagedBookmarks": [
-        {
-            "toplevel_name": "AstroImmutable"
+    "BookmarkBarEnabled": false,
+    "RestoreOnStartup": 4,
+    "RestoreOnStartupURLs": [
+        "https://www.startpage.com/"
+    ],
+    "ExtensionSettings": {
+        "mglpocjcjbekdckiahfhagndealpkpbj": {
+            "toolbar_pin": "default_pinned"
         },
-        {
-            "name": "AdGuard Extra installieren (Tampermonkey)",
-            "url": "https://userscripts.adtidy.org/beta/adguard-extra/1.0/adguard-extra.user.js"
+        "gebbhagfogifgggkldgodflihgfeippi": {
+            "toolbar_pin": "default_pinned"
+        },
+        "ajopnjidmegmdimjlfnijceegpefgped": {
+            "toolbar_pin": "default_pinned"
         }
-    ]
+    },
+    "ShowHomeButton": true,
+    "HomepageIsNewTabPage": false,
+    "HomepageLocation": "https://www.startpage.com/",
+    "SafeBrowsingProtectionLevel": 0,
+    "DefaultSearchProviderEnabled": true,
+    "DefaultSearchProviderName": "Startpage",
+    "DefaultSearchProviderKeyword": "startpage",
+    "DefaultSearchProviderSearchURL": "https://www.startpage.com/sp/search?query={searchTerms}",
+    "DefaultSearchProviderIconURL": "https://www.startpage.com/favicon.ico",
+    "HighEfficiencyModeEnabled": true,
+    "MemorySaverModeSavings": 2
 }
 JSON
 
