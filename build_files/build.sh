@@ -329,11 +329,15 @@ rm -f /usr/share/kio/servicemenus/com.mitchellh.ghostty.desktop
 # Digest, kein .user.js.
 #
 # ExtensionSettings heftet dieselben drei Erweiterungen in die Symbolleiste.
-# "default_pinned" zeigt sie ab Werk an, lässt sie aber abnehmbar; "force_pinned"
-# wäre die gesperrte Variante.
+# "default_unpinned" hält sie aus der Symbolleiste heraus; sie sind weiterhin
+# über das Puzzle-Symbol erreichbar und können von Hand angeheftet werden.
 #
 # RestoreOnStartup 4 = "bestimmte Seiten öffnen", die Liste steht in
-# RestoreOnStartupURLs.
+# RestoreOnStartupURLs. NewTabPageLocation setzt zusätzlich die Seite für neue
+# Tabs, sonst käme dort Braves eigene Startseite mit Bild und Statistik.
+#
+# PromotionalTabsEnabled false unterdrückt die Willkommensseite brave://welcome,
+# die sonst beim ersten Start als eigener Tab aufgeht.
 #
 # Achtung: erzwungen installierte Erweiterungen lassen sich vom Benutzer nicht
 # entfernen oder abschalten.
@@ -401,13 +405,13 @@ install -m 644 /dev/stdin /etc/brave/policies/managed/astroimmutable-policies.js
     ],
     "ExtensionSettings": {
         "mglpocjcjbekdckiahfhagndealpkpbj": {
-            "toolbar_pin": "default_pinned"
+            "toolbar_pin": "default_unpinned"
         },
         "gebbhagfogifgggkldgodflihgfeippi": {
-            "toolbar_pin": "default_pinned"
+            "toolbar_pin": "default_unpinned"
         },
         "ajopnjidmegmdimjlfnijceegpefgped": {
-            "toolbar_pin": "default_pinned"
+            "toolbar_pin": "default_unpinned"
         }
     },
     "ShowHomeButton": true,
@@ -420,7 +424,9 @@ install -m 644 /dev/stdin /etc/brave/policies/managed/astroimmutable-policies.js
     "DefaultSearchProviderSearchURL": "https://www.startpage.com/sp/search?query={searchTerms}",
     "DefaultSearchProviderIconURL": "https://www.startpage.com/favicon.ico",
     "HighEfficiencyModeEnabled": true,
-    "MemorySaverModeSavings": 2
+    "MemorySaverModeSavings": 2,
+    "PromotionalTabsEnabled": false,
+    "NewTabPageLocation": "https://www.startpage.com/"
 }
 JSON
 
