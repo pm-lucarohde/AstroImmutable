@@ -161,6 +161,31 @@ dnf5 remove -y --noautoremove \
     qt5ct \
     kcharselect
 
+# krfb ist die Bildschirmfreigabe per VNC, kwalletmanager5 die Verwaltungs-
+# oberfläche der Brieftasche. krfb-libs muss mit, weil es krfb verlangt und
+# sonst ohne sein Hauptpaket zurückbliebe. An kwalletmanager5 hängt nichts;
+# kf6-kwallet, pam-kwallet und signon-kwallet-extension bleiben unangetastet,
+# die Brieftasche selbst funktioniert also weiter.
+dnf5 remove -y --noautoremove \
+    krfb \
+    krfb-libs \
+    kwalletmanager5
+
+# KDE Connect: Pakete namens kdeconnect-app oder kdeconnect-sms gibt es in
+# Fedora nicht (geprüft) – beide Menüeinträge gehören zu kde-connect. In
+# demselben Paket liegt org.kde.kdeconnect.handler.desktop, auf das die
+# mimeapps.list im First-Login für tel: und callto: verweist. Das Paket zu
+# entfernen nähme also den Handler und die Telefonanbindung mit. Deshalb nur
+# die beiden Starter ausblenden statt Dateien zu löschen: NoDisplay ist der
+# vorgesehene Weg dafür, und rpm bleibt konsistent (eine gelöschte Datei käme
+# beim nächsten Paketupdate ohnehin zurück).
+for app in org.kde.kdeconnect.app org.kde.kdeconnect.sms; do
+    f="/usr/share/applications/${app}.desktop"
+    if [ -f "$f" ] && ! grep -q '^NoDisplay=true' "$f"; then
+        sed -i '/^\[Desktop Entry\]/a NoDisplay=true' "$f"
+    fi
+done
+
 # DOSBox kommt als Weak Dep von wine herein, fluid-soundfont-gs zusätzlich als
 # Weak Dep von lutris. Das Paket heißt inzwischen dosbox-staging; "dnf5 remove
 # dosbox" lief bisher ins Leere ("No packages to remove for argument: dosbox"),
