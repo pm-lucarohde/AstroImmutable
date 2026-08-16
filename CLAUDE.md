@@ -19,7 +19,7 @@ The image is signed with cosign (`cosign.pub`); the private key lives in the
 | `build_files/build.sh` | Everything that happens **at build time as root** in the image: repos, package add/remove, themes, systemd units, kargs, SELinux policy, sysctl/zram. |
 | `build_files/firstlogin-setup.sh` | Everything that happens **once per user at first graphical login**: KDE config, Flatpaks, locale, Brave GTK fix, distrobox, SDKMAN. |
 | `build_files/config/` | KDE dotfiles baked into `/usr/share/astroimmutable/config`, copied into `~/.config` by the first-login script. |
-| `build_files/{wallpaper,avatar,bin}/`, `outputs.ron`, `spotify_fix.te`, `notepadnext` | Assets embedded into the image. |
+| `build_files/{wallpaper,avatar,bin}/`, `outputs.ron`, `notepadnext` | Assets embedded into the image. |
 | `Justfile` | Local build / VM / lint helpers (upstream ublue template, largely untouched). |
 | `disk_config/*.toml` | bootc-image-builder configs for qcow2/raw/ISO. |
 | `.github/workflows/build.yml` | Builds + pushes + signs on push to `main`, PRs, and daily at 10:05 UTC. `build-disk.yml` then builds an Anaconda ISO. |

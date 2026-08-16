@@ -139,7 +139,6 @@ _dnf5_install \
     bleachbit \
     wine \
     lutris \
-    spotify \
     bazaar
 
 # ---------------------------------------------------------------------------
@@ -283,6 +282,50 @@ Categories=Development;TextEditor;
 Comment=A cross-platform reimplementation of Notepad++
 Terminal=false
 EOF
+
+# ---------------------------------------------------------------------------
+# Vesktop (angezeigt als Discord)
+# ---------------------------------------------------------------------------
+# Vesktop liegt in keinem der eingebundenen Repos (RPM Fusion, negativo17, die
+# beiden ublue-COPRs – alle geprüft). Die COPRs, die es führen, sind private
+# Sammlungen; für ein veröffentlichtes Image ist das offizielle RPM von
+# vencord.dev die bessere Herkunft. Die URL ist eine stabile Weiterleitung auf
+# das jeweils neueste Release-Asset, es braucht also weder die GitHub-API noch
+# eine gepinnte Version.
+#
+# Kein "dnf5 install <URL>": die Adresse endet nicht auf .rpm, dnf5 erkennt sie
+# damit nicht als Paket. Erst herunterladen, dann lokal installieren – so löst
+# dnf5 auch die Abhängigkeiten auf (gtk3, nss, libXScrnSaver, libnotify,
+# at-spi2-core, xdg-utils, libXtst, libuuid).
+#
+# Das RPM legt die Anwendung unter /opt/Vesktop ab – deshalb muss der
+# /opt-Umbau aus dem Containerfile vorher gelaufen sein, sonst zeigt /opt ins
+# leere /var. Das Postinstall-Scriptlet setzt zusätzlich den
+# update-alternatives-Link /usr/bin/vesktop; die .desktop-Datei ruft ohnehin
+# direkt /opt/Vesktop/vesktop auf.
+VESKTOP_RPM=/tmp/vesktop.rpm
+if curl -fL --retry 3 --retry-delay 30 -o "$VESKTOP_RPM" \
+    "https://vencord.dev/download/vesktop/amd64/rpm"; then
+    _dnf5_install "$VESKTOP_RPM"
+    rm -f "$VESKTOP_RPM"
+else
+    echo "WARNING: Vesktop-RPM konnte nicht geladen werden, skipping"
+fi
+
+# Anzeigename auf Discord ändern – dieselbe Vorgabe wie zuvor beim Flatpak, nur
+# jetzt systemweit statt pro Benutzer. Die Datei hat weder Name[xx]-Übersetzungen
+# noch Desktop-Actions, ein einzelnes sed genügt also.
+#
+# Wichtig für später: die Datei heißt vesktop.desktop und trägt
+# StartupWMClass=vesktop – das deckt sich mit der Wayland-app-id, die Vesktop
+# meldet. Die Ankerdatei, die das Flatpak dafür brauchte (dessen Datei hieß
+# dev.vencord.Vesktop.desktop und passte nicht zur app-id), entfällt damit.
+if [ -f /usr/share/applications/vesktop.desktop ]; then
+    sed -i 's/^Name=.*/Name=Discord/' /usr/share/applications/vesktop.desktop
+    sed -i '/^Name\[/d' /usr/share/applications/vesktop.desktop
+else
+    echo "WARNING: vesktop.desktop fehlt, Umbenennung übersprungen"
+fi
 
 # ---------------------------------------------------------------------------
 # Ghostty anpassen
@@ -541,16 +584,6 @@ systemctl mask dnf-makecache.timer
 # auf Vorrat an (Rückgabewert 0, bricht den Build nicht ab). Steht hier, damit
 # sie nicht auftaucht, falls jemals libvirt dazukommt.
 systemctl mask iscsi.service
-
-# ---------------------------------------------------------------------------
-# SELinux: Spotify execmem erlauben
-# ---------------------------------------------------------------------------
-# Spotify löst ein process:execmem-Denial aus. Das Modul wird hier zur
-# Build-Zeit (als root) kompiliert und fest in die Policy gebacken.
-rpm -q checkpolicy >/dev/null 2>&1 || _dnf5_install checkpolicy
-checkmodule -M -m -o /tmp/spotify_fix.mod /ctx/spotify_fix.te
-semodule_package -o /tmp/spotify_fix.pp -m /tmp/spotify_fix.mod
-semodule -i /tmp/spotify_fix.pp
 
 # ---------------------------------------------------------------------------
 # Swap, ZRAM & ZSWAP Tuning (OSTree / Vendor Defaults)

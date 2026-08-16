@@ -1,9 +1,0 @@
-module spotify_fix 1.0;
-
-require {
-	type kernel_t;
-	class process execmem;
-}
-
-# Spotify (negativo17 spotify-client) löst ein execmem-Denial aus.
-allow kernel_t self:process execmem;

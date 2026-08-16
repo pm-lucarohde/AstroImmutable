@@ -264,7 +264,7 @@ _flatpak_install \
     org.azahar_emu.Azahar \
     org.gimp.GIMP \
     com.heroicgameslauncher.hgl \
-    dev.vencord.Vesktop \
+    com.spotify.Client \
     org.onlyoffice.desktopeditors \
     com.pokemmo.PokeMMO \
     io.github.ryubing.Ryujinx \
@@ -277,32 +277,15 @@ _flatpak_install \
     org.fedoraproject.MediaWriter
 
 # ---------------------------------------------------------------------------
-# App-Anzeigenamen anpassen: Vesktop → Discord, ZapZap → WhatsApp
+# App-Anzeigenamen anpassen: ZapZap → WhatsApp
 # ---------------------------------------------------------------------------
+# Vesktop steht hier nicht mehr: es kommt inzwischen als RPM, wird deshalb
+# schon zur Bauzeit in build.sh auf "Discord" umbenannt, und die frühere
+# Ankerdatei für die KWin-Icon-Zuordnung ist überflüssig geworden – die
+# RPM-Datei heißt vesktop.desktop und trifft die Wayland-app-id direkt.
 
 FP_EXPORTS="$HOME/.local/share/flatpak/exports/share/applications"
 mkdir -p ~/.local/share/applications
-
-if [ -f "$FP_EXPORTS/dev.vencord.Vesktop.desktop" ]; then
-    cp "$FP_EXPORTS/dev.vencord.Vesktop.desktop" ~/.local/share/applications/
-    sed -i '0,/^\[Desktop Action/{s/^Name=.*/Name=Discord/; /^Name\[/d}' \
-        ~/.local/share/applications/dev.vencord.Vesktop.desktop
-
-    # KWin holt das Icon der Fensterdekoration über die app-id des Fensters und
-    # sucht dazu eine gleichnamige .desktop-Datei. Vesktop meldet sich als
-    # "vesktop" (mit WAYLAND_DEBUG geprüft: set_app_id("vesktop")), die Datei
-    # heißt aber dev.vencord.Vesktop.desktop. Ohne Treffer zeigt KWin das
-    # generische Wayland-Logo in der Titelleiste – das Icon selbst ist völlig in
-    # Ordnung, nur die Zuordnung schlägt fehl. Electron lässt sich die app-id
-    # nicht per --class umbiegen (getestet, bleibt "vesktop"), deshalb eine
-    # gleichnamige Ankerdatei, die ausschließlich der Zuordnung dient.
-    # NoDisplay hält sie aus Startmenü und KRunner heraus; die Taskleiste
-    # gruppiert weiterhin über StartupWMClass und zeigt keinen zweiten Eintrag.
-    sed '/^NoDisplay=/d' ~/.local/share/applications/dev.vencord.Vesktop.desktop \
-        > ~/.local/share/applications/vesktop.desktop
-    sed -i '/^\[Desktop Entry\]/a NoDisplay=true' \
-        ~/.local/share/applications/vesktop.desktop
-fi
 
 if [ -f "$FP_EXPORTS/com.rtosta.zapzap.desktop" ]; then
     cp "$FP_EXPORTS/com.rtosta.zapzap.desktop" ~/.local/share/applications/
@@ -388,7 +371,7 @@ if [ -n "$QDBUS" ]; then
     for app in \
         applications:systemsettings.desktop \
         applications:com.mitchellh.ghostty.desktop \
-        applications:dev.vencord.Vesktop.desktop \
+        applications:vesktop.desktop \
         applications:brave-browser.desktop; do
         "$QDBUS" org.kde.ActivityManager /ActivityManager/Resources/Linking \
             org.kde.ActivityManager.ResourcesLinking.LinkResourceToActivity \

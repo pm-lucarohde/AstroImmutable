@@ -70,7 +70,7 @@ popupHeight=509
 popupWidth=677
 
 [Containments][28][Applets][29][Configuration][General]
-favorites=applications:systemsettings.desktop,applications:com.mitchellh.ghostty.desktop,applications:dev.vencord.Vesktop.desktop,applications:brave-browser.desktop
+favorites=applications:systemsettings.desktop,applications:com.mitchellh.ghostty.desktop,applications:vesktop.desktop,applications:brave-browser.desktop
 favoritesPortedToKAstats=true
 icon=start-here
 highlightNewlyInstalledApps=false
@@ -81,7 +81,7 @@ immutability=1
 plugin=org.kde.plasma.icontasks
 
 [Containments][28][Applets][30][Configuration][General]
-launchers=applications:io.github.kolunmi.Bazaar.desktop,applications:org.kde.dolphin.desktop,file:///var/home/lr/.local/share/flatpak/exports/share/applications/org.mozilla.thunderbird_esr.desktop,applications:brave-browser.desktop,applications:spotify.desktop
+launchers=applications:io.github.kolunmi.Bazaar.desktop,applications:org.kde.dolphin.desktop,file:///var/home/lr/.local/share/flatpak/exports/share/applications/org.mozilla.thunderbird_esr.desktop,applications:brave-browser.desktop,file:///var/home/lr/.local/share/flatpak/exports/share/applications/com.spotify.Client.desktop
 
 [Containments][28][Applets][31]
 immutability=1
@@ -211,7 +211,7 @@ popupHeight=509
 popupWidth=677
 
 [Containments][74][Applets][75][Configuration][General]
-favorites=applications:systemsettings.desktop,applications:com.mitchellh.ghostty.desktop,applications:dev.vencord.Vesktop.desktop,applications:brave-browser.desktop
+favorites=applications:systemsettings.desktop,applications:com.mitchellh.ghostty.desktop,applications:vesktop.desktop,applications:brave-browser.desktop
 favoritesPortedToKAstats=true
 icon=start-here
 highlightNewlyInstalledApps=false
@@ -222,7 +222,7 @@ immutability=1
 plugin=org.kde.plasma.icontasks
 
 [Containments][74][Applets][76][Configuration][General]
-launchers=applications:io.github.kolunmi.Bazaar.desktop,applications:org.kde.dolphin.desktop,file:///var/home/lr/.local/share/flatpak/exports/share/applications/org.mozilla.thunderbird_esr.desktop,applications:brave-browser.desktop,applications:spotify.desktop
+launchers=applications:io.github.kolunmi.Bazaar.desktop,applications:org.kde.dolphin.desktop,file:///var/home/lr/.local/share/flatpak/exports/share/applications/org.mozilla.thunderbird_esr.desktop,applications:brave-browser.desktop,file:///var/home/lr/.local/share/flatpak/exports/share/applications/com.spotify.Client.desktop
 
 [Containments][74][Applets][77]
 immutability=1
