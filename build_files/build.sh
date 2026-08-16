@@ -171,6 +171,23 @@ dnf5 remove -y --noautoremove \
     iir1 \
     SDL2_net
 
+# Plasma Integration: die Erweiterung wird nicht von Brave installiert, sondern
+# von fedora-chromium-config-kde registriert. Das Paket legt nur zwei winzige
+# JSON-Dateien mit einer external_update_url ab, eine davon unter
+# /usr/share/chromium/extensions – und genau dieses Verzeichnis liest Brave (im
+# Binary nachgesehen, es ist der einzige externe Extension-Pfad darin). Chromium
+# und Chrome sind hier gar nicht installiert, das Paket ist also reine Altlast;
+# nichts hängt daran. Im Container gegengeprüft: mit Paket legt ein frisches
+# Profil cimiefiiaegbelhefglklhhakcgmhkai an, ohne Paket nicht.
+#
+# plasma-browser-integration selbst geht mit, weil ohne Erweiterung nur der
+# Native-Messaging-Host und die KRunner-Plugins für Browser-Tabs und -Verlauf
+# übrig blieben – dazu ein KDED-Modul (browserintegrationreminder), das genau
+# zur Installation dieser Erweiterung auffordert.
+dnf5 remove -y --noautoremove \
+    fedora-chromium-config-kde \
+    plasma-browser-integration
+
 # Intel-Videostack aus dem Basisimage: iHD_drv_video.so und libmfx funktionieren nur
 # auf einer Intel-iGPU. Auf NVIDIA und in der virtio-VM sind sie tot, kein Paket
 # benötigt sie und nichts ist dagegen gelinkt (geprüft). Spart ~38 MB.
