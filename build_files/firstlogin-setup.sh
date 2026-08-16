@@ -499,6 +499,19 @@ if [ -f "$BRAVE_PREFS" ]; then
     # wurde – Enum-Zahlen wie hover_mode=2 ("Karte mit Vorschau") und
     # sidebar_show_option=3 (nie) sind damit belegt, nicht geraten.
     #
+    # extensions.theme.system_theme = 1 stellt Brave auf das GTK-Design um.
+    # Der Wert ist aus Chromiums Settings-Oberfläche belegt (SystemTheme:
+    # DEFAULT = 0, GTK = 1, QT = 2). Das ist die fehlende Hälfte des
+    # GTK_THEME=Breeze-Dark-Fixes weiter oben: der sorgt dafür, dass der
+    # GTK-Modus dunkel aussieht, wählt ihn aber nicht aus. Nebenbei richtet
+    # sich unter Linux auch prefers-color-scheme nach dem nativen Theme –
+    # ohne diese Zeile liefern Websites ihre helle Fassung aus.
+    #
+    # Die Seitenleiste braucht zwei Schalter: sidebar_show_option=3 schaltet sie
+    # ab (SidebarService::ShowSidebarOption – 0 immer, 1 Mouseover, 2 veraltet,
+    # 3 nie), show_side_panel_button blendet zusätzlich den Knopf in der
+    # Symbolleiste aus. Der eine erledigt den anderen nicht mit.
+    #
     # location_bar_is_wide: steht der auf false, rückt Brave die Adressleiste
     # per ResetLocationBarBounds() ein und zentriert sie; true gibt das normale
     # Chromium-Layout, also linksbündig über die volle Breite.
@@ -519,6 +532,8 @@ if [ -f "$BRAVE_PREFS" ]; then
            {"setting": {"cosmeticFilteringV2": 1}}
            | .brave.location_bar_is_wide = true
            | .brave.sidebar.sidebar_show_option = 3
+           | .brave.show_side_panel_button = false
+           | .brave.show_bookmarks_button = false
            | .brave.tabs.hover_mode = 2
            | .brave.tabs.middle_click_close_tab_enabled = false
            | .brave.top_site_suggestions_enabled = false
@@ -539,6 +554,8 @@ if [ -f "$BRAVE_PREFS" ]; then
            | .webkit.webprefs.fonts.fixed.Zyyy = "Noto Sans Mono"
            | .webkit.webprefs.fonts.math.Zyyy = "Noto Sans Mono"
            | .brave.widevine_opted_in = true
+           | .brave.has_seen_brave_welcome_page = true
+           | .extensions.theme.system_theme = 1
            | .brave.default_private_search_provider_guid =
              "485bf7d3-0215-45af-87dc-538868000510"
            | .brave.default_private_search_provider_data = $psp' \
