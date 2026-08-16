@@ -493,6 +493,17 @@ if [ ! -f "$BRAVE_PREFS" ]; then
     done
 fi
 
+# Chromium merkt sich an der leeren Datei "First Run" im Profilverzeichnis, dass
+# das Profil schon einmal benutzt wurde. Der Headless-Lauf oben legt sie nicht
+# an – im Container geprüft, mit und ohne --no-first-run fehlt sie hinterher.
+# Damit hält der erste echte Start das Profil weiterhin für neu und zeigt
+# brave://welcome samt Standardbrowser-Abfrage, obwohl
+# brave.has_seen_brave_welcome_page längst true ist. Die Datei ist leer, das
+# Anlegen ist idempotent.
+if [ -d "$BRAVE_DIR" ] && [ ! -e "$BRAVE_DIR/First Run" ]; then
+    : >"$BRAVE_DIR/First Run"
+fi
+
 if [ -f "$BRAVE_PREFS" ]; then
     # Die Werte stammen nicht aus dem Kopf, sondern aus einem von Hand
     # eingerichteten Brave-Profil, das gegen ein unberührtes Profil gediffed

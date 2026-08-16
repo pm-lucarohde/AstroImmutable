@@ -73,6 +73,14 @@ Each of these is a bug that was fixed once — don't reintroduce it.
   `~/.config/gtk-3.0/settings.ini` — so the UI stays light. Forced per-app via
   `GTK_THEME=Breeze-Dark` in an overriding desktop file, *not* by editing `settings.ini`
   (kde-gtk-config rewrites that on every colour-scheme change).
+- **`brave://welcome` is gated on the `First Run` sentinel, not on
+  `brave.has_seen_brave_welcome_page`.** The headless run that seeds the profile never writes
+  that empty file (true with *and* without `--no-first-run`), so the first real GUI start
+  still treats the profile as new and shows the onboarding plus the default-browser prompt —
+  even with the pref set to `true`. Proven under Xvfb via `--remote-debugging-port` +
+  `/json/list`: identical profiles, sentinel missing → `chrome://welcome/`, sentinel present →
+  only the startup URL. `firstlogin-setup.sh` therefore creates it itself. A plain headless
+  probe cannot reproduce this at all — headless skips the onboarding route regardless.
 - **Do not add a NetworkManager `[global-dns-domain-*]` block** in `conf.d`. It killed name
   resolution in the image. Router DNS is the working setup — resolve it there, not in
   NetworkManager. (This used to say "router DNS plus Firefox DoH"; the browser is Brave
