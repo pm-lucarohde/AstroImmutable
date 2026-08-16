@@ -116,6 +116,7 @@ _dnf5_install \
     --exclude=wine-core.i686 \
     git \
     htop \
+    jq \
     flatpak \
     ffmpeg \
     ffmpeg-libs \
@@ -271,6 +272,131 @@ fi
 
 # Ghostty-Eintrag im Dolphin-Kontextmenü entfernen (verhindert Duplikate)
 rm -f /usr/share/kio/servicemenus/com.mitchellh.ghostty.desktop
+
+# ---------------------------------------------------------------------------
+# Brave: Enterprise-Policies
+# ---------------------------------------------------------------------------
+# Brave liest Chromium-Enterprise-Policies aus /etc/brave/policies/managed/.
+# Gesetzte Werte sind für den Benutzer gesperrt und in brave://policy sichtbar;
+# alles hier nicht Aufgeführte bleibt frei einstellbar.
+#
+# Grundlage ist das Preset "Maximum Privacy" von SlimBrave Neo
+# (github.com/ChaoticSi1ence/SlimBrave-Neo), ergänzt um DnsOverHttpsMode aus
+# Nobaras nobara-browser-policy – das Preset lässt DNS bewusst unverwaltet.
+#
+# Bewusst NICHT aus dem Preset übernommen, damit sie frei einstellbar bleiben:
+#
+#   Schränken den Alltag zu stark ein:
+#     DeveloperToolsAvailability (sperrt F12 und brave://inspect)
+#     PrintingEnabled (Drucken komplett aus)
+#     DefaultNotificationsSetting (blockt jede Web-Benachrichtigung)
+#     DefaultBraveRemember1PStorageSetting (loggt beim Schließen überall aus)
+#
+#   Kollidiert mit der eigenen Konfiguration:
+#     AlwaysOpenPdfExternally (application/pdf zeigt in der mimeapps.list aus
+#       firstlogin-setup.sh auf brave-browser.desktop)
+#
+#   Kein Privatsphäre-Gewinn oder sogar kontraproduktiv:
+#     QuicAllowed (QUIC ist verschlüsselt; Abschalten kostet nur Tempo und
+#       macht den Browser netzwerkseitig auffälliger)
+#     EmailAliasesEnabled (Aliase verbergen die echte Adresse – abschalten
+#       nimmt eine Schutzfunktion weg)
+#     BraveWaybackMachineEnabled (schickt beim Klick die URL an archive.org)
+#     BraveGlobalPrivacyControlEnabled (ohne Policy ohnehin aktiv, die Policy
+#       hätte es nur zusätzlich gesperrt)
+#
+# Alle 20 Brave-eigenen Schlüssel wurden gegen die Definitionen in brave-core
+# (components/policy/resources/templates/policy_definitions/BraveSoftware)
+# abgeglichen; die übrigen sind Chromium-Standard-Policies.
+#
+# Zwei Werte, die man beim Lesen leicht für Tippfehler hält:
+#   BraveVPNDisabled ist eine Boolean-Policy (Nobara schreibt dort 1).
+#   DefaultBraveAdblockSetting kennt nur 1 (Ads erlauben) und 2 (Ads blocken).
+#   Ein "aggressiv" gibt es als Policy nicht – das bleibt Shields-Einstellung.
+#
+# ExtensionInstallForcelist installiert die drei Erweiterungen beim ersten Start
+# und hält sie aktuell. IDs aus offizieller Quelle: Tampermonkey (stabil, MV3)
+# von tampermonkey.net, Return YouTube Dislike aus dem README des Projekts,
+# BetterTTV aus dessen Web-Store-Eintrag. Die angegebene Google-Update-URL ist
+# die übliche Schreibweise – Brave leitet Erweiterungs-Updates ohnehin über
+# extensionupdater.brave.com um (kExtensionUpdaterDomain in brave-core), Google
+# sieht die Abfragen also nicht. Achtung: erzwungen installierte Erweiterungen
+# lassen sich vom Benutzer nicht entfernen oder abschalten.
+#
+# ManagedBookmarks legt ein verwaltetes Lesezeichen auf das AdGuard-Extra-
+# Userscript. Automatisch installieren lässt es sich nicht: Tampermonkeys
+# Provisioning (managed_schema "jsonImport") erwartet unter "url" kein .user.js,
+# sondern ein Tampermonkey-Export-JSON, und "hash" ist ein Integritäts-Digest im
+# Format 1:<digest>, bei Abweichung bricht der Import ab. Dafür müsste man ein
+# eigenes Export-Dokument hosten. Das Lesezeichen macht daraus einen Klick.
+#
+# Datei gehört root und ist nur für root schreibbar – sonst könnte ein Benutzer
+# die Vorgaben einfach überschreiben.
+
+install -d -m 755 /etc/brave/policies/managed
+install -m 644 /dev/stdin /etc/brave/policies/managed/astroimmutable-policies.json <<'JSON'
+{
+    "MetricsReportingEnabled": false,
+    "SafeBrowsingExtendedReportingEnabled": false,
+    "UrlKeyedAnonymizedDataCollectionEnabled": false,
+    "BraveP3AEnabled": false,
+    "BraveStatsPingEnabled": false,
+    "AutofillAddressEnabled": false,
+    "AutofillCreditCardEnabled": false,
+    "PasswordManagerEnabled": false,
+    "PasswordLeakDetectionEnabled": false,
+    "BrowserSignin": 0,
+    "BraveDeAmpEnabled": true,
+    "BraveDebouncingEnabled": true,
+    "BraveTrackingQueryParametersFilteringEnabled": true,
+    "BraveReduceLanguageEnabled": true,
+    "WebRtcIPHandling": "disable_non_proxied_udp",
+    "NetworkPredictionOptions": 2,
+    "BlockThirdPartyCookies": true,
+    "PaymentMethodQueryEnabled": false,
+    "AlternateErrorPagesEnabled": false,
+    "DefaultGeolocationSetting": 3,
+    "DefaultSensorsSetting": 2,
+    "BraveRewardsDisabled": true,
+    "BraveWalletDisabled": true,
+    "BraveVPNDisabled": true,
+    "BraveAIChatEnabled": false,
+    "BraveNewsDisabled": true,
+    "BraveTalkDisabled": true,
+    "BravePlaylistEnabled": false,
+    "BraveWebDiscoveryEnabled": false,
+    "BraveSpeedreaderEnabled": false,
+    "TorDisabled": true,
+    "SyncDisabled": true,
+    "DefaultBraveAdblockSetting": 2,
+    "DefaultBraveFingerprintingV2Setting": 3,
+    "DefaultBraveHttpsUpgradeSetting": 2,
+    "DefaultBraveReferrersSetting": 2,
+    "BackgroundModeEnabled": false,
+    "EnableMediaRouter": false,
+    "MediaRecommendationsEnabled": false,
+    "ShoppingListEnabled": false,
+    "TranslateEnabled": false,
+    "SpellcheckEnabled": false,
+    "SearchSuggestEnabled": false,
+    "DefaultBrowserSettingEnabled": false,
+    "DnsOverHttpsMode": "automatic",
+    "ExtensionInstallForcelist": [
+        "dhdgffkkebhmkfjojejmpbldmpobfkfo;https://clients2.google.com/service/update2/crx",
+        "gebbhagfogifgggkldgodflihgfeippi;https://clients2.google.com/service/update2/crx",
+        "ajopnjidmegmdimjlfnijceegpefgped;https://clients2.google.com/service/update2/crx"
+    ],
+    "ManagedBookmarks": [
+        {
+            "toplevel_name": "AstroImmutable"
+        },
+        {
+            "name": "AdGuard Extra installieren (Tampermonkey)",
+            "url": "https://userscripts.adtidy.org/beta/adguard-extra/1.0/adguard-extra.user.js"
+        }
+    ]
+}
+JSON
 
 # ---------------------------------------------------------------------------
 # AstroImmutable-Ressourcen ins System-Image einbetten
