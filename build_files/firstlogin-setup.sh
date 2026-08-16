@@ -435,9 +435,11 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# Brave: Tracker-Blockierung auf "Aggressiv" vorbelegen
+# Brave: Profil-Vorbelegungen (Aggressiv, breite Adressleiste, Seitenleiste)
 # ---------------------------------------------------------------------------
-# Die Stufe "Aggressiv" ist keine Policy und kein Pref, sondern ein Content-
+# Drei Dinge, die sich nicht per Policy setzen lassen und ins Profil müssen.
+#
+# Die Stufe "Aggressiv" ist kein Pref, sondern ein Content-
 # Setting im Profil: Typ cosmeticFilteringV2, Wert ControlType::BLOCK (1);
 # "Standard" ist BLOCK_THIRD_PARTY (2). DefaultBraveAdblockSetting aus den
 # Policies setzt nur den Ads-Teil und lässt diesen Wert unberührt – deshalb
@@ -492,9 +494,55 @@ if [ ! -f "$BRAVE_PREFS" ]; then
 fi
 
 if [ -f "$BRAVE_PREFS" ]; then
+    # Die Werte stammen nicht aus dem Kopf, sondern aus einem von Hand
+    # eingerichteten Brave-Profil, das gegen ein unberührtes Profil gediffed
+    # wurde – Enum-Zahlen wie hover_mode=2 ("Karte mit Vorschau") und
+    # sidebar_show_option=3 (nie) sind damit belegt, nicht geraten.
+    #
+    # location_bar_is_wide: steht der auf false, rückt Brave die Adressleiste
+    # per ResetLocationBarBounds() ein und zentriert sie; true gibt das normale
+    # Chromium-Layout, also linksbündig über die volle Breite.
+    #
+    # Nicht gesetzt werden Dinge, die schon per Policy geregelt sind
+    # (Safe Browsing, Startseite, Suchmaschine) oder die ohnehin dem
+    # Auslieferungszustand entsprechen (Autovervollständigung an, Fenster beim
+    # Schließen der letzten Registerkarte schließen).
+    # Die private Suchmaschine führt Brave getrennt von der normalen und
+    # unabhängig von den DefaultSearchProvider-Policies. Die GUID ist nicht
+    # profilspezifisch, sondern aus der prepopulate_id 510 (Startpage)
+    # abgeleitet und damit auf jeder Installation dieselbe.
+    BRAVE_PSP='{"alternate_urls": [],"contextual_search_url": "","created_from_play_api": false,"date_created": "0","doodle_url": "","enforced_by_policy": false,"favicon_url": "https://www.startpage.com/favicon.ico","featured_by_policy": false,"id": "7","image_search_branding_label": "","image_translate_source_language_param_key": "","image_translate_target_language_param_key": "","image_translate_url": "","image_url": "","image_url_post_params": "","input_encodings": ["UTF-8"],"is_active": 0,"keyword": ":sp","last_modified": "0","last_visited": "0","logo_url": "","new_tab_url": "","originating_url": "","policy_origin": 0,"preconnect_to_search_url": false,"prefetch_likely_navigations": false,"prepopulate_id": 510,"safe_for_autoreplace": true,"search_intent_params": [],"search_url_post_params": "","send_x_geo_header": false,"short_name": "Startpage","starter_pack_id": 0,"suggestions_url": "https://www.startpage.com/cgi-bin/csuggest?query={searchTerms}&limit=10&format=json","suggestions_url_post_params": "","synced_guid": "485bf7d3-0215-45af-87dc-538868000510","url": "https://www.startpage.com/do/search?q={searchTerms}&segment=startpage.brave","usage_count": 0}'
+
     BRAVE_TMP=$(mktemp)
-    if jq '.profile.content_settings.exceptions.cosmeticFilteringV2["*,*"] =
-           {"setting": {"cosmeticFilteringV2": 1}}' "$BRAVE_PREFS" > "$BRAVE_TMP" \
+    if jq --argjson psp "$BRAVE_PSP" \
+          '.profile.content_settings.exceptions.cosmeticFilteringV2["*,*"] =
+           {"setting": {"cosmeticFilteringV2": 1}}
+           | .brave.location_bar_is_wide = true
+           | .brave.sidebar.sidebar_show_option = 3
+           | .brave.tabs.hover_mode = 2
+           | .brave.tabs.middle_click_close_tab_enabled = false
+           | .brave.top_site_suggestions_enabled = false
+           | .brave.omnibox.history_suggestions_enabled = true
+           | .brave.omnibox.bookmark_suggestions_enabled = false
+           | .brave.omnibox.commander_suggestions_enabled = false
+           | .brave.autofill_private_windows = false
+           | .brave.enable_window_closing_confirm = false
+           | .brave.allow_element_blocker_in_private_mode = true
+           | .brave.webcompat.report.enable_save_contact_info = false
+           | .omnibox.prevent_url_elisions = true
+           | .tab_search.pinned_to_tabstrip = false
+           | .intl.accept_languages = "en-US,en"
+           | .intl.selected_languages = "en-US,en"
+           | .webkit.webprefs.fonts.standard.Zyyy = "Noto Sans"
+           | .webkit.webprefs.fonts.serif.Zyyy = "Noto Serif"
+           | .webkit.webprefs.fonts.sansserif.Zyyy = "Noto Sans"
+           | .webkit.webprefs.fonts.fixed.Zyyy = "Noto Sans Mono"
+           | .webkit.webprefs.fonts.math.Zyyy = "Noto Sans Mono"
+           | .brave.widevine_opted_in = true
+           | .brave.default_private_search_provider_guid =
+             "485bf7d3-0215-45af-87dc-538868000510"
+           | .brave.default_private_search_provider_data = $psp' \
+           "$BRAVE_PREFS" > "$BRAVE_TMP" \
        && [ -s "$BRAVE_TMP" ]; then
         mv "$BRAVE_TMP" "$BRAVE_PREFS"
     else
@@ -503,6 +551,38 @@ if [ -f "$BRAVE_PREFS" ]; then
     fi
 else
     echo "WARNING: Brave hat kein Profil angelegt, Aggressiv-Vorgabe übersprungen"
+fi
+
+# Ein Teil der Einstellungen liegt nicht im Profil, sondern in "Local State"
+# neben dem Profilverzeichnis – Brave liest sie über g_browser_process->
+# local_state(). Betrifft die Filterlisten und den Kompakt-Modus.
+#
+# Die Filterlisten führt Brave über UUIDs, und der Eintrag enthält nur die
+# Abweichungen vom Standard. Aufgelöst über Braves öffentlichen Katalog
+# (github.com/brave/adblock-resources, filter_lists/list_catalog.json):
+#   67E792D4-… Annoying distractions blocker (Fanboy's Annoyances + uBO)  an
+#   E2FA7D98-… Tracking URL blocker (AdGuard URL Tracking Protection)     an
+#   E71426E7-… German website ad blocker (EasyList Germany)               aus
+# Cookie-Notice- und Mobile-App-Promo-Blocker tauchen nicht auf, weil sie
+# ohnehin standardmäßig aktiv sind.
+
+BRAVE_LOCALSTATE="$BRAVE_DIR/Local State"
+
+if [ -f "$BRAVE_LOCALSTATE" ]; then
+    BRAVE_TMP=$(mktemp)
+    if jq '.brave.ad_block.regional_filters["67E792D4-AE03-4D1A-9EDE-80E01C81F9B8"] = {"enabled": true}
+           | .brave.ad_block.regional_filters["E2FA7D98-0BD5-493E-8AF4-950604ADE9CB"] = {"enabled": true}
+           | .brave.ad_block.regional_filters["E71426E7-E898-401C-A195-177945415F38"] = {"enabled": false}
+           | .brave.tabs.compact_horizontal_tabs = true' \
+           "$BRAVE_LOCALSTATE" > "$BRAVE_TMP" \
+       && [ -s "$BRAVE_TMP" ]; then
+        mv "$BRAVE_TMP" "$BRAVE_LOCALSTATE"
+    else
+        rm -f "$BRAVE_TMP"
+        echo "WARNING: Brave Local State nicht patchbar, Filterlisten übersprungen"
+    fi
+else
+    echo "WARNING: Brave Local State fehlt, Filterlisten übersprungen"
 fi
 
 # ---------------------------------------------------------------------------
