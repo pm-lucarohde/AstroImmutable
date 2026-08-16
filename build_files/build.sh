@@ -171,20 +171,23 @@ dnf5 remove -y --noautoremove \
     krfb-libs \
     kwalletmanager5
 
-# KDE Connect: Pakete namens kdeconnect-app oder kdeconnect-sms gibt es in
-# Fedora nicht (geprüft) – beide Menüeinträge gehören zu kde-connect. In
-# demselben Paket liegt org.kde.kdeconnect.handler.desktop, auf das die
-# mimeapps.list im First-Login für tel: und callto: verweist. Das Paket zu
-# entfernen nähme also den Handler und die Telefonanbindung mit. Deshalb nur
-# die beiden Starter ausblenden statt Dateien zu löschen: NoDisplay ist der
-# vorgesehene Weg dafür, und rpm bleibt konsistent (eine gelöschte Datei käme
-# beim nächsten Paketupdate ohnehin zurück).
-for app in org.kde.kdeconnect.app org.kde.kdeconnect.sms; do
-    f="/usr/share/applications/${app}.desktop"
-    if [ -f "$f" ] && ! grep -q '^NoDisplay=true' "$f"; then
-        sed -i '/^\[Desktop Entry\]/a NoDisplay=true' "$f"
-    fi
-done
+# KDE Connect komplett. Pakete namens kdeconnect-app oder kdeconnect-sms gibt
+# es in Fedora nicht (geprüft: weder als Name noch als Provides) – die beiden
+# Menüeinträge gehören zu kde-connect, zusammen mit dem Daemon und dem
+# tel:/callto:-Handler. Die vier Pakete brauchen sich nur gegenseitig:
+# kde-connect-libs verlangt kde-connect, kde-connect verlangt kdeconnectd,
+# sonst hängt nichts daran. kde-connect-nautilus steht der Vollständigkeit
+# halber dabei, ist im Basisimage aber gar nicht installiert.
+#
+# Wichtig: damit verschwindet auch org.kde.kdeconnect.handler.desktop. Die
+# beiden zugehörigen Zeilen für tel: und callto: sind deshalb aus der
+# mimeapps.list im First-Login-Skript entfernt worden, sonst zeigten sie ins
+# Leere.
+dnf5 remove -y --noautoremove \
+    kde-connect \
+    kde-connect-libs \
+    kde-connect-nautilus \
+    kdeconnectd
 
 # DOSBox kommt als Weak Dep von wine herein, fluid-soundfont-gs zusätzlich als
 # Weak Dep von lutris. Das Paket heißt inzwischen dosbox-staging; "dnf5 remove
