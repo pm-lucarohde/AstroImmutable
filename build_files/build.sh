@@ -160,7 +160,10 @@ dnf5 remove -y --noautoremove \
     qt6ct \
     qt5ct \
     kcharselect \
-	konsole
+    konsole \
+    krfb \
+    krfb-libs \
+    kwalletmanager5
 
 # KDE Connect komplett. Pakete namens kdeconnect-app oder kdeconnect-sms gibt
 # es in Fedora nicht (geprüft: weder als Name noch als Provides) – die beiden
