@@ -3,6 +3,21 @@ COPY build_files /
 
 # ---- Builder-Stage: Kernel-Treiber kompilieren ----
 FROM quay.io/fedora-ostree-desktops/kinoite:44 AS builder
+
+# Kriechende Spiegel abbrechen statt aussitzen. dnf5 bricht standardmäßig erst
+# ab, wenn die Rate 30 s lang unter 1 kB/s liegt – ein Spiegel, der mit 2 kB/s
+# tröpfelt, läuft also nie in den Timeout und blockiert den Build beliebig
+# lange. Beobachtet in Lauf #471: dieselbe Quelle lieferte Metadaten mit
+# 24 kB/s und Pakete mit 50 MB/s. Sichtbar wird das nicht, weil dnf5 erst nach
+# einer fertigen Datei eine Zeile ausgibt.
+#
+# 100 kB/s ist weit über dem Kriechfall und weit unter jeder normalen Rate.
+# Greifen darf das nur bei Repos mit Metalink (Fedora, RPM Fusion), die auf
+# einen anderen Spiegel wechseln können. Quellen mit einer einzigen baseurl
+# bekommen minrate=0 zurück – dort gäbe es kein Ausweichziel, ein Abbruch
+# machte aus "langsam" nur "fehlgeschlagen".
+RUN printf 'minrate=100000\ntimeout=30\n' >>/etc/dnf/dnf.conf
+
 RUN dnf5 install -y https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-44.noarch.rpm \
                      https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-44.noarch.rpm \
     && dnf5 config-manager addrepo --from-repofile=https://negativo17.org/repos/fedora-multimedia.repo
@@ -12,7 +27,8 @@ RUN dnf5 install -y https://download1.rpmfusion.org/free/fedora/rpmfusion-free-r
 # ein kmod aus dem einen Repo passt nicht zwingend zum Userspace des anderen.
 # fedora-multimedia hat priority=1, würde also ohne excludepkgs immer gewinnen.
 RUN dnf5 config-manager setopt fedora-multimedia.priority=1 \
-    && dnf5 config-manager setopt fedora-multimedia.excludepkgs='*nvidia*'
+    && dnf5 config-manager setopt fedora-multimedia.excludepkgs='*nvidia*' \
+    && dnf5 config-manager setopt fedora-multimedia.minrate=0
 
 RUN dnf5 install -y --setopt=tsflags=noscripts kernel-devel gcc make \
     akmod-nvidia akmod-xone akmod-VirtualBox
@@ -43,6 +59,9 @@ ARG ZIG_VERSION=0.16.0
 # Öffentlicher minisign-Schlüssel des Ghostty-Projekts
 ARG GHOSTTY_KEY=RWQlAjJC23149WL2sEpT/l0QKy7hMIFhYdQOFy0Z7z7PbneUgvlsnYcV
 
+# Siehe Builder-Stufe: langsame Spiegel abbrechen statt aussitzen.
+RUN printf 'minrate=100000\ntimeout=30\n' >>/etc/dnf/dnf.conf
+
 RUN dnf5 install -y gtk4-devel gtk4-layer-shell-devel libadwaita-devel \
     gettext pkgconf minisign tar xz curl
 
@@ -60,7 +79,7 @@ RUN mkdir -p /var/roothome
 # eigenes Verzeichnis und PATH statt eines Symlinks in /usr/local/bin.
 # --strip-components=1 macht den versionierten Ordnernamen im Tarball egal.
 RUN mkdir -p /zig \
-    && curl -fL --retry 3 --retry-delay 30 \
+    && curl -fL --retry 3 --retry-delay 30 --speed-limit 10000 --speed-time 30 \
     "https://ziglang.org/download/${ZIG_VERSION}/zig-x86_64-linux-${ZIG_VERSION}.tar.xz" \
     | tar -xJ -C /zig --strip-components=1
 ENV PATH="/zig:${PATH}"
@@ -70,9 +89,9 @@ ENV PATH="/zig:${PATH}"
 # jeweiligen Snapshot-Namen, daher --strip-components=1.
 WORKDIR /src
 RUN mkdir -p ghostty \
-    && curl -fL --retry 3 --retry-delay 30 -O \
+    && curl -fL --retry 3 --retry-delay 30 --speed-limit 10000 --speed-time 30 -O \
     "https://github.com/ghostty-org/ghostty/releases/download/tip/ghostty-source.tar.gz" \
-    && curl -fL --retry 3 --retry-delay 30 -O \
+    && curl -fL --retry 3 --retry-delay 30 --speed-limit 10000 --speed-time 30 -O \
     "https://github.com/ghostty-org/ghostty/releases/download/tip/ghostty-source.tar.gz.minisig" \
     && minisign -Vm ghostty-source.tar.gz -P "${GHOSTTY_KEY}" \
     && tar -xf ghostty-source.tar.gz --strip-components=1 -C ghostty
@@ -121,6 +140,9 @@ RUN if ! grep -q ext_background_effect /out/usr/bin/ghostty; then \
 # ---- Ziel-Image (kein AS-Name nĂ¶tig, wird nirgendwo referenziert) ----
 FROM quay.io/fedora-ostree-desktops/kinoite:44
 
+# Siehe Builder-Stufe. Gilt auch fuer alle dnf5-Aufrufe in build.sh.
+RUN printf 'minrate=100000\ntimeout=30\n' >>/etc/dnf/dnf.conf
+
 RUN --mount=type=cache,dst=/var/cache \
     dnf5 install -y https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-44.noarch.rpm \
                      https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-44.noarch.rpm \
@@ -128,7 +150,8 @@ RUN --mount=type=cache,dst=/var/cache \
 
 # Siehe Builder-Stage: NVIDIA kommt nur von RPM Fusion.
 RUN dnf5 config-manager setopt fedora-multimedia.priority=1 \
-    && dnf5 config-manager setopt fedora-multimedia.excludepkgs='*nvidia*'
+    && dnf5 config-manager setopt fedora-multimedia.excludepkgs='*nvidia*' \
+    && dnf5 config-manager setopt fedora-multimedia.minrate=0
 
 COPY --from=builder /var/cache/akmods/nvidia/*.rpm /tmp/akmods-nvidia/
 RUN --mount=type=cache,dst=/var/cache \

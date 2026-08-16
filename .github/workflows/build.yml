@@ -41,6 +41,12 @@ jobs:
     name: Build and push image
     runs-on: ubuntu-24.04
 
+    # Ohne Angabe gilt GitHubs Vorgabe von 6 Stunden. Ein Lauf, der sich an
+    # einem hängenden Spiegel festbeißt, verbrennt damit einen halben Tag,
+    # bevor er abbricht. Der langsamste bisher beobachtete Lauf (#469) brauchte
+    # 1h26; 2 Stunden lassen also reichlich Luft und begrenzen den Schaden.
+    timeout-minutes: 120
+
     permissions:
       contents: read
       packages: write

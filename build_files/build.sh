@@ -58,6 +58,16 @@ _retry dnf5 copr enable -y copr.fedorainfracloud.org/ublue-os/packages
 dnf5 config-manager setopt fedora-multimedia.priority=1
 dnf5 config-manager setopt fedora-steam.priority=10
 
+# Das Containerfile setzt in /etc/dnf/dnf.conf minrate=100000: dnf5 bricht dann
+# ab, wenn ein Spiegel länger als 30 s unter 100 kB/s liefert, und nimmt den
+# nächsten. Das setzt voraus, dass es einen nächsten gibt. Fedora und RPM Fusion
+# haben Metalinks, die drei hier nicht – sie stehen auf genau einer baseurl.
+# Dort würde der Abbruch aus "langsam" nur "fehlgeschlagen" machen, also
+# minrate für sie zurücknehmen.
+dnf5 config-manager setopt fedora-multimedia.minrate=0
+dnf5 config-manager setopt fedora-steam.minrate=0
+dnf5 config-manager setopt brave-browser.minrate=0
+
 # ---------------------------------------------------------------------------
 # Unerwünschte Pakete entfernen
 # ---------------------------------------------------------------------------
@@ -213,7 +223,7 @@ KVKONQI_URL="https://github.com/Niru2169/KvKonqi/releases/latest/download/KvKonq
 KVKONQI_CONF="/usr/share/Kvantum/KvKonqiDark/KvKonqiDark.kvconfig"
 
 mkdir -p /usr/share/Kvantum
-if ! curl -fL --retry 3 --retry-delay 30 "$KVKONQI_URL" | tar -xz -C /usr/share/Kvantum/; then
+if ! curl -fL --retry 3 --retry-delay 30 --speed-limit 10000 --speed-time 30 "$KVKONQI_URL" | tar -xz -C /usr/share/Kvantum/; then
     echo "WARNING: KvKonqiDark konnte nicht geladen werden, skipping"
 fi
 
@@ -245,7 +255,7 @@ JB_URL=$(curl -s --retry 3 --retry-delay 30 "https://data.services.jetbrains.com
 if [ -z "$JB_URL" ]; then
     echo "WARNING: Could not fetch JetBrains Toolbox URL, skipping"
 else
-    curl -fL --retry 3 --retry-delay 30 "$JB_URL" | tar -xz --strip-components=1 -C /opt/jetbrains-toolbox/
+    curl -fL --retry 3 --retry-delay 30 --speed-limit 10000 --speed-time 30 "$JB_URL" | tar -xz --strip-components=1 -C /opt/jetbrains-toolbox/
     cp /ctx/bin/jetbrains-toolbox.desktop /opt/jetbrains-toolbox/
     cp /ctx/bin/toolbox-tray-color.png /opt/jetbrains-toolbox/
 
@@ -267,7 +277,7 @@ install -m755 /ctx/notepadnext /usr/bin/notepadnext
 chmod +x /usr/bin/notepadnext
 
 mkdir -p /usr/share/icons/hicolor/512x512/apps
-curl -fL --retry 3 --retry-delay 30 \
+curl -fL --retry 3 --retry-delay 30 --speed-limit 10000 --speed-time 30 \
     "https://raw.githubusercontent.com/dail8859/NotepadNext/master/src/icons/NotepadNext.png" \
     -o /usr/share/icons/hicolor/512x512/apps/notepadnext.png
 gtk-update-icon-cache /usr/share/icons/hicolor
@@ -304,7 +314,7 @@ EOF
 # update-alternatives-Link /usr/bin/vesktop; die .desktop-Datei ruft ohnehin
 # direkt /opt/Vesktop/vesktop auf.
 VESKTOP_RPM=/tmp/vesktop.rpm
-if curl -fL --retry 3 --retry-delay 30 -o "$VESKTOP_RPM" \
+if curl -fL --retry 3 --retry-delay 30 --speed-limit 10000 --speed-time 30 -o "$VESKTOP_RPM" \
     "https://vencord.dev/download/vesktop/amd64/rpm"; then
     _dnf5_install "$VESKTOP_RPM"
     rm -f "$VESKTOP_RPM"

@@ -30,6 +30,9 @@ jobs:
   build:
     name: Build disk images
     runs-on: ubuntu-24.04
+    # Siehe build.yml: GitHubs Vorgabe von 6 Stunden ist als Notbremse zu spät.
+    # Die ISO-Läufe lagen bisher bei 17-20 Minuten.
+    timeout-minutes: 60
     if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     permissions:
       contents: read

@@ -618,7 +618,7 @@ fi
 # ---------------------------------------------------------------------------
 
 if ! flatpak info --user com.hypixel.HytaleLauncher &>/dev/null; then
-    curl -fL --retry 3 --retry-delay 30 \
+    curl -fL --retry 3 --retry-delay 30 --speed-limit 10000 --speed-time 30 \
         "https://launcher.hytale.com/builds/release/linux/amd64/hytale-launcher-latest.flatpak" \
         -o /tmp/hytale.flatpak
     flatpak install --user -y /tmp/hytale.flatpak
@@ -637,7 +637,7 @@ if [ -z "$PROTON_URL" ]; then
     echo "WARNING: Could not fetch Proton-CachyOS URL, skipping"
 else
     PROTON_FILE=$(basename "$PROTON_URL")
-    curl -fL --retry 3 --retry-delay 30 "$PROTON_URL" -o "$PROTON_DIR/$PROTON_FILE"
+    curl -fL --retry 3 --retry-delay 30 --speed-limit 10000 --speed-time 30 "$PROTON_URL" -o "$PROTON_DIR/$PROTON_FILE"
     tar -xf "$PROTON_DIR/$PROTON_FILE" -C "$PROTON_DIR/"
     rm -f "$PROTON_DIR/$PROTON_FILE"
 fi
@@ -654,7 +654,7 @@ distrobox create --yes --image ubuntu:26.04 --name ubuntu --nvidia
 # dpkg ggf. reparieren, falls eine vorherige apt-Operation unterbrochen wurde
 distrobox enter ubuntu -- bash -c 'sudo dpkg --configure -a; sudo apt update && sudo apt upgrade -y && sudo apt install -y libasound2t64'
 distrobox enter ubuntu -- bash -c '
-    curl -fL --retry 3 --retry-delay 30 "https://curseforge.overwolf.com/downloads/curseforge-latest-linux.deb" -o ~/curseforge.deb \
+    curl -fL --retry 3 --retry-delay 30 --speed-limit 10000 --speed-time 30 "https://curseforge.overwolf.com/downloads/curseforge-latest-linux.deb" -o ~/curseforge.deb \
     && sudo apt install -y ~/curseforge.deb \
     && rm -f ~/curseforge.deb \
     && distrobox-export --app curseforge \
