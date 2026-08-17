@@ -123,6 +123,14 @@ jobs:
           image: ${{ env.IMAGE_NAME }}
           tags: ${{ steps.metadata.outputs.tags }}
           labels: ${{ steps.metadata.outputs.labels }}
+          # layers: true bleibt hier absichtlich weg. buildah legt damit je RUN
+          # eine eigene Schicht an, und deren Commit läuft über fuse-overlayfs –
+          # auf dem Runner gemessen 37 Minuten für einen einzelnen
+          # `printf >>/etc/dnf/dnf.conf`. Bei 31 schichtbildenden Schritten
+          # reicht das Zeitbudget nicht: #473 und #475 sind beide im Schritt
+          # "Build Image" in timeout-minutes gelaufen, während #472 ohne die
+          # Option nach 80 Minuten durch war. Der Cache-Vorteil greift ohnehin
+          # nicht – jeder Lauf startet auf einer frischen VM.
           oci: false
 
       # These `if` statements are so that pull requests for your custom images do not make it publish any packages under your name without you knowing

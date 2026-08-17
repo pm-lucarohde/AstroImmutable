@@ -461,8 +461,15 @@ fi
 # RestoreOnStartupURLs. NewTabPageLocation setzt zusätzlich die Seite für neue
 # Tabs, sonst käme dort Braves eigene Startseite mit Bild und Statistik.
 #
-# PromotionalTabsEnabled false unterdrückt die Willkommensseite brave://welcome,
-# die sonst beim ersten Start als eigener Tab aufgeht.
+# Die Willkommensseite brave://welcome steht bewusst nicht mehr hier. Sie hing
+# an PromotionalTabsEnabled, das Chromium inzwischen als veraltet meldet – und
+# gewirkt hat es ohnehin nie, weil das Onboarding an der Sentinel-Datei
+# "First Run" im Profil hängt, nicht an einer Policy. Die legt
+# firstlogin-setup.sh an.
+#
+# Ebenfalls entfernt: DefaultSearchProviderIconURL. chrome://policy führte sie
+# als "Unbekannte Richtlinie" – Chromium kennt sie nicht mehr. Sie setzte nur
+# das Favicon der Suchmaschine; Name, Keyword und SearchURL bleiben gültig.
 #
 # Achtung: erzwungen installierte Erweiterungen lassen sich vom Benutzer nicht
 # entfernen oder abschalten.
@@ -547,10 +554,8 @@ install -m 644 /dev/stdin /etc/brave/policies/managed/astroimmutable-policies.js
     "DefaultSearchProviderName": "Startpage",
     "DefaultSearchProviderKeyword": "startpage",
     "DefaultSearchProviderSearchURL": "https://www.startpage.com/sp/search?query={searchTerms}",
-    "DefaultSearchProviderIconURL": "https://www.startpage.com/favicon.ico",
     "HighEfficiencyModeEnabled": true,
     "MemorySaverModeSavings": 2,
-    "PromotionalTabsEnabled": false,
     "NewTabPageLocation": "https://www.startpage.com/"
 }
 JSON
