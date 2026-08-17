@@ -453,6 +453,13 @@ fi
 # Provisioning erwartet ein selbst gehostetes Export-JSON samt Integritäts-
 # Digest, kein .user.js.
 #
+# WebAppInstallByUserEnabled false nimmt das Symbol "Diese Seite installieren"
+# aus der Adressleiste. Gemessen an einer eigens gebauten installierbaren Seite
+# auf localhost: ohne die Policy feuert beforeinstallprompt, mit ihr nicht.
+# Achtung, das gilt browserweit – Web-Apps lassen sich danach überhaupt nicht
+# mehr installieren, nicht nur auf einzelnen Seiten. Für Ausnahmen gäbe es
+# WebAppSettings.
+#
 # ExtensionSettings heftet dieselben drei Erweiterungen in die Symbolleiste.
 # "default_unpinned" hält sie aus der Symbolleiste heraus; sie sind weiterhin
 # über das Puzzle-Symbol erreichbar und können von Hand angeheftet werden.
@@ -517,6 +524,7 @@ install -m 644 /dev/stdin /etc/brave/policies/managed/astroimmutable-policies.js
     "DefaultBraveHttpsUpgradeSetting": 2,
     "DefaultBraveReferrersSetting": 2,
     "BackgroundModeEnabled": false,
+    "WebAppInstallByUserEnabled": false,
     "EnableMediaRouter": false,
     "MediaRecommendationsEnabled": false,
     "ShoppingListEnabled": false,
