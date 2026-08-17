@@ -123,7 +123,6 @@ jobs:
           image: ${{ env.IMAGE_NAME }}
           tags: ${{ steps.metadata.outputs.tags }}
           labels: ${{ steps.metadata.outputs.labels }}
-          layers: true
           oci: false
 
       # These `if` statements are so that pull requests for your custom images do not make it publish any packages under your name without you knowing
