@@ -2,156 +2,96 @@
 
 ## What this is
 
-AstroImmutable is a custom Fedora **bootc/OSTree** desktop image (KDE Plasma 6) built
-from `quay.io/fedora-ostree-desktops/kinoite:44`, published to
-`ghcr.io/pm-lucarohde/astroimmutable`. There is no application code here — the repo *is*
-the OS definition: a Containerfile, one build script, one first-login script, and shipped
-config files.
-
-The image is signed with cosign (`cosign.pub`); the private key lives in the
-`SIGNING_SECRET` GitHub secret.
+AstroImmutable is a custom Fedora **bootc/OSTree** KDE Plasma 6 image built from `quay.io/fedora-ostree-desktops/kinoite:44`
+and published to `ghcr.io/pm-lucarohde/astroimmutable`. There is no application code — the repo *is* the OS definition.
+Signed with cosign (`cosign.pub`); the key lives in the `SIGNING_SECRET` secret.
 
 ## Layout
 
 | Path | Role |
 | --- | --- |
-| `Containerfile` | Two stages: a builder that compiles the NVIDIA akmod against the kernel, then the target image that installs the resulting RPMs and runs `build.sh`. |
-| `build_files/build.sh` | Everything that happens **at build time as root** in the image: repos, package add/remove, themes, systemd units, kargs, SELinux policy, sysctl/zram. |
-| `build_files/firstlogin-setup.sh` | Everything that happens **once per user at first graphical login**: KDE config, Flatpaks, locale, Brave GTK fix, distrobox, SDKMAN. |
-| `build_files/config/` | KDE dotfiles baked into `/usr/share/astroimmutable/config`, copied into `~/.config` by the first-login script. |
+| `Containerfile` | Three stages: `builder` compiles the NVIDIA, xone and VirtualBox akmods against the kernel, `ghostty-builder` builds Ghostty from tip, then the target image installs the results and runs `build.sh`. |
+| `build_files/build.sh` | Build time, as root: repos, package add/remove, themes, systemd units, kargs, Brave policies, sysctl/zram. |
+| `build_files/firstlogin-setup.sh` | Once per user at first graphical login: KDE config, Flatpaks, locale, Brave profile, distrobox, SDKMAN. |
+| `build_files/config/` | KDE dotfiles baked into `/usr/share/astroimmutable/config`, copied to `~/.config` at first login. |
 | `build_files/{wallpaper,avatar,bin}/`, `outputs.ron`, `notepadnext` | Assets embedded into the image. |
-| `Justfile` | Local build / VM / lint helpers (upstream ublue template, largely untouched). |
-| `disk_config/*.toml` | bootc-image-builder configs for qcow2/raw/ISO. |
-| `.github/workflows/build.yml` | Builds + pushes + signs on push to `main`, PRs, and daily at 10:05 UTC. `build-disk.yml` then builds an Anaconda ISO. |
+| `Justfile`, `disk_config/*.toml` | Local build / VM / lint helpers (upstream ublue template) and bootc-image-builder configs for qcow2/raw/ISO. |
+| `.github/workflows/build.yml` | Build + push + sign on push to `main`, on PRs, and at 19:57 UTC every 3rd day of the month. `build-disk.yml` then builds an Anaconda ISO. |
 
 ## The build-time vs. first-login split
 
-This is the single most important distinction when adding something.
+The single most important distinction when adding something.
 
-- **Build time (`build.sh`)** — root, no session, no user home, no D-Bus. System-wide
-  packages, files under `/usr`, systemd units, policy.
+- **Build time (`build.sh`)** — root, no session, no user home, no D-Bus. System-wide packages, files under `/usr`,
+  systemd units, policy.
 - **First login (`firstlogin-setup.sh`)** — runs as the logged-in user via the user unit
-  `astroimmutable-firstlogin.service` (symlinked into `/etc/systemd/user/default.target.wants`).
-  Anything needing `$HOME`, a Plasma session, D-Bus, or per-user Flatpaks goes here.
+  `astroimmutable-firstlogin.service` (symlinked into `/etc/systemd/user/default.target.wants`). Anything needing
+  `$HOME`, a Plasma session, D-Bus or per-user Flatpaks goes here.
 
-`firstlogin-setup.sh` guards itself twice: it exits for UID < 1000 (otherwise it would also
-run in the `cosmic-greeter` user's session) and it exits if
-`~/.local/state/astroimmutable/setup_done` exists. **The stamp file is only touched at the
-very end**, so a failure anywhere re-runs the whole script next login — every step must be
-idempotent. Fragile network-dependent steps (distrobox, SDKMAN) are placed last and wrapped
-in `set +e` so they can't block earlier work.
+It guards itself twice: exit for UID < 1000 (else it also runs in the `cosmic-greeter` session) and exit if
+`~/.local/state/astroimmutable/setup_done` exists. **The stamp is only touched at the very end**, so any failure re-runs
+the whole script next login — every step must be idempotent. Fragile network steps (distrobox, SDKMAN) come last,
+wrapped in `set +e`.
 
 ## Conventions
 
-- Comments in the shell scripts are **German**; match that when editing them. Commit
-  messages and this file are English.
-- Both scripts use retry wrappers (`_retry`, `_dnf5_install`, `_flatpak_install`, 3 attempts /
-  30 s) for anything that hits the network. Use them for new network calls.
-- Sections are separated by the `# ----` banner comment style. Keep it.
-- Non-critical fetches (JetBrains Toolbox, Proton-CachyOS) print `WARNING: ... skipping` and
-  continue rather than failing the build.
-- `build.sh` runs under `set -ouex pipefail`; `firstlogin-setup.sh` under `set -euo pipefail`.
+- Comments in the shell scripts are **German**; commit messages and this file are English.
+- Use the retry wrappers (`_retry`, `_dnf5_install`, `_flatpak_install`; 3 × 30 s) for new network calls, plus
+  `--speed-limit 10000 --speed-time 30` on `curl`.
+- Sections are separated by the `# ----` banner style. Keep it.
+- Non-critical fetches (JetBrains Toolbox, Proton-CachyOS) print `WARNING: ... skipping` instead of failing the build.
+- `build.sh` runs under `set -ouex pipefail`, `firstlogin-setup.sh` under `set -euo pipefail`.
 
 ## Gotchas that have already cost time
 
-Each of these is a bug that was fixed once — don't reintroduce it.
-
-- **`ConditionFirstBoot=` never fires on bootc/ostree.** Anaconda/ostree populate `/etc` and
-  `machine-id` differently, so no boot counts as "first". Run every boot with an idempotent
-  command (see `astroimmutable-grub-hide.service`) or use your own stamp file.
-- **The desktop wallpaper cannot ship via `plasma-org.kde.plasma.desktop-appletsrc`.** Its
-  containments are keyed to an `activityId` UUID that is generated fresh per install;
-  plasmashell discards them and creates empty ones. Use `plasma-apply-wallpaperimage` at
-  first login instead — and wait until `evaluateScript 'print(desktops().length)'` reports
-  ≥ 1. A D-Bus `Peer.Ping` is *not* a sufficient readiness check: plasmashell registers on
+- **`ConditionFirstBoot=` never fires on bootc/ostree**, because Anaconda/ostree populate `/etc` and `machine-id`
+  differently. Run an idempotent command every boot (see `astroimmutable-grub-hide.service`) or use your own stamp file.
+- **The wallpaper cannot ship via `plasma-org.kde.plasma.desktop-appletsrc`** — its containments are keyed to a
+  per-install `activityId`, so plasmashell discards them. Use `plasma-apply-wallpaperimage` at first login and wait
+  until `evaluateScript 'print(desktops().length)'` reports ≥ 1; a `Peer.Ping` is *not* enough, plasmashell registers on
   the bus before its containments exist.
-- **Brave ships two desktop files, and only one of them is the visible entry.**
-  `com.brave.Browser.desktop` carries `NoDisplay=true` and exists purely as an app-id anchor
-  for the XDG portal; the menu/taskbar/mimeapps entry is `brave-browser.desktop`. Its `Exec`
-  is `/usr/bin/brave-browser-stable`, not `/usr/bin/brave-browser`. Separately, Brave's GTK
-  appearance mode reads `gtk-theme-name`, which Plasma never writes into
-  `~/.config/gtk-3.0/settings.ini` — so the UI stays light. Forced per-app via
-  `GTK_THEME=Breeze-Dark` in an overriding desktop file, *not* by editing `settings.ini`
-  (kde-gtk-config rewrites that on every colour-scheme change).
-- **`GTK_THEME` colours the chrome, not the page — web content needs `--force-dark-mode`.**
-  `prefers-color-scheme` does not come from the GTK theme; in a real Plasma session Chromium's
-  DarkModeManager reports light no matter how GTK is set, so websites keep serving their light
-  variant. Measured in a live session (probe page read back through `--remote-debugging-port`):
-  default → light, `system_theme=1` → light, `system_theme=1` + `GTK_THEME=Breeze-Dark` →
-  light, `--force-dark-mode` → dark. Under a bare Xvfb the GTK route *does* come out dark,
-  because without a portal Chromium falls back to the toolkit theme — so a test without a
-  session proves nothing here, and neither does a headless one.
-- **`brave://welcome` is gated on the `First Run` sentinel, not on
-  `brave.has_seen_brave_welcome_page`.** The headless run that seeds the profile never writes
-  that empty file (true with *and* without `--no-first-run`), so the first real GUI start
-  still treats the profile as new and shows the onboarding plus the default-browser prompt —
-  even with the pref set to `true`. Proven under Xvfb via `--remote-debugging-port` +
-  `/json/list`: identical profiles, sentinel missing → `chrome://welcome/`, sentinel present →
-  only the startup URL. `firstlogin-setup.sh` therefore creates it itself. A plain headless
-  probe cannot reproduce this at all — headless skips the onboarding route regardless.
-- **Do not add a NetworkManager `[global-dns-domain-*]` block** in `conf.d`. It killed name
-  resolution in the image. Router DNS is the working setup — resolve it there, not in
-  NetworkManager. (This used to say "router DNS plus Firefox DoH"; the browser is Brave now,
-  and the only DoH left is the `DnsOverHttpsMode: "automatic"` policy — opportunistic, so it
-  upgrades to the resolver's own DoH endpoint when there is one and stays out of the way
-  otherwise. Nothing forces a third-party resolver.)
-- **`bootc-fstab-edit.service` rewrites `/etc/fstab` on first boot**, so BTRFS mount options
-  are applied afterwards by `astroimmutable-btrfs-opts.service`, which patches fstab
-  idempotently *and* remounts live.
-- **akmods cannot build in the target stage** — hence the separate builder stage, which builds
-  both the NVIDIA and the xone kmod. `akmods` without `--kmod` builds every installed akmod, so
-  adding another driver means adding its `akmod-*` package to that one install line.
-  Installing an `akmod-*` RPM with `rpm -ivh --nodeps --noscripts` (as xone used to be) is
-  **not** a workaround: skipping the scriptlets skips the akmods run, so no kernel module is
-  ever produced and the driver silently does nothing. Check with
-  `ls /usr/lib/modules/$(uname -r)/extra/`.
-- **NVIDIA: the kmod alone is not enough, and nouveau must be killed via kargs.** Installing
-  only `xorg-x11-drv-nvidia-cuda*` leaves you without `libEGL_nvidia`/GBM, so KWin Wayland
-  cannot render on the card — `xorg-x11-drv-nvidia-libs` is required (plus the `.i686` build
-  for 32-bit Steam/Proton titles). Separately, the initramfs comes from the base image and
-  contains `nouveau.ko` but not the blacklist that the NVIDIA packages install, so nouveau
-  claims the GPU early and stays. Fix with `rd.driver.blacklist=nouveau` /
-  `modprobe.blacklist=nouveau` / `nouveau.modeset=0` kargs, **not** a dracut rebuild —
-  `/usr/lib/dracut/dracut.conf.d/99-nvidia.conf` deliberately omits the NVIDIA modules from the
-  initramfs.
-- **RPM Fusion and negativo17 ship the same NVIDIA package names at the same version.** Which
-  repo wins is arbitrary, and a kmod from one does not necessarily match the userspace of the
-  other. Both stages pin NVIDIA to RPM Fusion via `excludepkgs='*nvidia*'` on
-  `fedora-multimedia` — that repo runs at `priority=1` and would otherwise always win.
-  `xorg-x11-drv-nvidia` itself provides `nvidia-kmod-common`, so the RPM Fusion set is
-  self-contained.
-- **The NVIDIA VA-API driver is called `libva-nvidia-driver` in Fedora**, not
-  `nvidia-vaapi-driver` as upstream and every guide name it — searching for the upstream name
-  finds nothing and looks like "not packaged". It lives in the plain `fedora` repo, needs no
-  env vars (libva-drm maps the DRM name `nvidia-drm` to the `nvidia` driver on its own, and the
-  driver's `direct` backend is the default since the EGL one broke on driver ≥ 525) and no extra
-  kargs beyond the `nvidia-drm.modeset=1` already set. Without it the host has no hardware video
-  decoding at all: the base image ships only `libva-intel-media-driver`, which is useless here.
-- Kernel args go in `/usr/lib/bootc/kargs.d/*.toml`, not GRUB config.
-- **In a builder stage, `/opt`, `/root`, `/usr/local`, `/home`, `/srv`, `/mnt` and `/media` are
-  all dead symlinks.** The ostree base points them into `/var`, which is empty during the
-  build — that is why the target image does `rm /opt && mkdir /opt`. Anything writing there
-  fails: `tar -C /opt` with *Cannot open*, and `HOME=/root` breaks tools that want a cache
-  dir (Zig: *unable to open global cache directory*). Use a plain top-level directory and
-  `ENV PATH=`, or create the `/var` target first. Check with
-  `find / -maxdepth 1 -type l ! -exec test -e {} \; -print`.
-- **Ghostty is built from the tip tarball, not from the COPR** — see the builder stage in the
-  Containerfile for why. Its Zig version is pinned by `ARG ZIG_VERSION` and must match what
-  tip demands; the upstream build docs lag behind tip (they still said 0.15.2 when tip had
-  moved to 0.16.0). A mismatch fails loudly with *does not meet the required build version*.
-  Fedora's `zig` package is deliberately not used: it tracks its own schedule and old versions
-  disappear from the repos, so a mismatch there cannot be fixed locally.
+- **Brave ships two desktop files.** `com.brave.Browser.desktop` is only an app-id anchor for the XDG portal
+  (`NoDisplay=true`; `build.sh` strips its `MimeType=` so it stops appearing twice under Default Applications); the real
+  entry is `brave-browser.desktop`, `Exec` being `/usr/bin/brave-browser-stable`.
+- **`GTK_THEME` colours the chrome, not the page.** Brave's GTK mode reads `gtk-theme-name`, which Plasma never writes
+  into `~/.config/gtk-3.0/settings.ini` — force it per-app in an overriding desktop file, never by editing
+  `settings.ini` (kde-gtk-config rewrites it on every colour-scheme change). Web content additionally needs
+  `--force-dark-mode`, because `prefers-color-scheme` comes from Chromium's DarkModeManager: measured live, default,
+  `system_theme=1` and `system_theme=1` + `GTK_THEME=Breeze-Dark` all stay light. Under a bare Xvfb the GTK route *does*
+  go dark (no portal → toolkit theme), so neither a headless nor a session-less test proves anything here.
+- **`brave://welcome` is gated on the `First Run` sentinel**, not on `brave.has_seen_brave_welcome_page`. The headless
+  run that seeds the profile never writes that empty file (with *or* without `--no-first-run`), so the first GUI start
+  still shows the onboarding even with the pref `true`. `firstlogin-setup.sh` creates it itself.
+- **Do not add a NetworkManager `[global-dns-domain-*]` block** in `conf.d` — it killed name resolution. DNS belongs to
+  the router; the only DoH is the opportunistic `DnsOverHttpsMode: "automatic"` policy.
+- **`bootc-fstab-edit.service` rewrites `/etc/fstab` on first boot**, so BTRFS mount options are applied afterwards by
+  `astroimmutable-btrfs-opts.service`, which patches fstab idempotently *and* remounts live.
+- **akmods cannot build in the target stage** — hence the builder stage. Without `--kmod` it builds every installed
+  akmod, so a new driver just needs its `akmod-*` package on that one install line. `rpm -ivh --nodeps --noscripts` is
+  **not** a workaround: skipping the scriptlets skips the akmods run, so no module is produced and the driver silently
+  does nothing. Check with `ls /usr/lib/modules/$(uname -r)/extra/`.
+- **NVIDIA: the kmod alone is not enough, and nouveau must be killed via kargs.** `xorg-x11-drv-nvidia-libs` is required
+  for `libEGL_nvidia`/GBM (plus `.i686` for 32-bit Steam/Proton); `-cuda` does not cover it. The base initramfs has
+  `nouveau.ko` but not the blacklist, so use `rd.driver.blacklist=nouveau` / `modprobe.blacklist=nouveau` /
+  `nouveau.modeset=0` — not a dracut rebuild, `99-nvidia.conf` keeps the modules out on purpose. Kargs live in
+  `/usr/lib/bootc/kargs.d/*.toml`, not in GRUB config.
+- **RPM Fusion and negativo17 ship the same NVIDIA package names at the same version**, and a kmod from one need not
+  match the other's userspace. Both stages pin NVIDIA to RPM Fusion via `excludepkgs='*nvidia*'` on `fedora-multimedia`,
+  which runs at `priority=1`.
+- **The NVIDIA VA-API driver is called `libva-nvidia-driver` in Fedora**, not `nvidia-vaapi-driver` as upstream names
+  it, so searching for the upstream name looks like "not packaged". Plain `fedora` repo, no env vars, no extra kargs;
+  without it there is no hardware video decoding at all.
+- **In a builder stage, `/opt`, `/root`, `/usr/local`, `/home`, `/srv`, `/mnt` and `/media` are dead symlinks** into the
+  empty `/var` — hence `rm /opt && mkdir /opt` in the target image. `tar -C /opt` fails with *Cannot open*, `HOME=/root`
+  breaks Zig's cache dir.
+- **Ghostty is built from the tip tarball, not from the COPR.** `ARG ZIG_VERSION` must match what tip demands and the
+  upstream docs lag behind it; a mismatch fails with *does not meet the required build version*. Fedora's `zig` is
+  unused: old versions vanish from the repos.
+- **`layers: true` in `build.yml` makes the build hit its timeout** — each RUN then commits a layer over fuse-overlayfs
+  (37 min for one `printf`; #473/#475 died at 120 min, #472 took 80).
 
 ## Local iteration
 
-```bash
-just build              # podman build to localhost/astroimmutable:latest
-just build-qcow2        # disk image via bootc-image-builder (needs rootful podman)
-just run-vm-qcow2       # build + boot it
-just lint               # shellcheck over *.sh
-just format             # shfmt -w over *.sh
-```
-
-A full build pulls a lot of packages and compiles the NVIDIA module; expect it to be slow.
-Note that `just lint`/`just format` only match `*.sh` — `build_files/notepadnext` is a
-binary, not a script.
+`just build` (podman → `localhost/astroimmutable:latest`), `just build-qcow2` (via bootc-image-builder, needs rootful
+podman), `just run-vm-qcow2`, `just lint` (shellcheck), `just format` (shfmt). A full build compiles the NVIDIA module
+and is slow. `lint`/`format` only match `*.sh` — `build_files/notepadnext` is a binary, not a script.

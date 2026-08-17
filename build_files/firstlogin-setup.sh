@@ -7,9 +7,8 @@ STATE_FILE="${STATE_DIR}/setup_done"
 # ---------------------------------------------------------------------------
 # Guard: nur für echte Benutzer, nicht für System-User
 # ---------------------------------------------------------------------------
-# Der Service liegt in default.target.wants und würde sonst auch in der
-# Session des cosmic-greeter-Users (UID < 1000) laufen und dessen Home mit
-# KDE-Configs, Flatpaks etc. zumüllen.
+# Der Service liegt in default.target.wants und liefe sonst auch in der Session
+# des cosmic-greeter-Users (UID < 1000) und würde dessen Home zumüllen.
 
 if [ "$(id -u)" -lt 1000 ]; then
     exit 0
@@ -28,12 +27,11 @@ mkdir -p "${STATE_DIR}"
 # ---------------------------------------------------------------------------
 # Fehlerdiagnose
 # ---------------------------------------------------------------------------
-# Bricht das Skript ab, meldet systemd nur "status=1/FAILURE". Befehle, die
-# ohne Ausgabe mit 1 enden (etwa grep ohne Treffer), sterben unter set -e
-# spurlos – im Journal steht dann keine einzige Zeile des Skripts. Der Trap
-# nennt Zeile, Befehl und Exitcode. Zusätzlich in eine Logdatei, weil das
-# Skript nach einem Fehlschlag erst beim nächsten Login erneut läuft und das
-# Journal der abgebrochenen Session dann nicht mehr zur Hand ist.
+# Bei einem Abbruch meldet systemd nur "status=1/FAILURE", und Befehle, die ohne
+# Ausgabe mit 1 enden (grep ohne Treffer), sterben unter set -e spurlos. Der Trap
+# nennt Zeile, Befehl und Exitcode – zusätzlich in eine Logdatei, weil das Skript
+# erst beim nächsten Login erneut läuft und das Journal der abgebrochenen Session
+# dann nicht mehr zur Hand ist.
 
 LOG_FILE="${STATE_DIR}/firstlogin.log"
 
@@ -56,10 +54,9 @@ _trap_on
 cp /usr/share/astroimmutable/avatar/katzenhai.png ~/.face.icon
 chmod 644 ~/.face.icon
 
-# Avatar auch in AccountsService setzen – das lesen die Systemeinstellungen
-# und der Anmeldebildschirm (~/.face.icon allein reicht nur für Kickoff).
-# Polkit erlaubt dem User, sein eigenes Icon zu setzen; AccountsService kopiert
-# es nach /var/lib/AccountsService/icons/<user>.
+# Auch in AccountsService setzen – das lesen Systemeinstellungen und
+# Anmeldebildschirm, ~/.face.icon allein reicht nur für Kickoff. Polkit erlaubt
+# dem User sein eigenes Icon.
 dbus-send --system --print-reply --dest=org.freedesktop.Accounts \
     "/org/freedesktop/Accounts/User$(id -u)" \
     org.freedesktop.Accounts.User.SetIconFile "string:$HOME/.face.icon" &>/dev/null || true
@@ -79,9 +76,8 @@ if [ -d "$KDE_CFG_SRC" ]; then
     [ -d "$KDE_CFG_SRC/KDE" ]         && cp -r "$KDE_CFG_SRC/KDE/."         ~/.config/KDE/
     [ -d "$KDE_CFG_SRC/kdedefaults" ] && cp -r "$KDE_CFG_SRC/kdedefaults/." ~/.config/kdedefaults/
 
-    # Dolphin-Panel-Layout (nur Orte-Panel; Ordner/Info/Terminal aus) liegt in
-    # ~/.local/state, nicht ~/.config. Nur die globale State=-Zeile (ohne
-    # "screens:"-Prefix), daher bildschirm-unabhängig.
+    # Dolphin-Panel-Layout liegt in ~/.local/state, nicht ~/.config. Nur die
+    # globale State=-Zeile, daher bildschirm-unabhängig.
     if [ -f "$KDE_CFG_SRC/dolphinstaterc" ]; then
         mkdir -p ~/.local/state
         cp "$KDE_CFG_SRC/dolphinstaterc" ~/.local/state/dolphinstaterc
@@ -185,25 +181,22 @@ EOF
 # ---------------------------------------------------------------------------
 # Hintergrundbild setzen (D-Bus, braucht ein WIRKLICH bereites Plasmashell)
 # ---------------------------------------------------------------------------
-# Wichtig: Das Wallpaper kann NICHT über die ausgelieferte appletsrc gesetzt
-# werden – deren Desktop-Container hängen an einer festen activityId, die es
-# auf einer Neuinstallation nicht gibt (jede Installation würfelt eine neue
-# Activity-UUID). plasmashell verwirft die Container dann und legt leere neue
-# an. Daher ID-unabhängig per plasma-apply-wallpaperimage zur Laufzeit.
+# Das Wallpaper kann NICHT über die ausgelieferte appletsrc kommen: deren
+# Desktop-Container hängen an einer activityId, die jede Installation neu
+# würfelt: plasmashell verwirft sie dann und legt leere an. Daher ID-unabhängig
+# per plasma-apply-wallpaperimage zur Laufzeit.
 #
-# Peer.Ping als Bereitschaftscheck reicht NICHT: plasmashell registriert sich
-# am Bus, bevor es die Desktop-Container erzeugt hat – plasma-apply läuft dann
-# ins Leere. Stattdessen warten, bis desktops() mindestens einen Container
-# meldet (das ist genau der Zustand, in dem plasma-apply greift).
+# Peer.Ping als Bereitschaftscheck reicht NICHT – plasmashell registriert sich am
+# Bus, bevor die Desktop-Container existieren. Stattdessen warten, bis desktops()
+# mindestens einen meldet; genau dann greift plasma-apply.
 
 QDBUS=$(command -v qdbus6 || command -v qdbus-qt6 || command -v qdbus || true)
 for i in $(seq 1 90); do
     if [ -n "$QDBUS" ]; then
-        # "|| true" ist hier zwingend: solange plasmashell noch nicht auf dem
-        # Bus ist, endet qdbus mit einem Fehler. Eine Zuweisung mit
-        # fehlschlagender Kommandosubstitution bricht unter set -e das ganze
-        # Skript ab – und wegen 2>/dev/null völlig lautlos. Genau daran ist das
-        # Skript in der VM gestorben: Papierkorb angelegt, Wallpaper nie.
+        # "|| true" ist zwingend: solange plasmashell nicht auf dem Bus ist,
+        # endet qdbus mit Fehler, und eine fehlschlagende Kommandosubstitution
+        # bricht unter set -e das Skript ab – wegen 2>/dev/null lautlos. Genau
+        # daran ist es in der VM gestorben: Papierkorb da, Wallpaper nie.
         n=$("$QDBUS" org.kde.plasmashell /PlasmaShell \
             org.kde.PlasmaShell.evaluateScript 'print(desktops().length)' 2>/dev/null || true)
         [ -n "$n" ] && [ "$n" -ge 1 ] 2>/dev/null && break
@@ -219,10 +212,9 @@ plasma-apply-wallpaperimage /usr/share/astroimmutable/wallpaper/mars.jpg || true
 # ---------------------------------------------------------------------------
 # cosmic-greeter: Login-Screen-Wallpaper
 # ---------------------------------------------------------------------------
-# Der cosmic-greeter-Daemon spiegelt das Wallpaper aus der cosmic-bg-State des
-# Users: ~/.local/state/cosmic/com.system76.CosmicBackground/v1/wallpapers im
-# RON-Format Vec<(output_name, Source)>. Der Greeter matcht den Output-Namen
-# exakt, daher pro verbundenem Output (aus /sys/class/drm) einen Eintrag.
+# Der Greeter spiegelt das Wallpaper aus der cosmic-bg-State des Users (RON,
+# Vec<(output_name, Source)>) und matcht den Output-Namen exakt – daher pro
+# verbundenem Output (aus /sys/class/drm) ein Eintrag.
 BG_STATE_DIR="$HOME/.local/state/cosmic/com.system76.CosmicBackground/v1"
 WALL="/usr/share/astroimmutable/wallpaper/mars.jpg"
 mkdir -p "$BG_STATE_DIR"
@@ -279,10 +271,9 @@ _flatpak_install \
 # ---------------------------------------------------------------------------
 # App-Anzeigenamen anpassen: ZapZap → WhatsApp
 # ---------------------------------------------------------------------------
-# Vesktop steht hier nicht mehr: es kommt inzwischen als RPM, wird deshalb
-# schon zur Bauzeit in build.sh auf "Discord" umbenannt, und die frühere
-# Ankerdatei für die KWin-Icon-Zuordnung ist überflüssig geworden – die
-# RPM-Datei heißt vesktop.desktop und trifft die Wayland-app-id direkt.
+# Vesktop fehlt hier bewusst: es kommt als RPM und wird schon in build.sh
+# umbenannt; die frühere Ankerdatei für die Icon-Zuordnung entfällt, weil
+# vesktop.desktop die Wayland-app-id direkt trifft.
 
 FP_EXPORTS="$HOME/.local/share/flatpak/exports/share/applications"
 mkdir -p ~/.local/share/applications
@@ -299,10 +290,9 @@ update-desktop-database ~/.local/share/applications 2>/dev/null || true
 # Standard-Apps festlegen (mimeapps.list)
 # ---------------------------------------------------------------------------
 
-# geo: braucht den Eintrag zwingend. kf6-kguiaddons liefert gleich drei
-# Handler mit – Google Maps, OpenStreetMap und wheelmap.org – und ohne eigene
-# Vorgabe gewinnt Google Maps (im Container gegengeprüft: ein frisches Image
-# meldet google-maps-geo-handler.desktop als Standard).
+# geo braucht den Eintrag zwingend: kf6-kguiaddons liefert drei Handler mit
+# (Google Maps, OpenStreetMap, wheelmap.org), und ohne Vorgabe gewinnt Google
+# Maps – im Container gegengeprüft.
 mkdir -p ~/.local/share/applications ~/.config
 cat <<'EOF' > ~/.config/mimeapps.list
 [Default Applications]
@@ -364,11 +354,10 @@ update-desktop-database ~/.local/share/flatpak/exports/share/applications 2>/dev
 # ---------------------------------------------------------------------------
 # Kickoff-Favoriten in die KActivityManager-DB seeden
 # ---------------------------------------------------------------------------
-# Hier – nach den Flatpak-Installs (Apps existieren, werden also sofort
-# angezeigt), aber vor dem fragilen Distrobox/SDKMAN-Teil, damit ein Abbruch
-# dort die Favoriten nicht verhindert. Die Reihenfolge kommt aus der kopierten
-# appletsrc (favorites=); hier nur die Mitgliedschaft, da Plasma 6 die
-# Favoriten in KAStats hält.
+# Steht nach den Flatpak-Installs (Apps existieren also schon), aber vor dem
+# fragilen Distrobox/SDKMAN-Teil, damit ein Abbruch dort die Favoriten nicht
+# verhindert. Die Reihenfolge kommt aus der appletsrc; hier nur die
+# Mitgliedschaft, weil Plasma 6 die Favoriten in KAStats hält.
 QDBUS=$(command -v qdbus6 || command -v qdbus-qt6 || command -v qdbus || true)
 if [ -n "$QDBUS" ]; then
     for app in \
@@ -385,42 +374,25 @@ fi
 # ---------------------------------------------------------------------------
 # Brave: Dark-Mode im GTK-Design
 # ---------------------------------------------------------------------------
-# Brave ist Chromium: steht unter brave://settings/appearance das GTK-Design an,
-# holt Brave seine Oberflächenfarben direkt aus GTK statt aus dem Plasma-
-# Farbschema. Als "dunkel" gilt GTK dort aber nur, wenn gtk-theme-name auf ein
-# Dark-Theme zeigt. Plasma schreibt in ~/.config/gtk-3.0/settings.ini gar kein
-# gtk-theme-name (nachgesehen: nur gtk-application-prefer-dark-theme und
-# gtk-icon-theme-name) und färbt stattdessen dynamisch um. Brave liest daraus
-# "hell", also bleibt die Oberfläche weiß, obwohl der Rest des Systems dunkel
-# ist. Mit dem klassischen Design tritt das nicht auf, weil Brave dann seine
-# eigenen Farben nimmt.
+# Steht in brave://settings/appearance das GTK-Design an, holt Brave seine
+# Oberflächenfarben aus GTK. Als dunkel gilt GTK dort nur bei passendem
+# gtk-theme-name – und genau den schreibt Plasma nicht in
+# ~/.config/gtk-3.0/settings.ini, es färbt dynamisch um. Brave liest daraus
+# "hell". Erzwungen wird das per GTK_THEME in einer eigenen .desktop-Datei unter
+# ~/.local/share/applications, die die gleichnamige aus dem RPM überlagert;
+# settings.ini wäre der falsche Ort, die gehört kde-gtk-config und wird bei jedem
+# Farbschema-Wechsel neu geschrieben. Überlagert wird nur brave-browser.desktop –
+# com.brave.Browser.desktop trägt NoDisplay und ist nur der App-ID-Anker.
 #
-# Erzwungen wird das nur für Brave, per GTK_THEME in einer eigenen .desktop-
-# Datei unter ~/.local/share/applications – die überlagert die gleichnamige aus
-# dem RPM. settings.ini direkt zu setzen wäre der falsche Ort: die Datei gehört
-# kde-gtk-config, das sie bei jedem Farbschema-Wechsel neu schreibt und einen
-# Eintrag dort wieder überbügeln würde.
-#
-# Das Paket bringt zwei .desktop-Dateien mit: com.brave.Browser.desktop trägt
-# NoDisplay=true und ist nur der App-ID-Anker für das XDG-Portal, sichtbar ist
-# brave-browser.desktop. Überlagert wird deshalb ausschließlich letztere.
-#
-# GTK_THEME allein färbt nur die Oberfläche, nicht den Seiteninhalt. Für
-# prefers-color-scheme fragt Chromium unter Linux nicht das GTK-Theme, sondern
-# den DarkModeManager – und der liefert in einer echten Plasma-Sitzung "hell",
-# egal wie GTK eingestellt ist. Gemessen in der laufenden Sitzung des Hosts,
-# Testseite über --remote-debugging-port ausgelesen:
-#
-#   Standard                              -> hell
-#   system_theme=1, kein GTK_THEME        -> hell
-#   system_theme=1 + GTK_THEME=Breeze-Dark -> hell
-#   --force-dark-mode                     -> dunkel
-#
-# Unter einem nackten Xvfb ohne Portal kommt dagegen auch der GTK-Weg dunkel
-# heraus – dort fällt Chromium mangels Portal auf das Toolkit-Theme zurück. Ein
-# Test ohne Sitzung beweist hier also nichts. Deshalb zusätzlich
-# --force-dark-mode. Der Preis: Brave bleibt dunkel, auch wenn Plasma auf ein
-# helles Farbschema umgestellt wird.
+# GTK_THEME färbt aber nur die Oberfläche, nicht den Seiteninhalt:
+# prefers-color-scheme kommt unter Linux nicht vom GTK-Theme, sondern vom
+# DarkModeManager, und der meldet in einer echten Plasma-Sitzung "hell". Gemessen
+# in der laufenden Sitzung über --remote-debugging-port: Standard, system_theme=1
+# und system_theme=1 + GTK_THEME=Breeze-Dark alle hell, erst --force-dark-mode
+# dunkel. Unter nacktem Xvfb ohne Portal kommt der GTK-Weg dagegen dunkel heraus,
+# weil Chromium dort aufs Toolkit-Theme zurückfällt – ein Test ohne Sitzung
+# beweist hier nichts. Preis von --force-dark-mode: Brave bleibt dunkel, auch
+# wenn Plasma auf ein helles Farbschema wechselt.
 
 BRAVE_DESKTOP="/usr/share/applications/brave-browser.desktop"
 BRAVE_LOCAL="$HOME/.local/share/applications/brave-browser.desktop"
@@ -428,8 +400,7 @@ BRAVE_LOCAL="$HOME/.local/share/applications/brave-browser.desktop"
 if [ -f "$BRAVE_DESKTOP" ]; then
     cp "$BRAVE_DESKTOP" "$BRAVE_LOCAL"
 
-    # Greift auf alle drei Exec-Zeilen: Hauptfenster, "Neues Fenster" und
-    # "Neues Inkognito-Fenster".
+    # Greift auf alle drei Exec-Zeilen (Haupt-, Neues und Inkognito-Fenster).
     sed -i 's|^Exec=/usr/bin/brave-browser-stable|Exec=env GTK_THEME=Breeze-Dark /usr/bin/brave-browser-stable --force-dark-mode|' \
         "$BRAVE_LOCAL"
     update-desktop-database ~/.local/share/applications 2>/dev/null || true
@@ -440,44 +411,29 @@ fi
 # ---------------------------------------------------------------------------
 # Brave: Profil-Vorbelegungen (Aggressiv, breite Adressleiste, Seitenleiste)
 # ---------------------------------------------------------------------------
-# Drei Dinge, die sich nicht per Policy setzen lassen und ins Profil müssen.
+# Dinge, die sich nicht per Policy setzen lassen und ins Profil müssen. Die Stufe
+# "Aggressiv" ist kein Pref, sondern ein Content-Setting: cosmeticFilteringV2 mit
+# ControlType::BLOCK (1), "Standard" wäre BLOCK_THIRD_PARTY (2).
+# DefaultBraveAdblockSetting aus den Policies setzt nur den Ads-Teil.
 #
-# Die Stufe "Aggressiv" ist kein Pref, sondern ein Content-
-# Setting im Profil: Typ cosmeticFilteringV2, Wert ControlType::BLOCK (1);
-# "Standard" ist BLOCK_THIRD_PARTY (2). DefaultBraveAdblockSetting aus den
-# Policies setzt nur den Ads-Teil und lässt diesen Wert unberührt – deshalb
-# muss es hier passieren.
+# Im Container geprüft: eine vorab hingelegte Minimal-Preferences verwirft Brave
+# und überschreibt den Eintrag mit {}, und initial_preferences trägt
+# Content-Settings gar nicht erst ein (auch nicht als master_preferences). Nur
+# das Patchen einer von Brave selbst erzeugten Preferences hält.
 #
-# Alles darunter ist im Container gegen das Brave aus dem Image geprüft worden:
-#   - Eine vorab hingelegte Minimal-Preferences wird verworfen; Brave füllt die
-#     Datei auf und überschreibt den Eintrag mit {}. Das Profil muss also von
-#     Brave selbst stammen, bevor man es anfasst.
-#   - /opt/brave.com/brave/initial_preferences trägt Content-Settings NICHT in
-#     ein neues Profil, weder mit noch ohne Erstlauf-Logik, auch nicht als
-#     master_preferences. Der Weg existiert für diesen Zweck nicht.
-#   - Patcht man dagegen eine von Brave erzeugte Preferences, übernimmt Brave
-#     den Eintrag beim nächsten Start und schreibt ihn mit eigenem
-#     last_modified-Zeitstempel zurück.
-#
-# Der Wert ist eine Vorbelegung, keine Sperre: du kannst die Stufe in Shields
-# jederzeit ändern.
+# Alles hier ist Vorbelegung, keine Sperre – in Shields jederzeit änderbar.
 
 BRAVE_DIR="$HOME/.config/BraveSoftware/Brave-Browser"
 BRAVE_PREFS="$BRAVE_DIR/Default/Preferences"
 
 if [ ! -f "$BRAVE_PREFS" ]; then
-    # Zwei Fallstricke, beide im Container nachgestellt:
-    #
-    # 1. --user-data-dir ist zwingend. --headless=new benutzt sonst ein eigenes
-    #    Verzeichnis "Brave-Browser-headless" und legt das echte Profil nie an.
-    # 2. Der Prozess beendet sich nicht von selbst – weder mit --dump-dom noch
-    #    mit --disable-extensions (beides gemessen: Rückgabewert 124 nach vollen
-    #    60 s). Deshalb: in eigener Prozessgruppe starten, auf die Datei warten,
-    #    Gruppe abräumen. Ein kill auf die reine PID genügt nicht, die
-    #    Kindprozesse laufen weiter, halten das Profil gesperrt und würden den
-    #    Patch beim Beenden überschreiben.
-    #
-    # So dauert der Schritt rund 12 Sekunden statt 60.
+    # Zwei Fallstricke, im Container nachgestellt: --user-data-dir ist zwingend,
+    # sonst benutzt --headless=new ein eigenes "Brave-Browser-headless" und legt
+    # das echte Profil nie an. Und der Prozess beendet sich nicht von selbst
+    # (auch nicht mit --dump-dom oder --disable-extensions, beides gemessen).
+    # Daher eigene Prozessgruppe, auf die Datei warten, Gruppe abräumen – ein
+    # kill auf die PID allein lässt die Kinder laufen, die das Profil gesperrt
+    # halten und den Patch beim Beenden überschreiben. Dauert so ~12 s statt 60.
     setsid brave-browser-stable --headless=new --no-first-run --disable-gpu \
         --user-data-dir="$BRAVE_DIR" about:blank >/dev/null 2>&1 &
     BRAVE_PG=$!
@@ -496,48 +452,34 @@ if [ ! -f "$BRAVE_PREFS" ]; then
     done
 fi
 
-# Chromium merkt sich an der leeren Datei "First Run" im Profilverzeichnis, dass
-# das Profil schon einmal benutzt wurde. Der Headless-Lauf oben legt sie nicht
-# an – im Container geprüft, mit und ohne --no-first-run fehlt sie hinterher.
-# Damit hält der erste echte Start das Profil weiterhin für neu und zeigt
-# brave://welcome samt Standardbrowser-Abfrage, obwohl
-# brave.has_seen_brave_welcome_page längst true ist. Die Datei ist leer, das
-# Anlegen ist idempotent.
+# An der leeren Datei "First Run" erkennt Chromium ein schon benutztes Profil.
+# Der Headless-Lauf oben legt sie nicht an (im Container geprüft, mit und ohne
+# --no-first-run), also hielte der erste echte Start das Profil für neu und
+# zeigte brave://welcome samt Standardbrowser-Abfrage – trotz
+# brave.has_seen_brave_welcome_page. Anlegen ist idempotent.
 if [ -d "$BRAVE_DIR" ] && [ ! -e "$BRAVE_DIR/First Run" ]; then
     : >"$BRAVE_DIR/First Run"
 fi
 
 if [ -f "$BRAVE_PREFS" ]; then
-    # Die Werte stammen nicht aus dem Kopf, sondern aus einem von Hand
-    # eingerichteten Brave-Profil, das gegen ein unberührtes Profil gediffed
-    # wurde – Enum-Zahlen wie hover_mode=2 ("Karte mit Vorschau") und
+    # Die Werte stammen aus einem von Hand eingerichteten Profil, gediffed gegen
+    # ein unberührtes – Enums wie hover_mode=2 ("Karte mit Vorschau") und
     # sidebar_show_option=3 (nie) sind damit belegt, nicht geraten.
     #
-    # extensions.theme.system_theme = 1 stellt Brave auf das GTK-Design um.
-    # Der Wert ist aus Chromiums Settings-Oberfläche belegt (SystemTheme:
-    # DEFAULT = 0, GTK = 1, QT = 2). Das ist die fehlende Hälfte des
-    # GTK_THEME=Breeze-Dark-Fixes weiter oben: der sorgt dafür, dass der
-    # GTK-Modus dunkel aussieht, wählt ihn aber nicht aus. Nebenbei richtet
-    # sich unter Linux auch prefers-color-scheme nach dem nativen Theme –
-    # ohne diese Zeile liefern Websites ihre helle Fassung aus.
+    # extensions.theme.system_theme=1 wählt das GTK-Design (SystemTheme: DEFAULT
+    # 0, GTK 1, QT 2) – die fehlende Hälfte zum GTK_THEME-Fix oben, der den
+    # GTK-Modus nur dunkel aussehen lässt, ihn aber nicht auswählt.
     #
     # Die Seitenleiste braucht zwei Schalter: sidebar_show_option=3 schaltet sie
-    # ab (SidebarService::ShowSidebarOption – 0 immer, 1 Mouseover, 2 veraltet,
-    # 3 nie), show_side_panel_button blendet zusätzlich den Knopf in der
-    # Symbolleiste aus. Der eine erledigt den anderen nicht mit.
+    # ab, show_side_panel_button nimmt zusätzlich den Knopf aus der Symbolleiste.
+    # location_bar_is_wide=true gibt das normale Chromium-Layout; auf false rückt
+    # Brave die Adressleiste ein und zentriert sie.
     #
-    # location_bar_is_wide: steht der auf false, rückt Brave die Adressleiste
-    # per ResetLocationBarBounds() ein und zentriert sie; true gibt das normale
-    # Chromium-Layout, also linksbündig über die volle Breite.
-    #
-    # Nicht gesetzt werden Dinge, die schon per Policy geregelt sind
-    # (Safe Browsing, Startseite, Suchmaschine) oder die ohnehin dem
-    # Auslieferungszustand entsprechen (Autovervollständigung an, Fenster beim
-    # Schließen der letzten Registerkarte schließen).
-    # Die private Suchmaschine führt Brave getrennt von der normalen und
-    # unabhängig von den DefaultSearchProvider-Policies. Die GUID ist nicht
-    # profilspezifisch, sondern aus der prepopulate_id 510 (Startpage)
-    # abgeleitet und damit auf jeder Installation dieselbe.
+    # Nicht gesetzt wird, was schon per Policy geregelt ist (Safe Browsing,
+    # Startseite, Suchmaschine) oder ohnehin dem Auslieferungszustand entspricht.
+    # Die private Suchmaschine führt Brave getrennt und unabhängig von den
+    # DefaultSearchProvider-Policies; die GUID ist aus prepopulate_id 510
+    # (Startpage) abgeleitet und damit überall dieselbe.
     BRAVE_PSP='{"alternate_urls": [],"contextual_search_url": "","created_from_play_api": false,"date_created": "0","doodle_url": "","enforced_by_policy": false,"favicon_url": "https://www.startpage.com/favicon.ico","featured_by_policy": false,"id": "7","image_search_branding_label": "","image_translate_source_language_param_key": "","image_translate_target_language_param_key": "","image_translate_url": "","image_url": "","image_url_post_params": "","input_encodings": ["UTF-8"],"is_active": 0,"keyword": ":sp","last_modified": "0","last_visited": "0","logo_url": "","new_tab_url": "","originating_url": "","policy_origin": 0,"preconnect_to_search_url": false,"prefetch_likely_navigations": false,"prepopulate_id": 510,"safe_for_autoreplace": true,"search_intent_params": [],"search_url_post_params": "","send_x_geo_header": false,"short_name": "Startpage","starter_pack_id": 0,"suggestions_url": "https://www.startpage.com/cgi-bin/csuggest?query={searchTerms}&limit=10&format=json","suggestions_url_post_params": "","synced_guid": "485bf7d3-0215-45af-87dc-538868000510","url": "https://www.startpage.com/do/search?q={searchTerms}&segment=startpage.brave","usage_count": 0}'
 
     BRAVE_TMP=$(mktemp)
@@ -584,18 +526,14 @@ else
     echo "WARNING: Brave hat kein Profil angelegt, Aggressiv-Vorgabe übersprungen"
 fi
 
-# Ein Teil der Einstellungen liegt nicht im Profil, sondern in "Local State"
-# neben dem Profilverzeichnis – Brave liest sie über g_browser_process->
-# local_state(). Betrifft die Filterlisten und den Kompakt-Modus.
-#
-# Die Filterlisten führt Brave über UUIDs, und der Eintrag enthält nur die
-# Abweichungen vom Standard. Aufgelöst über Braves öffentlichen Katalog
-# (github.com/brave/adblock-resources, filter_lists/list_catalog.json):
+# Filterlisten und Kompakt-Modus liegen nicht im Profil, sondern in "Local State"
+# daneben. Die Listen führt Brave über UUIDs, eingetragen wird nur, was vom
+# Standard abweicht; aufgelöst über github.com/brave/adblock-resources
+# (filter_lists/list_catalog.json):
 #   67E792D4-… Annoying distractions blocker (Fanboy's Annoyances + uBO)  an
 #   E2FA7D98-… Tracking URL blocker (AdGuard URL Tracking Protection)     an
 #   E71426E7-… German website ad blocker (EasyList Germany)               aus
-# Cookie-Notice- und Mobile-App-Promo-Blocker tauchen nicht auf, weil sie
-# ohnehin standardmäßig aktiv sind.
+# Cookie-Notice- und Mobile-App-Promo-Blocker fehlen, weil ohnehin aktiv.
 
 BRAVE_LOCALSTATE="$BRAVE_DIR/Local State"
 
@@ -654,7 +592,7 @@ set +e
 _trap_off
 
 distrobox create --yes --image ubuntu:26.04 --name ubuntu --nvidia
-# dpkg ggf. reparieren, falls eine vorherige apt-Operation unterbrochen wurde
+# dpkg reparieren, falls eine apt-Operation unterbrochen wurde
 distrobox enter ubuntu -- bash -c 'sudo dpkg --configure -a; sudo apt update && sudo apt upgrade -y && sudo apt install -y libasound2t64'
 distrobox enter ubuntu -- bash -c '
     curl -fL --retry 3 --retry-delay 30 --speed-limit 10000 --speed-time 30 "https://curseforge.overwolf.com/downloads/curseforge-latest-linux.deb" -o ~/curseforge.deb \
@@ -670,8 +608,7 @@ set -e
 # ---------------------------------------------------------------------------
 # SDKMAN und Java (GraalVM Community Edition)
 # ---------------------------------------------------------------------------
-# set -euo pipefail muss temporär deaktiviert werden, da sdkman-init.sh
-# nicht POSIX-konform ist und unter strict mode Fehler wirft.
+# sdkman-init.sh ist nicht POSIX-konform und wirft unter strict mode Fehler.
 
 if [ ! -d "$HOME/.sdkman" ]; then
     curl -s --retry 3 --retry-delay 30 "https://get.sdkman.io" | bash

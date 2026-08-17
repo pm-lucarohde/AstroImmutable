@@ -40,30 +40,24 @@ for repo_url in \
     fi
 done
 
-# Brave: offizielles RPM-Repo von Brave Software. Das in der Anleitung genannte
-# dnf-plugins-core entfällt – dnf5 bringt "config-manager" als eingebautes
-# Kommando mit (wird oben für negativo17 genauso benutzt).
+# Brave: offizielles RPM-Repo. Das in der Anleitung genannte dnf-plugins-core
+# entfällt, dnf5 bringt config-manager als eingebautes Kommando mit.
 if [ ! -f /etc/yum.repos.d/brave-browser.repo ]; then
     _retry dnf5 config-manager addrepo \
         --from-repofile="https://brave-browser-rpm-release.s3.brave.com/brave-browser.repo"
 fi
 
-# COPR: ublue-os Hilfspakete
-# Ghostty kommt nicht mehr aus scottames/ghostty, sondern wird im Containerfile
-# aus dem tip-Zweig gebaut – das COPR liefert nur 1.3.1 und damit ein Ghostty
-# ohne ext-background-effect-v1, also ohne Blur unter KWin 6.7.
+# COPR: ublue-os Hilfspakete. Ghostty wird im Containerfile aus tip gebaut, nicht
+# aus scottames/ghostty – das liefert nur 1.3.1, also ohne Blur unter KWin 6.7.
 _retry dnf5 copr enable -y copr.fedorainfracloud.org/ublue-os/packages
 
 # Prioritäten setzen: Multimedia übersteuert Standard-Repos, Steam hat niedrigere Priorität
 dnf5 config-manager setopt fedora-multimedia.priority=1
 dnf5 config-manager setopt fedora-steam.priority=10
 
-# Das Containerfile setzt in /etc/dnf/dnf.conf minrate=100000: dnf5 bricht dann
-# ab, wenn ein Spiegel länger als 30 s unter 100 kB/s liefert, und nimmt den
-# nächsten. Das setzt voraus, dass es einen nächsten gibt. Fedora und RPM Fusion
-# haben Metalinks, die drei hier nicht – sie stehen auf genau einer baseurl.
-# Dort würde der Abbruch aus "langsam" nur "fehlgeschlagen" machen, also
-# minrate für sie zurücknehmen.
+# Das Containerfile setzt minrate=100000, was voraussetzt, dass dnf5 auf einen
+# anderen Spiegel wechseln kann. Diese drei haben keinen Metalink, sondern genau
+# eine baseurl – dort machte der Abbruch aus "langsam" nur "fehlgeschlagen".
 dnf5 config-manager setopt fedora-multimedia.minrate=0
 dnf5 config-manager setopt fedora-steam.minrate=0
 dnf5 config-manager setopt brave-browser.minrate=0
@@ -72,9 +66,8 @@ dnf5 config-manager setopt brave-browser.minrate=0
 # Unerwünschte Pakete entfernen
 # ---------------------------------------------------------------------------
 
-# Standardbrowser und -editoren werden ersetzt: Firefox durch Brave (RPM, weiter
-# unten installiert), Kate/KWrite durch NotepadNext. Firefox muss trotzdem raus,
-# sonst bliebe das Paket aus dem Basisimage einfach liegen.
+# Firefox -> Brave (weiter unten), Kate/KWrite -> NotepadNext. Muss explizit
+# raus, sonst bliebe das Paket aus dem Basisimage liegen.
 dnf5 remove -y firefox
 dnf5 remove -y kwrite
 dnf5 remove -y kate
@@ -165,33 +158,24 @@ dnf5 remove -y --noautoremove \
     krfb-libs \
     kwalletmanager5
 
-# KDE Connect komplett. Pakete namens kdeconnect-app oder kdeconnect-sms gibt
-# es in Fedora nicht (geprüft: weder als Name noch als Provides) – die beiden
-# Menüeinträge gehören zu kde-connect, zusammen mit dem Daemon und dem
-# tel:/callto:-Handler. Die vier Pakete brauchen sich nur gegenseitig:
-# kde-connect-libs verlangt kde-connect, kde-connect verlangt kdeconnectd,
-# sonst hängt nichts daran. kde-connect-nautilus steht der Vollständigkeit
-# halber dabei, ist im Basisimage aber gar nicht installiert.
-#
-# Wichtig: damit verschwindet auch org.kde.kdeconnect.handler.desktop. Die
-# beiden zugehörigen Zeilen für tel: und callto: sind deshalb aus der
-# mimeapps.list im First-Login-Skript entfernt worden, sonst zeigten sie ins
-# Leere.
+# KDE Connect komplett. Pakete namens kdeconnect-app oder kdeconnect-sms gibt es
+# in Fedora nicht (weder als Name noch als Provides) – die Menüeinträge gehören
+# zu kde-connect. Die vier brauchen nur sich gegenseitig; kde-connect-nautilus
+# ist im Basisimage gar nicht installiert. Damit verschwindet auch
+# org.kde.kdeconnect.handler.desktop, weshalb die tel:- und callto:-Zeilen aus
+# der mimeapps.list im First-Login-Skript entfernt wurden.
 dnf5 remove -y --noautoremove \
     kde-connect \
     kde-connect-libs \
     kde-connect-nautilus \
     kdeconnectd
 
-# DOSBox kommt als Weak Dep von wine herein, fluid-soundfont-gs zusätzlich als
-# Weak Dep von lutris. Das Paket heißt inzwischen dosbox-staging; "dnf5 remove
-# dosbox" lief bisher ins Leere ("No packages to remove for argument: dosbox"),
-# weil dnf5 beim Entfernen nur Paketnamen matcht und nicht das Provides "dosbox",
-# das dosbox-staging mitbringt. Die Abhängigkeiten müssen einzeln aufgezählt
-# werden, weil --noautoremove sie sonst stehen lässt – allein die GM-Soundfont
-# ist 142 MB groß. Alle acht werden ausschließlich von dosbox-staging bzw. den
-# Soundfonts benötigt (mit rpm --whatrequires geprüft). speexdsp bleibt
-# absichtlich drin: vlc-plugins-extra ist dagegen gelinkt. Spart ~162 MB.
+# DOSBox kommt als Weak Dep von wine, fluid-soundfont-gs von lutris. Das Paket
+# heißt dosbox-staging – "dnf5 remove dosbox" lief ins Leere, weil dnf5 beim
+# Entfernen nur Namen matcht, nicht das Provides. Die Abhängigkeiten einzeln,
+# sonst lässt --noautoremove sie stehen (GM-Soundfont allein 142 MB). Alle acht
+# hängen nur an dosbox-staging bzw. den Soundfonts (rpm --whatrequires); speexdsp
+# bleibt, vlc-plugins-extra ist dagegen gelinkt. Spart ~162 MB.
 dnf5 remove -y --noautoremove \
     dosbox-staging \
     fluid-soundfont-gm \
@@ -202,45 +186,37 @@ dnf5 remove -y --noautoremove \
     iir1 \
     SDL2_net
 
-# Plasma Integration: die Erweiterung wird nicht von Brave installiert, sondern
-# von fedora-chromium-config-kde registriert. Das Paket legt nur zwei winzige
-# JSON-Dateien mit einer external_update_url ab, eine davon unter
-# /usr/share/chromium/extensions – und genau dieses Verzeichnis liest Brave (im
-# Binary nachgesehen, es ist der einzige externe Extension-Pfad darin). Chromium
-# und Chrome sind hier gar nicht installiert, das Paket ist also reine Altlast;
-# nichts hängt daran. Im Container gegengeprüft: mit Paket legt ein frisches
-# Profil cimiefiiaegbelhefglklhhakcgmhkai an, ohne Paket nicht.
-#
-# plasma-browser-integration selbst geht mit, weil ohne Erweiterung nur der
-# Native-Messaging-Host und die KRunner-Plugins für Browser-Tabs und -Verlauf
-# übrig blieben – dazu ein KDED-Modul (browserintegrationreminder), das genau
-# zur Installation dieser Erweiterung auffordert.
+# Die Plasma-Integration installiert nicht Brave, sondern
+# fedora-chromium-config-kde: es legt eine external_update_url unter
+# /usr/share/chromium/extensions ab, dem einzigen externen Extension-Pfad im
+# Brave-Binary. Chromium und Chrome sind hier nicht installiert, das Paket ist
+# also Altlast (gegengeprüft: mit Paket legt ein frisches Profil die Erweiterung
+# an, ohne nicht). plasma-browser-integration geht mit, weil ohne Erweiterung nur
+# Native-Messaging-Host, KRunner-Plugins und ein KDED-Modul blieben, das zur
+# Installation genau dieser Erweiterung auffordert.
 dnf5 remove -y --noautoremove \
     fedora-chromium-config-kde \
     plasma-browser-integration
 
-# Intel-Videostack aus dem Basisimage: iHD_drv_video.so und libmfx funktionieren nur
-# auf einer Intel-iGPU. Auf NVIDIA und in der virtio-VM sind sie tot, kein Paket
-# benötigt sie und nichts ist dagegen gelinkt (geprüft). Spart ~38 MB.
-# Falls das Image doch mal auf Intel-Grafik booten soll, müssen die beiden hier raus.
+# iHD_drv_video.so und libmfx laufen nur auf einer Intel-iGPU; auf NVIDIA und in
+# der virtio-VM sind sie tot und nichts ist dagegen gelinkt (geprüft). Spart
+# ~38 MB. Für ein Image auf Intel-Grafik müssten sie hier raus.
 dnf5 remove -y --noautoremove \
     libva-intel-media-driver \
     intel-mediasdk
 
-# thermald ist Intels Thermal Daemon für Notebooks. Auf einem Desktop bricht er
-# beim Start mit "Non mobile platform, exiting.." ab; systemd startet ihn
-# fünfmal neu und meldet die Unit dann als failed. Kein Paket benötigt ihn.
+# thermald ist für Notebooks. Auf dem Desktop bricht er mit "Non mobile platform,
+# exiting.." ab, systemd startet ihn fünfmal neu und meldet ihn dann als failed.
 dnf5 remove -y --noautoremove thermald
 
 # ---------------------------------------------------------------------------
 # Kvantum-Theme (KvKonqiDark)
 # ---------------------------------------------------------------------------
 
-# Nicht über api.github.com auflösen: unauthentifiziert gilt dort ein Limit von
-# 60 Anfragen pro Stunde und IP, das sich alle Actions-Runner teilen. In CI kam
-# deshalb eine leere URL zurück, und der Build brach an dieser Stelle ab
-# (Lauf #470). /releases/latest/download/<asset> leitet ohne API auf dasselbe
-# Archiv weiter und kennt das Limit nicht.
+# Nicht über api.github.com: unauthentifiziert gelten 60 Anfragen pro Stunde und
+# IP, die sich alle Actions-Runner teilen – in CI kam eine leere URL zurück und
+# der Build brach ab (Lauf #470). /releases/latest/download/<asset> leitet ohne
+# API auf dasselbe Archiv weiter.
 KVKONQI_URL="https://github.com/Niru2169/KvKonqi/releases/latest/download/KvKonqiDark.tar.gz"
 KVKONQI_CONF="/usr/share/Kvantum/KvKonqiDark/KvKonqiDark.kvconfig"
 
@@ -250,14 +226,13 @@ if ! curl -fL --retry 3 --retry-delay 30 --speed-limit 10000 --speed-time 30 "$K
 fi
 
 if [ -f "$KVKONQI_CONF" ]; then
-    # Theme-Parameter auf gewünschte Werte setzen
     sed -i 's/^reduce_window_opacity=.*/reduce_window_opacity=18/' /usr/share/Kvantum/KvKonqiDark/KvKonqiDark.kvconfig
     sed -i 's/^reduce_menu_opacity=.*/reduce_menu_opacity=75/' /usr/share/Kvantum/KvKonqiDark/KvKonqiDark.kvconfig
     sed -i 's/^contrast=.*/contrast=1.30/' /usr/share/Kvantum/KvKonqiDark/KvKonqiDark.kvconfig
     sed -i 's/^intensity=.*/intensity=1.10/' /usr/share/Kvantum/KvKonqiDark/KvKonqiDark.kvconfig
     sed -i 's/^saturation=.*/saturation=1.20/' /usr/share/Kvantum/KvKonqiDark/KvKonqiDark.kvconfig
     sed -i 's/^shadowless_popup=.*/shadowless_popup=false/' /usr/share/Kvantum/KvKonqiDark/KvKonqiDark.kvconfig
-    # noninteger_translucency: setzen falls vorhanden, sonst unter [Hacks] einfügen
+    # noninteger_translucency: ersetzen, sonst unter [Hacks] einfügen
     grep -q '^noninteger_translucency=' /usr/share/Kvantum/KvKonqiDark/KvKonqiDark.kvconfig \
         && sed -i 's/^noninteger_translucency=.*/noninteger_translucency=false/' /usr/share/Kvantum/KvKonqiDark/KvKonqiDark.kvconfig \
         || sed -i '/^\[Hacks\]/a noninteger_translucency=false' /usr/share/Kvantum/KvKonqiDark/KvKonqiDark.kvconfig
@@ -318,23 +293,15 @@ EOF
 # ---------------------------------------------------------------------------
 # Vesktop (angezeigt als Discord)
 # ---------------------------------------------------------------------------
-# Vesktop liegt in keinem der eingebundenen Repos (RPM Fusion, negativo17, die
-# beiden ublue-COPRs – alle geprüft). Die COPRs, die es führen, sind private
-# Sammlungen; für ein veröffentlichtes Image ist das offizielle RPM von
-# vencord.dev die bessere Herkunft. Die URL ist eine stabile Weiterleitung auf
-# das jeweils neueste Release-Asset, es braucht also weder die GitHub-API noch
-# eine gepinnte Version.
+# Vesktop liegt in keinem eingebundenen Repo (alle geprüft), und die COPRs, die
+# es führen, sind private Sammlungen – daher das offizielle RPM von vencord.dev.
+# Die URL ist eine stabile Weiterleitung auf das neueste Release-Asset, es
+# braucht also weder GitHub-API noch gepinnte Version.
 #
-# Kein "dnf5 install <URL>": die Adresse endet nicht auf .rpm, dnf5 erkennt sie
-# damit nicht als Paket. Erst herunterladen, dann lokal installieren – so löst
-# dnf5 auch die Abhängigkeiten auf (gtk3, nss, libXScrnSaver, libnotify,
-# at-spi2-core, xdg-utils, libXtst, libuuid).
-#
-# Das RPM legt die Anwendung unter /opt/Vesktop ab – deshalb muss der
-# /opt-Umbau aus dem Containerfile vorher gelaufen sein, sonst zeigt /opt ins
-# leere /var. Das Postinstall-Scriptlet setzt zusätzlich den
-# update-alternatives-Link /usr/bin/vesktop; die .desktop-Datei ruft ohnehin
-# direkt /opt/Vesktop/vesktop auf.
+# Kein "dnf5 install <URL>": die Adresse endet nicht auf .rpm und wird nicht als
+# Paket erkannt. Erst laden, dann lokal installieren, damit dnf5 die
+# Abhängigkeiten auflöst. Das RPM legt die Anwendung unter /opt/Vesktop ab – der
+# /opt-Umbau aus dem Containerfile muss also vorher gelaufen sein.
 VESKTOP_RPM=/tmp/vesktop.rpm
 if curl -fL --retry 3 --retry-delay 30 --speed-limit 10000 --speed-time 30 -o "$VESKTOP_RPM" \
     "https://vencord.dev/download/vesktop/amd64/rpm"; then
@@ -344,14 +311,9 @@ else
     echo "WARNING: Vesktop-RPM konnte nicht geladen werden, skipping"
 fi
 
-# Anzeigename auf Discord ändern – dieselbe Vorgabe wie zuvor beim Flatpak, nur
-# jetzt systemweit statt pro Benutzer. Die Datei hat weder Name[xx]-Übersetzungen
-# noch Desktop-Actions, ein einzelnes sed genügt also.
-#
-# Wichtig für später: die Datei heißt vesktop.desktop und trägt
-# StartupWMClass=vesktop – das deckt sich mit der Wayland-app-id, die Vesktop
-# meldet. Die Ankerdatei, die das Flatpak dafür brauchte (dessen Datei hieß
-# dev.vencord.Vesktop.desktop und passte nicht zur app-id), entfällt damit.
+# Anzeigename auf Discord, jetzt systemweit statt pro Benutzer. Die Datei heißt
+# vesktop.desktop und trägt StartupWMClass=vesktop, was zur gemeldeten
+# Wayland-app-id passt – die Ankerdatei, die das Flatpak dafür brauchte, entfällt.
 if [ -f /usr/share/applications/vesktop.desktop ]; then
     sed -i 's/^Name=.*/Name=Discord/' /usr/share/applications/vesktop.desktop
     sed -i '/^Name\[/d' /usr/share/applications/vesktop.desktop
@@ -364,12 +326,10 @@ fi
 # ---------------------------------------------------------------------------
 
 if [ -f /usr/share/applications/com.mitchellh.ghostty.desktop ]; then
-    # Anzeigename vereinfachen und lokalisierte Varianten entfernen
+    # Name vereinfachen, aktuelles Verzeichnis als Startpfad, Einzelinstanz aus
     sed -i 's/^Name=.*/Name=Terminal/' /usr/share/applications/com.mitchellh.ghostty.desktop
     sed -i '/^Name\[/d' /usr/share/applications/com.mitchellh.ghostty.desktop
-    # Aktuelles Verzeichnis als Startpfad übergeben
     sed -i 's|^Exec=ghostty$|Exec=ghostty --working-directory=%f|' /usr/share/applications/com.mitchellh.ghostty.desktop
-    # Einzelinstanz deaktivieren, damit mehrere Fenster möglich sind
     sed -i 's/--gtk-single-instance=true/--gtk-single-instance=false/g' /usr/share/applications/com.mitchellh.ghostty.desktop
 fi
 
@@ -379,21 +339,15 @@ rm -f /usr/share/kio/servicemenus/com.mitchellh.ghostty.desktop
 # ---------------------------------------------------------------------------
 # Brave: doppelten Eintrag aus den Standard-Anwendungen nehmen
 # ---------------------------------------------------------------------------
-# Das Paket liefert zwei vollständige Desktop-Dateien aus. com.brave.Browser
-# ist laut eigenem Kommentar eine Kopie von brave-browser und existiert nur,
-# damit das XDG-Portal die Anwendung über ihre App-ID wiedererkennt; NoDisplay
-# hält sie aus Startmenü und KRunner heraus.
-#
-# Die KDE-Seite "Standard-Anwendungen" wertet NoDisplay aber nicht aus und
-# listet alles, was x-scheme-handler/http beansprucht – Brave erscheint dort
-# also zweimal. Das ist nicht nur unschön: die Kopie trägt das unveränderte
-# Exec, während firstlogin-setup.sh nur brave-browser.desktop überlagert.
-# Wer versehentlich den zweiten Eintrag wählt, verliert damit GTK_THEME und
-# --force-dark-mode für alle aus anderen Anwendungen geöffneten Links.
-#
-# Ohne MimeType-Zeile taucht die Datei in der Liste nicht mehr auf, bleibt dem
-# Portal aber als App-ID-Anker erhalten – ihr eigentlicher Zweck. Ein sed auf
-# eine bereits entfernte Zeile ist wirkungslos, der Schritt also idempotent.
+# Das Paket liefert zwei vollständige Desktop-Dateien. com.brave.Browser ist eine
+# Kopie von brave-browser und existiert nur, damit das XDG-Portal die Anwendung
+# über ihre App-ID wiedererkennt; NoDisplay hält sie aus Startmenü und KRunner.
+# Die KDE-Seite "Standard-Anwendungen" wertet NoDisplay aber nicht aus und listet
+# alles mit x-scheme-handler/http – Brave erscheint dort zweimal, und die Kopie
+# trägt das unveränderte Exec, während firstlogin-setup.sh nur
+# brave-browser.desktop überlagert: wer sie wählt, verliert GTK_THEME und
+# --force-dark-mode. Ohne MimeType-Zeile verschwindet sie aus der Liste, bleibt
+# dem Portal aber als Anker. sed auf eine fehlende Zeile ist wirkungslos.
 if [ -f /usr/share/applications/com.brave.Browser.desktop ]; then
     sed -i '/^MimeType=/d' /usr/share/applications/com.brave.Browser.desktop
 fi
@@ -402,87 +356,45 @@ fi
 # Brave: Enterprise-Policies
 # ---------------------------------------------------------------------------
 # Brave liest Chromium-Enterprise-Policies aus /etc/brave/policies/managed/.
-# Gesetzte Werte sind für den Benutzer gesperrt und in brave://policy sichtbar;
-# alles hier nicht Aufgeführte bleibt frei einstellbar.
+# Gesetzte Werte sind gesperrt und in brave://policy sichtbar, alles hier nicht
+# Aufgeführte bleibt frei. Grundlage ist das Preset "Maximum Privacy" von
+# SlimBrave Neo (github.com/ChaoticSi1ence/SlimBrave-Neo), ergänzt um
+# DnsOverHttpsMode aus Nobaras nobara-browser-policy – das Preset lässt DNS
+# bewusst unverwaltet.
 #
-# Grundlage ist das Preset "Maximum Privacy" von SlimBrave Neo
-# (github.com/ChaoticSi1ence/SlimBrave-Neo), ergänzt um DnsOverHttpsMode aus
-# Nobaras nobara-browser-policy – das Preset lässt DNS bewusst unverwaltet.
+# Bewusst nicht übernommen, damit sie frei einstellbar bleiben:
+#   zu einschränkend: DeveloperToolsAvailability, PrintingEnabled,
+#     DefaultNotificationsSetting, DefaultBraveRemember1PStorageSetting
+#   kollidiert: AlwaysOpenPdfExternally (application/pdf zeigt in der
+#     mimeapps.list aus firstlogin-setup.sh auf brave-browser.desktop)
+#   kein Gewinn oder kontraproduktiv: QuicAllowed, EmailAliasesEnabled,
+#     BraveWaybackMachineEnabled, BraveGlobalPrivacyControlEnabled
 #
-# Bewusst NICHT aus dem Preset übernommen, damit sie frei einstellbar bleiben:
+# Alle 20 Brave-eigenen Schlüssel gegen brave-core abgeglichen, der Rest sind
+# Chromium-Standard-Policies. Keine Tippfehler: BraveVPNDisabled ist boolean,
+# und DefaultBraveAdblockSetting kennt nur 1 (erlauben) und 2 (blocken) – ein
+# "aggressiv" gibt es als Policy nicht, das bleibt Shields-Einstellung.
 #
-#   Schränken den Alltag zu stark ein:
-#     DeveloperToolsAvailability (sperrt F12 und brave://inspect)
-#     PrintingEnabled (Drucken komplett aus)
-#     DefaultNotificationsSetting (blockt jede Web-Benachrichtigung)
-#     DefaultBraveRemember1PStorageSetting (loggt beim Schließen überall aus)
+# ExtensionInstallForcelist installiert AdGuard Extra, Return YouTube Dislike und
+# BetterTTV und hält sie aktuell; IDs aus offizieller Quelle geprüft. Erzwungene
+# Erweiterungen kann der Benutzer nicht entfernen oder abschalten. Die
+# Google-Update-URL ist nur die übliche Schreibweise, Brave leitet Updates über
+# extensionupdater.brave.com um. ExtensionSettings hält die drei per
+# "default_unpinned" aus der Symbolleiste; erreichbar bleiben sie.
 #
-#   Kollidiert mit der eigenen Konfiguration:
-#     AlwaysOpenPdfExternally (application/pdf zeigt in der mimeapps.list aus
-#       firstlogin-setup.sh auf brave-browser.desktop)
-#
-#   Kein Privatsphäre-Gewinn oder sogar kontraproduktiv:
-#     QuicAllowed (QUIC ist verschlüsselt; Abschalten kostet nur Tempo und
-#       macht den Browser netzwerkseitig auffälliger)
-#     EmailAliasesEnabled (Aliase verbergen die echte Adresse – abschalten
-#       nimmt eine Schutzfunktion weg)
-#     BraveWaybackMachineEnabled (schickt beim Klick die URL an archive.org)
-#     BraveGlobalPrivacyControlEnabled (ohne Policy ohnehin aktiv, die Policy
-#       hätte es nur zusätzlich gesperrt)
-#
-# Alle 20 Brave-eigenen Schlüssel wurden gegen die Definitionen in brave-core
-# (components/policy/resources/templates/policy_definitions/BraveSoftware)
-# abgeglichen; die übrigen sind Chromium-Standard-Policies.
-#
-# Zwei Werte, die man beim Lesen leicht für Tippfehler hält:
-#   BraveVPNDisabled ist eine Boolean-Policy (Nobara schreibt dort 1).
-#   DefaultBraveAdblockSetting kennt nur 1 (Ads erlauben) und 2 (Ads blocken).
-#   Ein "aggressiv" gibt es als Policy nicht – das bleibt Shields-Einstellung.
-#
-# ExtensionInstallForcelist installiert die drei Erweiterungen beim ersten Start
-# und hält sie aktuell. IDs aus offizieller Quelle geprüft: AdGuard Extra aus dem
-# Manifest der Erweiterung selbst (Autor "Adguard Software Ltd"), Return YouTube
-# Dislike aus dem README des Projekts, BetterTTV aus dessen Web-Store-Eintrag.
-# Die angegebene Google-Update-URL ist die übliche Schreibweise – Brave leitet
-# Erweiterungs-Updates ohnehin über extensionupdater.brave.com um
-# (kExtensionUpdaterDomain in brave-core), Google sieht die Abfragen also nicht.
-#
-# AdGuard Extra gibt es auch als Userscript für Tampermonkey; die Erweiterung
-# ist hier der einfachere Weg, weil sie sich per Policy ausrollen lässt. Ein
-# Userscript ließe sich nicht automatisch installieren: Tampermonkeys
-# Provisioning erwartet ein selbst gehostetes Export-JSON samt Integritäts-
-# Digest, kein .user.js.
+# RestoreOnStartup 4 = "bestimmte Seiten öffnen"; NewTabPageLocation ersetzt
+# zusätzlich Braves eigene Startseite mit Bild und Statistik.
 #
 # WebAppInstallByUserEnabled false nimmt das Symbol "Diese Seite installieren"
-# aus der Adressleiste. Gemessen an einer eigens gebauten installierbaren Seite
-# auf localhost: ohne die Policy feuert beforeinstallprompt, mit ihr nicht.
-# Achtung, das gilt browserweit – Web-Apps lassen sich danach überhaupt nicht
-# mehr installieren, nicht nur auf einzelnen Seiten. Für Ausnahmen gäbe es
-# WebAppSettings.
+# aus der Adressleiste – gemessen an einer installierbaren Testseite: ohne die
+# Policy feuert beforeinstallprompt, mit ihr nicht. Gilt browserweit, nicht pro
+# Seite; für Ausnahmen gäbe es WebAppSettings.
 #
-# ExtensionSettings heftet dieselben drei Erweiterungen in die Symbolleiste.
-# "default_unpinned" hält sie aus der Symbolleiste heraus; sie sind weiterhin
-# über das Puzzle-Symbol erreichbar und können von Hand angeheftet werden.
+# Nicht mehr hier: PromotionalTabsEnabled (veraltet, und brave://welcome hängt an
+# der Sentinel-Datei "First Run", die firstlogin-setup.sh anlegt) und
+# DefaultSearchProviderIconURL (von chrome://policy als unbekannt gemeldet).
 #
-# RestoreOnStartup 4 = "bestimmte Seiten öffnen", die Liste steht in
-# RestoreOnStartupURLs. NewTabPageLocation setzt zusätzlich die Seite für neue
-# Tabs, sonst käme dort Braves eigene Startseite mit Bild und Statistik.
-#
-# Die Willkommensseite brave://welcome steht bewusst nicht mehr hier. Sie hing
-# an PromotionalTabsEnabled, das Chromium inzwischen als veraltet meldet – und
-# gewirkt hat es ohnehin nie, weil das Onboarding an der Sentinel-Datei
-# "First Run" im Profil hängt, nicht an einer Policy. Die legt
-# firstlogin-setup.sh an.
-#
-# Ebenfalls entfernt: DefaultSearchProviderIconURL. chrome://policy führte sie
-# als "Unbekannte Richtlinie" – Chromium kennt sie nicht mehr. Sie setzte nur
-# das Favicon der Suchmaschine; Name, Keyword und SearchURL bleiben gültig.
-#
-# Achtung: erzwungen installierte Erweiterungen lassen sich vom Benutzer nicht
-# entfernen oder abschalten.
-#
-# Datei gehört root und ist nur für root schreibbar – sonst könnte ein Benutzer
-# die Vorgaben einfach überschreiben.
+# Datei gehört root, sonst könnte ein Benutzer die Vorgaben überschreiben.
 
 install -d -m 755 /etc/brave/policies/managed
 install -m 644 /dev/stdin /etc/brave/policies/managed/astroimmutable-policies.json <<'JSON'
@@ -580,15 +492,12 @@ install -Dm644 /ctx/avatar/katzenhai.png /usr/share/astroimmutable/avatar/katzen
 # ---------------------------------------------------------------------------
 # cosmic-greeter: Hintergrundbild
 # ---------------------------------------------------------------------------
-# Der cosmic-greeter-Daemon liest pro echtem User dessen cosmic-bg-State
-# (~/.local/state/cosmic/com.system76.CosmicBackground/v1/wallpapers) und
-# spiegelt das Wallpaper auf den Login-Screen. Das wird daher beim ersten
-# Login als User in firstlogin-setup.sh angelegt (gekeyt auf die echten
-# Output-Namen), nicht hier im Image.
+# Der Greeter-Daemon spiegelt pro echtem User dessen cosmic-bg-State auf den
+# Login-Screen. Der wird deshalb in firstlogin-setup.sh angelegt (gekeyt auf die
+# echten Output-Namen), nicht hier im Image.
 
-# Monitor-Layout des Greeters (Auflösung/120Hz/Position) – cosmic-comp-State
-# des cosmic-greeter-Users. /var/lib/cosmic-greeter wird via tmpfiles.d zur
-# Laufzeit angelegt; der Inhalt wird beim Erst-Install aus dem Image geseedet.
+# Monitor-Layout des Greeters (Auflösung/120Hz/Position). /var/lib/cosmic-greeter
+# entsteht via tmpfiles.d, der Inhalt wird beim Erst-Install geseedet.
 mkdir -p /var/lib/cosmic-greeter/.local/state/cosmic-comp/
 cp /ctx/outputs.ron /var/lib/cosmic-greeter/.local/state/cosmic-comp/outputs.ron
 chown -R cosmic-greeter:cosmic-greeter /var/lib/cosmic-greeter/.local
@@ -620,36 +529,30 @@ echo "astroimmutable" > /etc/hostname
 
 systemctl enable podman.socket
 
-# VirtualBox: lädt beim Boot vboxdrv/vboxnetflt/vboxnetadp. Das Kernelmodul
-# selbst entsteht in der Builder-Stage (siehe Containerfile). Explizit
-# aktivieren, weil systemd-Presets im Container-Build nicht angewandt werden.
-# Für USB-Zugriff muss der Benutzer zusätzlich in die Gruppe vboxusers:
-#   sudo usermod -aG vboxusers $USER
-# Das lässt sich hier nicht vorwegnehmen, da der Benutzer zur Build-Zeit noch
-# nicht existiert, und firstlogin-setup.sh läuft ohne root.
+# Lädt beim Boot vboxdrv/vboxnetflt/vboxnetadp; das Kernelmodul entsteht in der
+# Builder-Stage. Explizit aktivieren, weil systemd-Presets im Container-Build
+# nicht angewandt werden. Für USB-Zugriff muss der Benutzer selbst in die Gruppe
+# vboxusers (usermod -aG vboxusers $USER) – zur Build-Zeit gibt es ihn noch
+# nicht, und firstlogin-setup.sh läuft ohne root.
 systemctl enable vboxdrv.service
 
 # ---------------------------------------------------------------------------
 # Units abschalten, die den Boot nur verzögern
 # ---------------------------------------------------------------------------
 
-# dnf-makecache läuft auf ostree nie: die Unit trägt
-# ConditionPathExists=!/run/ostree-booted und wird jeden Boot übersprungen. Ihr
-# "Wants=network-online.target" landet aber trotzdem in der Boot-Transaktion,
-# weil Abhängigkeiten beim Aufbau der Transaktion aufgelöst werden und
-# Conditions erst beim Ausführen greifen. Damit zieht sie
-# NetworkManager-wait-online.service mit (~5,4 s, langsamste Unit im System)
-# für einen Job, der sich sofort wieder beendet. Sie ist die einzige aktivierte
-# Unit, die das Target anfordert; Updates kommen ohnehin über bootc.
+# dnf-makecache läuft auf ostree nie (ConditionPathExists=!/run/ostree-booted),
+# ihr "Wants=network-online.target" landet aber trotzdem in der Boot-Transaktion,
+# weil Conditions erst beim Ausführen greifen. Damit zieht sie
+# NetworkManager-wait-online mit (~5,4 s, langsamste Unit im System) für einen
+# Job, der sich sofort beendet. Sie ist die einzige aktivierte Unit, die das
+# Target anfordert; Updates kommen ohnehin über bootc.
 systemctl mask dnf-makecache.timer
 
 # iscsi.service erzeugt eine nutzlose Ordnungsabhängigkeit zwischen
-# network-online und remote-fs.target und verlängert dadurch den Boot (von
-# einem Fedora-Maintainer so beschrieben). Nach Fedora kommt die Unit über
-# libvirt herein, das dieses Image nicht installiert – die Unit ist hier derzeit
-# also gar nicht vorhanden, und "systemctl mask" legt den Symlink dann einfach
-# auf Vorrat an (Rückgabewert 0, bricht den Build nicht ab). Steht hier, damit
-# sie nicht auftaucht, falls jemals libvirt dazukommt.
+# network-online und remote-fs.target und verlängert so den Boot. Die Unit kommt
+# über libvirt herein, das hier nicht installiert ist – "systemctl mask" legt den
+# Symlink dann auf Vorrat an (Rückgabewert 0) und greift, falls libvirt je
+# dazukommt.
 systemctl mask iscsi.service
 
 # ---------------------------------------------------------------------------
@@ -675,9 +578,8 @@ echo "w /sys/module/zswap/parameters/enabled - - - - N" > /usr/lib/tmpfiles.d/di
 # ---------------------------------------------------------------------------
 # BTRFS-Mountoptionen (noatime, compress=no)
 # ---------------------------------------------------------------------------
-# bootc-fstab-edit.service überschreibt die fstab beim ersten Boot, daher
-# werden die Optionen per Service nach dem Mounten gesetzt und für Folgeboots
-# in die fstab geschrieben.
+# bootc-fstab-edit.service überschreibt die fstab beim ersten Boot, daher setzt
+# ein Service die Optionen nach dem Mounten und schreibt sie für Folgeboots rein.
 
 cat <<'EOF' > /usr/libexec/astroimmutable/apply-btrfs-opts.sh
 #!/bin/bash
@@ -733,10 +635,9 @@ EOF
 # ---------------------------------------------------------------------------
 # GRUB Menu Auto-Hide
 # ---------------------------------------------------------------------------
-# WICHTIG: NICHT ConditionFirstBoot verwenden – auf bootc/ostree feuert die
-# nicht (Anaconda/ostree befüllen /etc + machine-id anders als ein klassischer
-# Erstboot, daher gilt der Boot nie als "first boot"). Stattdessen bei jedem
-# Boot setzen; grub2-editenv set ist idempotent und vernachlässigbar billig.
+# NICHT ConditionFirstBoot: auf bootc/ostree feuert die nie, weil Anaconda/ostree
+# /etc und machine-id anders befüllen als ein klassischer Erstboot. Stattdessen
+# jeden Boot setzen – grub2-editenv set ist idempotent und billig.
 cat <<'EOF' > /usr/lib/systemd/system/astroimmutable-grub-hide.service
 [Unit]
 Description=Hide GRUB menu (set menu_auto_hide)
@@ -757,12 +658,11 @@ systemctl enable astroimmutable-grub-hide.service
 # ---------------------------------------------------------------------------
 # DNF-Reste aus /var entfernen
 # ---------------------------------------------------------------------------
-# Auf bootc gehört /var nicht ins Image – es wird beim Erst-Install einmalig
-# aus dem Image geseedet und danach nie wieder angefasst. Alles, was der Build
-# dort ablegt, ist also totes Gewicht, und "bootc container lint" meldet es als
-# var-tmpfiles. Der Paket-Cache selbst landet dank der Cache-Mounts im
-# Containerfile gar nicht erst in einer Layer; /var/lib/dnf liegt außerhalb
-# davon und wird hier entfernt. Gefahrlos: die RPM-Datenbank liegt unter
-# /usr/share/rpm, /var/lib/rpm ist nur ein Symlink dorthin.
+# Auf bootc gehört /var nicht ins Image: es wird beim Erst-Install einmalig
+# geseedet und danach nie angefasst, alles dort ist totes Gewicht und "bootc
+# container lint" meldet es als var-tmpfiles. Der Paket-Cache landet dank der
+# Cache-Mounts gar nicht erst in einer Layer, /var/lib/dnf liegt außerhalb.
+# Gefahrlos: die RPM-Datenbank liegt unter /usr/share/rpm, /var/lib/rpm ist nur
+# ein Symlink dorthin.
 dnf5 clean all -y
 rm -rf /var/lib/dnf

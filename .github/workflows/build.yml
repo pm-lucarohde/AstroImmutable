@@ -5,30 +5,24 @@ on:
     branches:
       - main
   schedule:
-    # Fields: minute hour day-of-month month day-of-week. The hour field is
-    # 24-hour (0-23), cron has no am/pm — 20 means 20:00 UTC.
-    # Caveat on */3: cron is stateless and has no notion of "every N days".
-    # */3 is a step over the day-of-month range, i.e. the fixed set
-    # 1,4,7,…,31 — and that set restarts on the 1st of every month. So after a
-    # 31-day month, and after February, the next run follows one day later
-    # instead of three (in a leap year 28 Feb → 1 Mar is two days, because
-    # 29 Feb is not in the set). That is 7 short gaps and 127 runs per year.
+    # Caveat on */3: cron is stateless, so this is not "every 3 days" but the
+    # fixed set 1,4,7,…,31, restarting on the 1st. After a 31-day month and
+    # after February the next run follows earlier — 7 short gaps, 127 runs/year.
     - cron: '57 19 */3 * *'  # 19:57 UTC, every 3rd day of the month
   push:
     branches:
       - main
     paths-ignore:
       - '**/README.md'
-      # Documentation only — no effect on the image, and a push would otherwise
-      # trigger the full build plus the chained ISO build.
+      # Docs only — would otherwise trigger the build plus the chained ISO build.
       - '**/CLAUDE.md'
   workflow_dispatch:
 
 env:
   IMAGE_DESC: "AstroImmutable Universal Blue Image"
   IMAGE_KEYWORDS: "bootc,ublue,universal-blue"
-  IMAGE_LOGO_URL: "https://avatars.githubusercontent.com/u/120078124?s=200&v=4"  # Put your own image here for a fancy profile on https://artifacthub.io/!
-  IMAGE_NAME: "${{ github.event.repository.name }}"  # output image name, usually same as repo name
+  IMAGE_LOGO_URL: "https://avatars.githubusercontent.com/u/120078124?s=200&v=4"
+  IMAGE_NAME: "${{ github.event.repository.name }}"
   IMAGE_REGISTRY: "ghcr.io/${{ github.repository_owner }}"  # do not edit
   DEFAULT_TAG: "latest"
 
@@ -41,10 +35,8 @@ jobs:
     name: Build and push image
     runs-on: ubuntu-24.04
 
-    # Ohne Angabe gilt GitHubs Vorgabe von 6 Stunden. Ein Lauf, der sich an
-    # einem hängenden Spiegel festbeißt, verbrennt damit einen halben Tag,
-    # bevor er abbricht. Der langsamste bisher beobachtete Lauf (#469) brauchte
-    # 1h26; 2 Stunden lassen also reichlich Luft und begrenzen den Schaden.
+    # Ohne Angabe gälten GitHubs 6 Stunden; ein Lauf an einem hängenden Spiegel
+    # verbrennt damit einen halben Tag. Langsamster echter Lauf: 1h26 (#469).
     timeout-minutes: 120
 
     permissions:
@@ -59,31 +51,24 @@ jobs:
           echo "IMAGE_REGISTRY=${IMAGE_REGISTRY,,}" >> ${GITHUB_ENV}
           echo "IMAGE_NAME=${IMAGE_NAME,,}" >> ${GITHUB_ENV}
 
-      # These stage versions are pinned by https://github.com/renovatebot/renovate
+      # Action versions are pinned by https://github.com/renovatebot/renovate
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
-      # This is optional, but if you see that your builds are way too big for the runners, you can enable this by uncommenting the following lines:
       - name: Maximize build space
         uses: ublue-os/remove-unwanted-software@695eb75bc387dbcd9685a8e72d23439d8686cba6
 
       - name: Get current date
         id: date
         run: |
-          # This generates a timestamp like what is defined on the ArtifactHub documentation
-          # E.G: 2022-02-08T15:38:15Z'
-          # https://artifacthub.io/docs/topics/repositories/container-images/
-          # https://linux.die.net/man/1/date
+          # ArtifactHub timestamp format, e.g. 2022-02-08T15:38:15Z
           echo "date=$(date -u +%Y\-%m\-%d\T%H\:%M\:%S\Z)" >> $GITHUB_OUTPUT
 
-      # Image metadata for https://artifacthub.io/ - This is optional but is highly recommended so we all can get a index of all the custom images
-      # The metadata by itself is not going to do anything, you choose if you want your image to be on ArtifactHub or not.
+      # Metadata for https://artifacthub.io/ — optional, does nothing on its own.
       - name: Image Metadata
         uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5
         id: metadata
         with:
-          # This generates all the tags for your image, you can add custom tags here too!
-          # Default tags are "$DEFAULT_TAG" and "$DEFAULT_TAG.$date".
           tags: |
             type=raw,value=${{ env.DEFAULT_TAG }}
             type=raw,value=${{ env.DEFAULT_TAG }}.{{date 'YYYYMMDD'}}
@@ -118,23 +103,17 @@ jobs:
         with:
           containerfiles: |
             ./Containerfile
-          # Postfix image name with -custom to make it a little more descriptive
-          # Syntax: https://docs.github.com/en/actions/learn-github-actions/expressions#format
           image: ${{ env.IMAGE_NAME }}
           tags: ${{ steps.metadata.outputs.tags }}
           labels: ${{ steps.metadata.outputs.labels }}
-          # layers: true bleibt hier absichtlich weg. buildah legt damit je RUN
-          # eine eigene Schicht an, und deren Commit läuft über fuse-overlayfs –
-          # auf dem Runner gemessen 37 Minuten für einen einzelnen
-          # `printf >>/etc/dnf/dnf.conf`. Bei 31 schichtbildenden Schritten
-          # reicht das Zeitbudget nicht: #473 und #475 sind beide im Schritt
-          # "Build Image" in timeout-minutes gelaufen, während #472 ohne die
-          # Option nach 80 Minuten durch war. Der Cache-Vorteil greift ohnehin
-          # nicht – jeder Lauf startet auf einer frischen VM.
+          # layers: true bleibt absichtlich weg: buildah committet dann je RUN
+          # eine Schicht über fuse-overlayfs – gemessen 37 Minuten für einen
+          # einzelnen printf, und #473/#475 liefen bei 31 solchen Schritten in
+          # timeout-minutes, während #472 ohne die Option nach 80 Minuten durch
+          # war. Der Cache-Vorteil greift nicht, jeder Lauf startet frisch.
           oci: false
 
-      # These `if` statements are so that pull requests for your custom images do not make it publish any packages under your name without you knowing
-      # They also check if the runner is on the default branch so that things like the merge queue (if you enable it), are going to work
+      # The `if` guards keep pull requests from publishing packages under your name.
       - name: Login to GitHub Container Registry
         uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
         if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
@@ -157,10 +136,7 @@ jobs:
           username: ${{ env.REGISTRY_USER }}
           password: ${{ env.REGISTRY_PASSWORD }}
 
-      # This section is optional and only needs to be enabled if you plan on distributing
-      # your project for others to consume. You will need to create a public and private key
-      # using Cosign and save the private key as a repository secret in Github for this workflow
-      # to consume. For more details, review the image signing section of the README.
+      # Needs the cosign private key in the SIGNING_SECRET repository secret.
       - name: Install Cosign
         uses: sigstore/cosign-installer@faadad0cce49287aee09b3a48701e75088a2c6ad # v4.0.0
         if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
