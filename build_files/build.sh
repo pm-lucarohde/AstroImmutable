@@ -145,6 +145,16 @@ _dnf5_install \
     bazaar
 
 # ---------------------------------------------------------------------------
+# Farb-Emoji für Chromium
+# ---------------------------------------------------------------------------
+
+# Fedoras Noto Color Emoji ist seit dem COLRv1-Wechsel bitmapfrei; Chromium
+# wählt die Datei über die Systemschrift-Auswahl nie aus, Vesktop und Brave
+# zeigen nur Kästchen (Qt/GTK dagegen nicht, fontconfig-Regeln helfen nicht).
+# Twemoji hat CBDT-Bitmaps; fc-match emoji bleibt Noto, andere Apps unberührt.
+_dnf5_install twitter-twemoji-fonts
+
+# ---------------------------------------------------------------------------
 # Weitere unerwünschte Pakete entfernen
 # ---------------------------------------------------------------------------
 

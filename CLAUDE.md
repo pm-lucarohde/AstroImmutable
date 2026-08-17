@@ -89,6 +89,8 @@ wrapped in `set +e`.
   unused: old versions vanish from the repos.
 - **`layers: true` in `build.yml` makes the build hit its timeout** — each RUN then commits a layer over fuse-overlayfs
   (37 min for one `printf`; #473/#475 died at 120 min, #472 took 80).
+- **Chromium never picks Fedora's COLRv1 `Noto-COLRv1.ttf`** — Vesktop and Brave show tofu, Qt/GTK colour emoji;
+  `@font-face` on the same file works, fontconfig rules don't. Fix: `twitter-twemoji-fonts` (CBDT) in `build.sh`.
 
 ## Local iteration
 
