@@ -81,7 +81,11 @@ RUN mkdir -p ghostty \
     && tar -xf ghostty-source.tar.gz --strip-components=1 -C ghostty
 
 WORKDIR /src/ghostty
-RUN zig build -p /out/usr -Doptimize=ReleaseFast
+# -Dcpu ist Pflicht: Zigs Standardziel ist native, die Binary wird also auf die
+# CPU des gerade zugeteilten GitHub-Runners zugeschnitten. Erwischt der Build
+# einen Runner mit AVX-512, stirbt Ghostty auf CPUs ohne AVX-512 (Zen 3) sofort
+# mit SIGILL – zufällig mal so, mal so, ohne Änderung am Quelltext.
+RUN zig build -p /out/usr -Doptimize=ReleaseSmall -Dcpu=baseline
 
 # "zig build -p PREFIX" schreibt den Prefix in TryExec/Exec der .desktop- und der
 # D-Bus-Service-Datei. Im Zielimage gibt es kein /out, und ein nicht auflösbares
