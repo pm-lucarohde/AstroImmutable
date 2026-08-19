@@ -194,5 +194,17 @@ RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
     --mount=type=tmpfs,dst=/tmp \
     /ctx/build.sh
 
+### RPM-DATENBANK PRÜFEN
+# Landet der Build je wieder auf fuse-overlayfs (siehe Kommentar in build.yml),
+# droht mehr als Langsamkeit: 1.16 schreibt beim Copy-up großer SQLite-Dateien
+# sporadisch Seiten an falsche Offsets (containers/fuse-overlayfs#475). Treffen
+# würde es die 120 MB große rpm-Datenbank, die build.sh in jedem Lauf neu
+# schreibt, und der Schaden bliebe still: das Image baut, pusht und bootet, erst
+# dnf oder bootc auf dem installierten System fallen darüber. Prüfung: 0,3 s.
+RUN python3 -c "import sqlite3,sys; \
+    r=sqlite3.connect('file:/usr/lib/sysimage/rpm/rpmdb.sqlite?mode=ro',uri=True) \
+    .execute('PRAGMA integrity_check').fetchone()[0]; \
+    sys.exit(0 if r == 'ok' else 'FEHLER: rpm-Datenbank beschädigt: ' + r)"
+
 ### LINTING
 RUN bootc container lint
