@@ -85,10 +85,10 @@ wrapped in `set +e`.
   empty `/var` — hence `rm /opt && mkdir /opt`. `tar -C /opt` fails with *Cannot open*, `HOME=/root` breaks Zig's cache.
 - **Ghostty is built from the tip tarball, not the COPR.** `ARG ZIG_VERSION` must match what tip demands and the docs
   lag behind; a mismatch fails with *does not meet the required build version*. Fedora's `zig` is unused: it moves on.
-- **Built by rootless `podman build --layers=false`, not `redhat-actions/buildah-build`** — that action forces
+- **Built by rootless `podman build --layers=true`, not `redhat-actions/buildah-build`** — that action forces
   `overlay.mount_program=fuse-overlayfs` once the binary exists (runner image ≥ 20260810): commit 1.7 → 43 min, lint
   9 s → 12 min, plus rpmdb corruption reports (hence the integrity check). Layers were slow *because of* fuse (37 min
-  for a `printf`; #473/#475 timed out); on the kernel overlay they cost ~1 min (#484) and buy nothing — no cache.
+  for a `printf`; #473/#475 timed out); on the kernel overlay they cost ~1 min (#484), so they stay on.
 - **Chromium never picks Fedora's COLRv1 `Noto-COLRv1.ttf`** — Vesktop and Brave show tofu, Qt/GTK colour emoji;
   `@font-face` on the same file works, fontconfig rules don't. Fix: `twitter-twemoji-fonts` (CBDT) in `build.sh`.
 
