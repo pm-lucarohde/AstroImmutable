@@ -129,19 +129,20 @@ jobs:
             fi
           done <<< "${LABELS}"
 
-          # TESTLAUF, einmalig: --layers=true. Die 37 Minuten für ein einzelnes
-          # printf und die Timeouts in #473/#475 wurden auf fuse-overlayfs
-          # gemessen – ob Zwischenschichten auf dem Kernel-Overlay überhaupt noch
-          # weh tun, ist damit offen. Dieser Lauf misst es, danach zurück auf
-          # --layers=false, sofern er teurer ist als die 18 Minuten aus #483.
-          # Einen Cache-Vorteil kann es ohnehin nicht geben, jeder Lauf startet
-          # mit leerem Storage.
+          # --layers=false: podman baut anders als "buildah bud" standardmäßig
+          # mit Zwischenschichten. Die 37 Minuten für ein einzelnes printf und
+          # die Timeouts in #473/#475 lagen an fuse-overlayfs, nicht an den
+          # Schichten – auf dem Kernel-Overlay kosten sie gemessen rund eine
+          # Minute (#484: 19,5 gegen 18,0 Minuten in #483). Trotzdem aus: einen
+          # Cache-Vorteil gibt es nicht, jeder Lauf startet mit leerem Storage,
+          # und praktisch jede Schicht ändert sich ohnehin bei jedem Bau (frisch
+          # gebaute akmod-RPMs, Ghostty von tip). Ein Blob statt siebzehn.
           # --format docker hält das Manifest bei dem, was bisher veröffentlicht
           # wurde; podman schriebe sonst OCI.
           podman build \
             --file ./Containerfile \
             --format docker \
-            --layers=true \
+            --layers=false \
             --pull=newer \
             --retry 3 \
             --retry-delay 30s \
