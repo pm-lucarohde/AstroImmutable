@@ -82,13 +82,13 @@ wrapped in `set +e`.
   it, so searching for the upstream name looks like "not packaged". Plain `fedora` repo, no env vars, no extra kargs;
   without it there is no hardware video decoding at all.
 - **In a builder stage, `/opt`, `/root`, `/usr/local`, `/home`, `/srv`, `/mnt` and `/media` are dead symlinks** into the
-  empty `/var` — hence `rm /opt && mkdir /opt` in the target image. `tar -C /opt` fails with *Cannot open*, `HOME=/root`
-  breaks Zig's cache dir.
-- **Ghostty is built from the tip tarball, not from the COPR.** `ARG ZIG_VERSION` must match what tip demands and the
-  upstream docs lag behind it; a mismatch fails with *does not meet the required build version*. Fedora's `zig` is
-  unused: old versions vanish from the repos.
-- **`layers: true` in `build.yml` makes the build hit its timeout** — each RUN then commits a layer over fuse-overlayfs
-  (37 min for one `printf`; #473/#475 died at 120 min, #472 took 80).
+  empty `/var` — hence `rm /opt && mkdir /opt`. `tar -C /opt` fails with *Cannot open*, `HOME=/root` breaks Zig's cache.
+- **Ghostty is built from the tip tarball, not the COPR.** `ARG ZIG_VERSION` must match what tip demands and the docs
+  lag behind; a mismatch fails with *does not meet the required build version*. Fedora's `zig` is unused: it moves on.
+- **Built by rootless `podman build --layers=false`, not `redhat-actions/buildah-build`** — that action forces
+  `overlay.mount_program=fuse-overlayfs` once the binary exists (runner image ≥ 20260810): commit 1.7 → 43 min, lint
+  9 s → 12 min, plus rpmdb corruption reports (hence the integrity check). With layers on, every RUN commits its own
+  (37 min for a `printf`; #473/#475 died at the 120-min timeout).
 - **Chromium never picks Fedora's COLRv1 `Noto-COLRv1.ttf`** — Vesktop and Brave show tofu, Qt/GTK colour emoji;
   `@font-face` on the same file works, fontconfig rules don't. Fix: `twitter-twemoji-fonts` (CBDT) in `build.sh`.
 
