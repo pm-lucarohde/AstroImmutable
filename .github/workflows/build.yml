@@ -137,11 +137,15 @@ jobs:
           # einzelnes printf und die Timeouts in #473/#475 lagen an
           # fuse-overlayfs, nicht an den Schichten – landet der Build je wieder
           # dort (siehe podman-info-Zeile unten), wird genau das hier teuer.
-          # --format docker hält das Manifest bei dem, was bisher veröffentlicht
-          # wurde; podman schriebe sonst OCI.
+          # --format oci ist Voraussetzung für zstd:chunked beim Push (siehe
+          # unten): Docker-Schema-2 kennt nur gzip-Layer, podman schriebe das
+          # Manifest beim Push sonst still selbst auf OCI um. Bisher lag auf
+          # ghcr Schema 2, weil buildah-build mit oci: false lief – der Wechsel
+          # ändert den Digest einmalig, gepinnt wird hier aber nirgends
+          # (build-disk.yml und iso.toml ziehen über Tags).
           podman build \
             --file ./Containerfile \
-            --format docker \
+            --format oci \
             --layers=true \
             --pull=newer \
             --retry 3 \
@@ -175,8 +179,18 @@ jobs:
         run: |
           set -euo pipefail
 
+          # zstd:chunked statt des Default gzip: kleinere Layer (auf einem
+          # /usr/lib64-Sample 144 MiB gzip gegen 134 MiB zstd-3) und ein
+          # Datei-Index in den Layer-Annotationen, über den Clients beim Update
+          # nur geänderte Teile nachladen können. Level 5 liegt eine Stufe über
+          # dem zstd-Default 3, die Skala geht bis 20. --force-compression ist
+          # implizit an, sobald --compression-format gesetzt ist; bereits als
+          # zstd hochgeladene Blobs werden trotzdem wiederverwendet, die
+          # weiteren Tags kosten deshalb nichts.
           for tag in ${TAGS}; do
             podman push \
+              --compression-format zstd:chunked \
+              --compression-level 5 \
               --retry 3 \
               --retry-delay 30s \
               --digestfile=/tmp/digestfile \
