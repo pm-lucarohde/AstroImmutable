@@ -675,18 +675,13 @@ systemctl enable astroimmutable-grub-hide.service
 # Gefahrlos: die RPM-Datenbank liegt unter /usr/share/rpm, /var/lib/rpm ist nur
 # ein Symlink dorthin.
 #
-# dnf5.log selbst NICHT hier löschen: das Containerfile mountet für diesen
-# RUN-Schritt /var/log als Cache ("--mount=type=cache,dst=/var/log"), ein rm
-# hier träfe nur die Cache-Kopie. Das echte Logfile stammt aus den dnf5-Aufrufen
-# vorher im Containerfile (RPM Fusion, Akmods, NVIDIA-Libs) und wird dort als
-# eigener RUN-Schritt entfernt.
+# dnf5.log räumt das Containerfile auf: /var/log ist für diesen RUN ein
+# Cache-Mount, ein rm hier träfe nur die Cache-Kopie.
 dnf5 clean all -y
 rm -rf /var/lib/dnf
 
-# Symvers braucht nur, wer gegen genau diesen Kernel neu baut – die Akmods
-# kommen fertig kompiliert aus der Builder-Stage ("nonempty-boot").
+# Symvers braucht nur, wer gegen diesen Kernel neu baut ("nonempty-boot").
 rm -f /boot/symvers-*.xz
 
-# /run ist zur Laufzeit ein tmpfs; Scratch-Space von dnf5/SELinux-Policy-Build
-# ist dort nur Ballast ("nonempty-run-tmp").
-rm -rf /run/dnf /run/selinux-policy
+# /run ist zur Laufzeit tmpfs, der Scratch dort Ballast ("nonempty-run-tmp").
+rm -rf /run/dnf /run/selinux-policy /run/setrans
