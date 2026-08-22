@@ -666,7 +666,7 @@ EOF
 systemctl enable astroimmutable-grub-hide.service
 
 # ---------------------------------------------------------------------------
-# DNF-Reste aus /var entfernen
+# Build-Reste aus /boot, /run und /var entfernen
 # ---------------------------------------------------------------------------
 # Auf bootc gehört /var nicht ins Image: es wird beim Erst-Install einmalig
 # geseedet und danach nie angefasst, alles dort ist totes Gewicht und "bootc
@@ -676,3 +676,14 @@ systemctl enable astroimmutable-grub-hide.service
 # ein Symlink dorthin.
 dnf5 clean all -y
 rm -rf /var/lib/dnf
+
+# dnf5s Logfile ist ein Build-Artefakt, kein Systemlog ("var-log").
+rm -f /var/log/dnf5.log /var/log/dnf5.log.1
+
+# Symvers braucht nur, wer gegen genau diesen Kernel neu baut – die Akmods
+# kommen fertig kompiliert aus der Builder-Stage ("nonempty-boot").
+rm -f /boot/symvers-*.xz
+
+# /run ist zur Laufzeit ein tmpfs; Scratch-Space von dnf5/SELinux-Policy-Build
+# ist dort nur Ballast ("nonempty-run-tmp").
+rm -rf /run/dnf /run/selinux-policy
