@@ -674,11 +674,14 @@ systemctl enable astroimmutable-grub-hide.service
 # Cache-Mounts gar nicht erst in einer Layer, /var/lib/dnf liegt außerhalb.
 # Gefahrlos: die RPM-Datenbank liegt unter /usr/share/rpm, /var/lib/rpm ist nur
 # ein Symlink dorthin.
+#
+# dnf5.log selbst NICHT hier löschen: das Containerfile mountet für diesen
+# RUN-Schritt /var/log als Cache ("--mount=type=cache,dst=/var/log"), ein rm
+# hier träfe nur die Cache-Kopie. Das echte Logfile stammt aus den dnf5-Aufrufen
+# vorher im Containerfile (RPM Fusion, Akmods, NVIDIA-Libs) und wird dort als
+# eigener RUN-Schritt entfernt.
 dnf5 clean all -y
 rm -rf /var/lib/dnf
-
-# dnf5s Logfile ist ein Build-Artefakt, kein Systemlog ("var-log").
-rm -f /var/log/dnf5.log /var/log/dnf5.log.1
 
 # Symvers braucht nur, wer gegen genau diesen Kernel neu baut – die Akmods
 # kommen fertig kompiliert aus der Builder-Stage ("nonempty-boot").

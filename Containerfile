@@ -194,6 +194,13 @@ RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
     --mount=type=tmpfs,dst=/tmp \
     /ctx/build.sh
 
+# dnf5.log stammt aus den dnf5-Aufrufen weiter oben (RPM Fusion, Akmods,
+# NVIDIA-Libs) und ist ein Build-Artefakt, kein Systemlog ("var-log" in
+# "bootc container lint"). Ein rm in der build.sh-Zeile oben griffe hier nicht:
+# deren --mount=type=cache,dst=/var/log verdeckt für die Dauer des RUN das
+# echte /var/log.
+RUN rm -f /var/log/dnf5.log /var/log/dnf5.log.1
+
 ### RPM-DATENBANK PRÜFEN
 # Landet der Build je wieder auf fuse-overlayfs (siehe Kommentar in build.yml),
 # droht mehr als Langsamkeit: 1.16 schreibt beim Copy-up großer SQLite-Dateien
