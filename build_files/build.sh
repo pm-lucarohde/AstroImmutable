@@ -259,21 +259,29 @@ JB_URL=$(curl -s --retry 3 --retry-delay 30 "https://data.services.jetbrains.com
     | grep -o '"link":"https://download\.jetbrains\.com/toolbox/jetbrains-toolbox-[0-9.]*\.tar\.gz"' \
     | head -1 \
     | grep -o 'https://[^"]*' || true)
+# Unkritisch, darf den Build also nie kippen: abgesichert sind daher nicht nur
+# die URL-Ermittlung, sondern auch Download und Archiv-Layout.
 if [ -z "$JB_URL" ]; then
     echo "WARNING: Could not fetch JetBrains Toolbox URL, skipping"
+elif ! curl -fL --retry 3 --retry-delay 30 --speed-limit 10000 --speed-time 30 "$JB_URL" | tar -xz --strip-components=1 -C /opt/jetbrains-toolbox/; then
+    echo "WARNING: JetBrains-Toolbox-Archiv nicht ladbar, skipping"
+    rm -rf /opt/jetbrains-toolbox
 else
-    curl -fL --retry 3 --retry-delay 30 --speed-limit 10000 --speed-time 30 "$JB_URL" | tar -xz --strip-components=1 -C /opt/jetbrains-toolbox/
     cp /ctx/bin/jetbrains-toolbox.desktop /opt/jetbrains-toolbox/
     cp /ctx/bin/toolbox-tray-color.png /opt/jetbrains-toolbox/
 
     JB_BIN=$(find /opt/jetbrains-toolbox -name "jetbrains-toolbox" -type f | head -1)
-    chmod +x "$JB_BIN"
+    if [ -z "$JB_BIN" ]; then
+        echo "WARNING: jetbrains-toolbox nicht im Archiv, skipping"
+    else
+        chmod +x "$JB_BIN"
 
-    ln -sf "$JB_BIN" /usr/bin/jetbrains-toolbox
+        ln -sf "$JB_BIN" /usr/bin/jetbrains-toolbox
 
-    cp /opt/jetbrains-toolbox/jetbrains-toolbox.desktop /usr/share/applications/
-    sed -i "s|^Exec=.*|Exec=${JB_BIN}|" /usr/share/applications/jetbrains-toolbox.desktop
-    sed -i 's|^Icon=.*|Icon=/opt/jetbrains-toolbox/toolbox-tray-color.png|' /usr/share/applications/jetbrains-toolbox.desktop
+        cp /opt/jetbrains-toolbox/jetbrains-toolbox.desktop /usr/share/applications/
+        sed -i "s|^Exec=.*|Exec=${JB_BIN}|" /usr/share/applications/jetbrains-toolbox.desktop
+        sed -i 's|^Icon=.*|Icon=/opt/jetbrains-toolbox/toolbox-tray-color.png|' /usr/share/applications/jetbrains-toolbox.desktop
+    fi
 fi
 
 # ---------------------------------------------------------------------------
