@@ -525,6 +525,20 @@ mkdir -p /var/lib/cosmic-greeter/.local/state/cosmic-comp/
 cp /ctx/outputs.ron /var/lib/cosmic-greeter/.local/state/cosmic-comp/outputs.ron
 chown -R cosmic-greeter:cosmic-greeter /var/lib/cosmic-greeter/.local
 
+# Mausbeschleunigung aus, wie PointerAccelerationProfile=1 der kcminputrc in der
+# Plasma-Sitzung. Anders als das Output-State liest cosmic-config diesen Key als
+# System-Default aus /usr/share/cosmic – das wandert beim Upgrade mit.
+mkdir -p /usr/share/cosmic/com.system76.CosmicComp/v1
+cat <<'EOF' > /usr/share/cosmic/com.system76.CosmicComp/v1/input_default
+(
+    state: Enabled,
+    acceleration: Some((
+        profile: Some(Flat),
+        speed: 0.0,
+    )),
+)
+EOF
+
 # ---------------------------------------------------------------------------
 # First-Login-Service einrichten
 # ---------------------------------------------------------------------------
