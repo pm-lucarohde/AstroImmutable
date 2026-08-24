@@ -142,7 +142,12 @@ _dnf5_install \
     bleachbit \
     wine \
     lutris \
-    bazaar
+    bazaar \
+    krunner-bazaar
+
+# Bazaars Search-Provider ist GNOME-only, krunner-bazaar liefert das
+# Plasma-Pendant. Das Paket legt zwei Dateien in / ab (Packaging-Bug im COPR).
+rm -f /krunner-bazaar.spec /v[0-9]*.zip
 
 # ---------------------------------------------------------------------------
 # Farb-Emoji für Chromium
