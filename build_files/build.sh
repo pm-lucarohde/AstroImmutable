@@ -254,6 +254,7 @@ curl -fL --retry 3 --retry-delay 30 --speed-limit 10000 --speed-time 30 \
     -o /tmp/fonts-apple-color-emoji.rpm
 
 _dnf5_install /tmp/fonts-apple-color-emoji.rpm
+rm -f /tmp/fonts-apple-color-emoji.rpm
 
 # ---------------------------------------------------------------------------
 # JetBrains Toolbox
