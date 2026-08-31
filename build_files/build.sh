@@ -150,16 +150,6 @@ _dnf5_install \
 rm -f /krunner-bazaar.spec /v[0-9]*.zip
 
 # ---------------------------------------------------------------------------
-# Farb-Emoji für Chromium
-# ---------------------------------------------------------------------------
-
-# Fedoras Noto Color Emoji ist seit dem COLRv1-Wechsel bitmapfrei; Chromium
-# wählt die Datei über die Systemschrift-Auswahl nie aus, Vesktop und Brave
-# zeigen nur Kästchen (Qt/GTK dagegen nicht, fontconfig-Regeln helfen nicht).
-# Twemoji hat CBDT-Bitmaps; fc-match emoji bleibt Noto, andere Apps unberührt.
-_dnf5_install twitter-twemoji-fonts
-
-# ---------------------------------------------------------------------------
 # Weitere unerwünschte Pakete entfernen
 # ---------------------------------------------------------------------------
 
@@ -254,6 +244,16 @@ if [ -f "$KVKONQI_CONF" ]; then
 else
     echo "WARNING: $KVKONQI_CONF fehlt, Theme-Parameter übersprungen"
 fi
+
+# ---------------------------------------------------------------------------
+# Apple-Emoji
+# ---------------------------------------------------------------------------
+
+curl -fL --retry 3 --retry-delay 30 --speed-limit 10000 --speed-time 30 \
+    "https://github.com/samuelngs/apple-emoji-ttf/releases/download/macos-26-20260722-484daf4e/fonts-apple-color-emoji.rpm" \
+    -o /tmp/fonts-apple-color-emoji.rpm
+
+_dnf5_install /tmp/fonts-apple-color-emoji.rpm
 
 # ---------------------------------------------------------------------------
 # JetBrains Toolbox
