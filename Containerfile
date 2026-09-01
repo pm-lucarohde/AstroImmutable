@@ -31,15 +31,15 @@ RUN dnf5 config-manager setopt fedora-multimedia.priority=1 \
 RUN dnf5 copr enable -y copr.fedorainfracloud.org/bieszczaders/kernel-cachyos \
     && CACHY_REPO=/etc/yum.repos.d/_copr:copr.fedorainfracloud.org:bieszczaders:kernel-cachyos.repo \
     && sed -i 's/^skip_if_unavailable=.*/skip_if_unavailable=False/' "$CACHY_REPO" \
-    && printf 'minrate=0\nexcludepkgs=kernel-cachyos,kernel-cachyos-core,kernel-cachyos-devel*,kernel-cachyos-modules,kernel-cachyos-nvidia-open,kernel-cachyos-lts*,kernel-cachyos-server*\n' >> "$CACHY_REPO"
+    && printf 'minrate=0\nexcludepkgs=kernel-cachyos,kernel-cachyos-core,kernel-cachyos-devel*,kernel-cachyos-modules,kernel-cachyos-nvidia-open,kernel-cachyos-lts-nvidia-open,kernel-cachyos-rt*,kernel-cachyos-server*\n' >> "$CACHY_REPO"
 
 # -devel-matched statt -devel: akmods verlangt zusätzlich /lib/modules/$kver,
 # das erst -core anlegt.
-RUN dnf5 install -y --setopt=tsflags=noscripts kernel-cachyos-rt-devel-matched gcc make \
+RUN dnf5 install -y --setopt=tsflags=noscripts kernel-cachyos-lts-devel-matched gcc make \
     akmod-nvidia akmod-xone akmod-VirtualBox
 
 # Ohne --kmod baut akmods alle installierten akmods: NVIDIA, xone, VirtualBox.
-RUN akmods --kernels $(rpm -q kernel-cachyos-rt-core --qf '%{version}-%{release}.%{arch}\n') --force
+RUN akmods --kernels $(rpm -q kernel-cachyos-lts-core --qf '%{version}-%{release}.%{arch}\n') --force
 
 # ls scheitert bei leerem Glob – Abbruch hier statt erst beim COPY im Zielimage.
 RUN ls /var/cache/akmods/nvidia/*.rpm /var/cache/akmods/xone/*.rpm \
@@ -148,7 +148,7 @@ RUN dnf5 config-manager setopt fedora-multimedia.priority=1 \
     && dnf5 config-manager setopt fedora-multimedia.excludepkgs='*nvidia*' \
     && dnf5 config-manager setopt fedora-multimedia.minrate=0
 
-# ---- Fedora-Kernel gegen den CachyOS-RT-Kernel tauschen ----
+# ---- Fedora-Kernel gegen den CachyOS-LTS-Kernel tauschen ----
 # Vor den akmod-Installationen: deren RPMs fordern "kernel-uname-r = <cachy>".
 # Erst installieren, dann entfernen, sonst risse "remove kernel" die
 # virtualbox-guest-additions (Requires: kernel) mit heraus. Das rm muss sein:
@@ -158,9 +158,9 @@ RUN --mount=type=cache,dst=/var/cache \
     dnf5 copr enable -y copr.fedorainfracloud.org/bieszczaders/kernel-cachyos \
     && CACHY_REPO=/etc/yum.repos.d/_copr:copr.fedorainfracloud.org:bieszczaders:kernel-cachyos.repo \
     && sed -i 's/^skip_if_unavailable=.*/skip_if_unavailable=False/' "$CACHY_REPO" \
-    && printf 'minrate=0\nexcludepkgs=kernel-cachyos,kernel-cachyos-core,kernel-cachyos-devel*,kernel-cachyos-modules,kernel-cachyos-nvidia-open,kernel-cachyos-lts*,kernel-cachyos-server*\n' >> "$CACHY_REPO" \
+    && printf 'minrate=0\nexcludepkgs=kernel-cachyos,kernel-cachyos-core,kernel-cachyos-devel*,kernel-cachyos-modules,kernel-cachyos-nvidia-open,kernel-cachyos-lts-nvidia-open,kernel-cachyos-rt*,kernel-cachyos-server*\n' >> "$CACHY_REPO" \
     && FEDORA_KVER=$(rpm -q kernel-core --qf '%{version}-%{release}.%{arch}') \
-    && dnf5 install -y kernel-cachyos-rt \
+    && dnf5 install -y kernel-cachyos-lts \
     && dnf5 remove -y kernel kernel-core kernel-modules kernel-modules-core \
        kernel-modules-extra \
     && rm -rf "/usr/lib/modules/${FEDORA_KVER}"
@@ -232,7 +232,7 @@ RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
 # den Symlink ins initramfs auf. Im Container ist /var leer, der tote Link gibt
 # ein rotes "dracut-install: ERROR: installing '/root'". Danach wieder weg,
 # sonst wächst die var-tmpfiles-Warnung des Lints.
-RUN KVER=$(rpm -q kernel-cachyos-rt-core --qf '%{version}-%{release}.%{arch}') \
+RUN KVER=$(rpm -q kernel-cachyos-lts-core --qf '%{version}-%{release}.%{arch}') \
     && test -f "/usr/lib/modules/${KVER}/modules.dep" \
     && mkdir -p /var/roothome \
     && dracut --kver "$KVER" --reproducible --add ostree --force \
