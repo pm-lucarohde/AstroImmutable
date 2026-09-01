@@ -708,8 +708,10 @@ systemctl enable astroimmutable-grub-hide.service
 dnf5 clean all -y
 rm -rf /var/lib/dnf
 
-# Symvers braucht nur, wer gegen diesen Kernel neu baut ("nonempty-boot").
-rm -f /boot/symvers-*.xz
+# Symvers braucht nur, wer gegen diesen Kernel neu baut ("nonempty-boot"). Glob
+# ohne Endung, weil der CachyOS-Kernel .zst statt .xz ablegt; das Containerfile
+# leert /boot nach dem dracut-Lauf ohnehin ganz, das hier ist die Absicherung.
+rm -f /boot/symvers-*
 
 # /run ist zur Laufzeit tmpfs, der Scratch dort Ballast ("nonempty-run-tmp").
 rm -rf /run/dnf /run/selinux-policy /run/setrans

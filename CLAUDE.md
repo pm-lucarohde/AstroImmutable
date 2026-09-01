@@ -10,7 +10,7 @@ Signed with cosign (`cosign.pub`); the key lives in the `SIGNING_SECRET` secret.
 
 | Path | Role |
 | --- | --- |
-| `Containerfile` | Three stages: `builder` compiles the NVIDIA, xone and VirtualBox akmods against the kernel, `ghostty-builder` builds Ghostty from tip, then the target image installs the results and runs `build.sh`. |
+| `Containerfile` | Three stages: `builder` compiles the NVIDIA, xone and VirtualBox akmods against the CachyOS-RT kernel, `ghostty-builder` builds Ghostty from tip, then the target image installs the results and runs `build.sh`. |
 | `build_files/build.sh` | Build time, as root: repos, package add/remove, themes, systemd units, kargs, Brave policies, sysctl/zram. |
 | `build_files/firstlogin-setup.sh` | Once per user at first graphical login: KDE config, Flatpaks, locale, Brave profile, distrobox, SDKMAN. |
 | `build_files/config/` | KDE dotfiles baked into `/usr/share/astroimmutable/config`, copied to `~/.config` at first login. |
@@ -39,7 +39,7 @@ wrapped in `set +e`.
 - Use the retry wrappers (`_retry`, `_dnf5_install`, `_flatpak_install`; 3 × 30 s) for new network calls, plus
   `--speed-limit 10000 --speed-time 30` on `curl`.
 - Sections are separated by the `# ----` banner style. Keep it.
-- Non-critical fetches (JetBrains Toolbox, Proton-CachyOS) print `WARNING: ... skipping` instead of failing the build.
+- Non-critical fetches (JetBrains Toolbox, GE-Proton) print `WARNING: ... skipping` instead of failing the build.
 - `build.sh` runs under `set -ouex pipefail`, `firstlogin-setup.sh` under `set -euo pipefail`.
 
 ## Gotchas that have already cost time
@@ -70,10 +70,24 @@ wrapped in `set +e`.
   akmod, so a new driver just needs its `akmod-*` package on that one install line. `rpm -ivh --nodeps --noscripts` is
   **not** a workaround: skipping the scriptlets skips the akmods run, so no module is produced and the driver silently
   does nothing. Check with `ls /usr/lib/modules/$(uname -r)/extra/`.
+- **The kernel is swapped for `kernel-cachyos-rt`** (COPR `bieszczaders/kernel-cachyos`, PREEMPT_RT, needs
+  x86-64-v3), in the target stage *before* the akmod RPMs are installed — those require
+  `kernel-uname-r = <cachy-kver>`. Install first, remove second: `virtualbox-guest-additions` has a
+  `Requires: kernel` that only `kernel-cachyos-rt-core` keeps satisfied. Afterwards `rm -rf` the old
+  `/usr/lib/modules/<fedora-kver>`, because its `initramfs.img` belongs to no package and the directory survives
+  the `dnf remove` — `bootc container lint` fails fatally on a second kernel. The COPR repo file ships
+  `skip_if_unavailable=True`, which would silently leave Fedora's kernel in place, so the build patches it to
+  `False`. Only one kernel per image: the fallback is the previous deployment, not a second entry in GRUB.
+- **The initramfs is built by the image now**, once, after `build.sh` — CachyOS declares it only as `%ghost`.
+  `dracut --kver "$KVER" --add ostree` writes it to `/usr/lib/modules/$KVER/initramfs.img`, where bootc expects it;
+  `hostonly=no` already comes from `20-atomic-nohostonly.conf`. Guard on `modules.dep` first: without the depmod
+  scriptlets the image builds and pushes but does not boot. `/boot` has to be emptied afterwards (keep `efi`),
+  `kernel-install` fills it during the package install and `nonempty-boot` is fatal.
 - **NVIDIA: the kmod alone is not enough, and nouveau must be killed via kargs.** `xorg-x11-drv-nvidia-libs` is required
   for `libEGL_nvidia`/GBM (plus `.i686` for 32-bit Steam/Proton); `-cuda` does not cover it. The base initramfs has
   `nouveau.ko` but not the blacklist, so use `rd.driver.blacklist=nouveau` / `modprobe.blacklist=nouveau` /
-  `nouveau.modeset=0` — not a dracut rebuild, `99-nvidia.conf` keeps the modules out on purpose. Kargs live in
+  `nouveau.modeset=0` — never a dracut `--add` for NVIDIA, `99-nvidia-dracut.conf` keeps those modules out on
+  purpose, and that stays true for the initramfs the image now builds itself. Kargs live in
   `/usr/lib/bootc/kargs.d/*.toml`, not in GRUB config.
 - **RPM Fusion and negativo17 ship the same NVIDIA package names at the same version**, and a kmod from one need not
   match the other's userspace. Both stages pin NVIDIA to RPM Fusion via `excludepkgs='*nvidia*'` on `fedora-multimedia`,

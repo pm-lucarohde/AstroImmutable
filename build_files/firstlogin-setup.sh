@@ -475,6 +475,11 @@ if [ -f "$BRAVE_PREFS" ]; then
     # location_bar_is_wide=true gibt das normale Chromium-Layout; auf false rückt
     # Brave die Adressleiste ein und zentriert sie.
     #
+    # Die Schriften sind Liberation statt Noto: Braves Fingerprinting-Schutz
+    # erlaubt auf Linux nur eine einkompilierte Liste und hält jedes "Fedora*"
+    # für Fedora 32 – Noto Serif und Noto Sans Mono fehlen dort und werden auf
+    # Webseiten verworfen.
+    #
     # Nicht gesetzt wird, was schon per Policy geregelt ist (Safe Browsing,
     # Startseite, Suchmaschine) oder ohnehin dem Auslieferungszustand entspricht.
     # Die private Suchmaschine führt Brave getrennt und unabhängig von den
@@ -504,11 +509,11 @@ if [ -f "$BRAVE_PREFS" ]; then
            | .tab_search.pinned_to_tabstrip = false
            | .intl.accept_languages = "en-US,en"
            | .intl.selected_languages = "en-US,en"
-           | .webkit.webprefs.fonts.standard.Zyyy = "Noto Sans"
-           | .webkit.webprefs.fonts.serif.Zyyy = "Noto Serif"
-           | .webkit.webprefs.fonts.sansserif.Zyyy = "Noto Sans"
-           | .webkit.webprefs.fonts.fixed.Zyyy = "Noto Sans Mono"
-           | .webkit.webprefs.fonts.math.Zyyy = "Noto Sans Mono"
+           | .webkit.webprefs.fonts.standard.Zyyy = "Liberation Sans"
+           | .webkit.webprefs.fonts.serif.Zyyy = "Liberation Serif"
+           | .webkit.webprefs.fonts.sansserif.Zyyy = "Liberation Sans"
+           | .webkit.webprefs.fonts.fixed.Zyyy = "Liberation Mono"
+           | .webkit.webprefs.fonts.math.Zyyy = "Liberation Mono"
            | .brave.widevine_opted_in = true
            | .brave.has_seen_brave_welcome_page = true
            | .extensions.theme.system_theme = 1
@@ -567,20 +572,35 @@ if ! flatpak info --user com.hypixel.HytaleLauncher &>/dev/null; then
 fi
 
 # ---------------------------------------------------------------------------
-# Proton-CachyOS installieren
+# GE-Proton installieren
 # ---------------------------------------------------------------------------
 
+# Immer das aktuelle Release über die GitHub-API. Der Dateiname trägt den Tag
+# und das Tarball entpackt in ein gleichnamiges Verzeichnis
+# (GE-Proton11-6-x86_64.tar.gz -> GE-Proton11-6-x86_64/), die Existenzprüfung
+# ist damit die Versionsprüfung. Der aarch64-Anhang fällt über den Grep raus.
+#
+# GE-Proton legt zu jedem Tarball eine .sha512sum daneben. Die Prüfung kostet
+# nichts und fängt einen abgebrochenen Download ab, der sonst als halb
+# entpacktes Proton in Steams Kompatibilitätsliste auftauchte.
 PROTON_DIR="$HOME/.local/share/Steam/compatibilitytools.d"
 mkdir -p "$PROTON_DIR"
-PROTON_URL=$(curl -s --retry 3 --retry-delay 30 https://api.github.com/repos/CachyOS/proton-cachyos/releases/latest \
-    | grep "browser_download_url" | grep "x86_64\.tar\.xz" | cut -d '"' -f 4 || true)
+PROTON_URL=$(curl -s --retry 3 --retry-delay 30 \
+    https://api.github.com/repos/GloriousEggroll/proton-ge-custom/releases/latest \
+    | grep "browser_download_url" | grep "x86_64\.tar\.gz" | cut -d '"' -f 4 || true)
+PROTON_FILE=$(basename "${PROTON_URL:-}")
 if [ -z "$PROTON_URL" ]; then
-    echo "WARNING: Could not fetch Proton-CachyOS URL, skipping"
+    echo "WARNING: Could not fetch GE-Proton URL, skipping"
+elif [ -d "$PROTON_DIR/${PROTON_FILE%.tar.gz}" ]; then
+    echo "GE-Proton ${PROTON_FILE%.tar.gz} ist bereits installiert"
 else
-    PROTON_FILE=$(basename "$PROTON_URL")
-    curl -fL --retry 3 --retry-delay 30 --speed-limit 10000 --speed-time 30 "$PROTON_URL" -o "$PROTON_DIR/$PROTON_FILE"
+    curl -fL --retry 3 --retry-delay 30 --speed-limit 10000 --speed-time 30 \
+        "$PROTON_URL" -o "$PROTON_DIR/$PROTON_FILE"
+    curl -fL --retry 3 --retry-delay 30 --speed-limit 10000 --speed-time 30 \
+        "${PROTON_URL%.tar.gz}.sha512sum" -o "$PROTON_DIR/$PROTON_FILE.sha512sum"
+    (cd "$PROTON_DIR" && sha512sum -c "$PROTON_FILE.sha512sum")
     tar -xf "$PROTON_DIR/$PROTON_FILE" -C "$PROTON_DIR/"
-    rm -f "$PROTON_DIR/$PROTON_FILE"
+    rm -f "$PROTON_DIR/$PROTON_FILE" "$PROTON_DIR/$PROTON_FILE.sha512sum"
 fi
 
 # ---------------------------------------------------------------------------
