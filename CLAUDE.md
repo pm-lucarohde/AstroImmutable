@@ -82,7 +82,10 @@ wrapped in `set +e`.
   `dracut --kver "$KVER" --add ostree` writes it to `/usr/lib/modules/$KVER/initramfs.img`, where bootc expects it;
   `hostonly=no` already comes from `20-atomic-nohostonly.conf`. Guard on `modules.dep` first: without the depmod
   scriptlets the image builds and pushes but does not boot. `/boot` has to be emptied afterwards (keep `efi`),
-  `kernel-install` fills it during the package install and `nonempty-boot` is fatal.
+  `kernel-install` fills it during the package install and `nonempty-boot` is fatal. dracut also copies the
+  `/root` symlink into the initramfs, so `/var/roothome` must exist for the run (dangling link → red
+  `dracut-install: ERROR: installing '/root'`, harmless but it hides real dracut errors) and be `rmdir`ed again
+  in the same layer, or it joins the `var-tmpfiles` lint warning.
 - **NVIDIA: the kmod alone is not enough, and nouveau must be killed via kargs.** `xorg-x11-drv-nvidia-libs` is required
   for `libEGL_nvidia`/GBM (plus `.i686` for 32-bit Steam/Proton); `-cuda` does not cover it. The base initramfs has
   `nouveau.ko` but not the blacklist, so use `rd.driver.blacklist=nouveau` / `modprobe.blacklist=nouveau` /

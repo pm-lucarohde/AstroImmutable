@@ -475,10 +475,8 @@ if [ -f "$BRAVE_PREFS" ]; then
     # location_bar_is_wide=true gibt das normale Chromium-Layout; auf false rückt
     # Brave die Adressleiste ein und zentriert sie.
     #
-    # Die Schriften sind Liberation statt Noto: Braves Fingerprinting-Schutz
-    # erlaubt auf Linux nur eine einkompilierte Liste und hält jedes "Fedora*"
-    # für Fedora 32 – Noto Serif und Noto Sans Mono fehlen dort und werden auf
-    # Webseiten verworfen.
+    # Liberation statt Noto: Braves Fingerprinting-Schutz kennt auf Fedora nur
+    # eine einkompilierte Liste von Fedora 32, in der die Notos fehlen.
     #
     # Nicht gesetzt wird, was schon per Policy geregelt ist (Safe Browsing,
     # Startseite, Suchmaschine) oder ohnehin dem Auslieferungszustand entspricht.
@@ -575,14 +573,10 @@ fi
 # GE-Proton installieren
 # ---------------------------------------------------------------------------
 
-# Immer das aktuelle Release über die GitHub-API. Der Dateiname trägt den Tag
-# und das Tarball entpackt in ein gleichnamiges Verzeichnis
-# (GE-Proton11-6-x86_64.tar.gz -> GE-Proton11-6-x86_64/), die Existenzprüfung
-# ist damit die Versionsprüfung. Der aarch64-Anhang fällt über den Grep raus.
-#
-# GE-Proton legt zu jedem Tarball eine .sha512sum daneben. Die Prüfung kostet
-# nichts und fängt einen abgebrochenen Download ab, der sonst als halb
-# entpacktes Proton in Steams Kompatibilitätsliste auftauchte.
+# Immer das aktuelle Release über die GitHub-API. Das Tarball entpackt in ein
+# Verzeichnis mit dem Tag im Namen, dessen Existenz ist die Versionsprüfung.
+# Die .sha512sum daneben fängt einen Abbruch ab, der sonst als halb entpacktes
+# Proton in Steams Liste landete.
 PROTON_DIR="$HOME/.local/share/Steam/compatibilitytools.d"
 mkdir -p "$PROTON_DIR"
 PROTON_URL=$(curl -s --retry 3 --retry-delay 30 \

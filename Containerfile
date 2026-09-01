@@ -24,22 +24,17 @@ RUN dnf5 config-manager setopt fedora-multimedia.priority=1 \
     && dnf5 config-manager setopt fedora-multimedia.excludepkgs='*nvidia*' \
     && dnf5 config-manager setopt fedora-multimedia.minrate=0
 
-# CachyOS-Kernel aus dem COPR, hier wie im Zielimage: die akmods müssen gegen
-# genau den Kernel gebaut werden, der später läuft. Zwei Optionen sind zu
-# korrigieren – minrate=0, weil das COPR wie fedora-multimedia nur eine baseurl
-# ohne Metalink hat (siehe oben), und skip_if_unavailable, das die COPR-Repodatei
-# auf True setzt: ein nicht erreichbares COPR würde sonst still übersprungen und
-# der Build liefe mit Fedoras Kernel weiter. Direkt in der Repodatei statt per
-# config-manager setopt, dessen repoid.option-Syntax an den Doppelpunkten der
-# COPR-Repo-ID hängen bleibt.
+# CachyOS-COPR, wie im Zielimage: die akmods müssen gegen den Kernel bauen, der
+# später läuft. skip_if_unavailable=False, sonst liefe der Build bei totem COPR
+# still mit Fedoras Kernel weiter; minrate=0 mangels Metalink. Direkt in der
+# Repodatei, weil config-manager setopt an den Doppelpunkten der Repo-ID hängt.
 RUN dnf5 copr enable -y copr.fedorainfracloud.org/bieszczaders/kernel-cachyos \
     && CACHY_REPO=/etc/yum.repos.d/_copr:copr.fedorainfracloud.org:bieszczaders:kernel-cachyos.repo \
     && sed -i 's/^skip_if_unavailable=.*/skip_if_unavailable=False/' "$CACHY_REPO" \
     && printf 'minrate=0\nexcludepkgs=kernel-cachyos,kernel-cachyos-core,kernel-cachyos-devel*,kernel-cachyos-modules,kernel-cachyos-nvidia-open,kernel-cachyos-lts*,kernel-cachyos-server*\n' >> "$CACHY_REPO"
 
-# -devel-matched statt -devel: akmods' check_kernel_devel verlangt neben
-# /usr/src/kernels/$kver/Makefile auch /lib/modules/$kver, das erst -core anlegt.
-# -devel allein bricht mit "kernel or kernel-devel required" ab.
+# -devel-matched statt -devel: akmods verlangt zusätzlich /lib/modules/$kver,
+# das erst -core anlegt.
 RUN dnf5 install -y --setopt=tsflags=noscripts kernel-cachyos-rt-devel-matched gcc make \
     akmod-nvidia akmod-xone akmod-VirtualBox
 
@@ -154,17 +149,11 @@ RUN dnf5 config-manager setopt fedora-multimedia.priority=1 \
     && dnf5 config-manager setopt fedora-multimedia.minrate=0
 
 # ---- Fedora-Kernel gegen den CachyOS-RT-Kernel tauschen ----
-# Muss vor den akmod-Installationen stehen: die kmod-RPMs aus der Builder-Stage
-# fordern "kernel-uname-r = <cachy-kver>" an.
-#
-# Erst installieren, dann entfernen. Andersherum risse "dnf5 remove kernel" die
-# virtualbox-guest-additions mit heraus, die ein "Requires: kernel" haben –
-# kernel-cachyos-rt-core liefert genau dieses Provides und hält sie am Leben.
-#
-# Der Fedora-Kernel muss weg, "bootc container lint" duldet nur ein Verzeichnis
-# unter /usr/lib/modules (Check "kernel", fatal). Das rm danach ist Pflicht: die
-# initramfs.img des Basis-Images gehört keinem Paket, das Verzeichnis überlebt
-# das remove also und der Lint sähe zwei Kernel.
+# Vor den akmod-Installationen: deren RPMs fordern "kernel-uname-r = <cachy>".
+# Erst installieren, dann entfernen, sonst risse "remove kernel" die
+# virtualbox-guest-additions (Requires: kernel) mit heraus. Das rm muss sein:
+# die initramfs.img des Basis-Images gehört keinem Paket, ihr Verzeichnis
+# überlebt das remove und der Lint duldet nur einen Kernel.
 RUN --mount=type=cache,dst=/var/cache \
     dnf5 copr enable -y copr.fedorainfracloud.org/bieszczaders/kernel-cachyos \
     && CACHY_REPO=/etc/yum.repos.d/_copr:copr.fedorainfracloud.org:bieszczaders:kernel-cachyos.repo \
@@ -234,20 +223,21 @@ RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
     /ctx/build.sh
 
 ### INITRAMFS FÜR DEN CACHYOS-KERNEL
-# Das Basis-Image bringt eine fertige initramfs.img für Fedoras Kernel mit; für
-# den CachyOS-Kernel gibt es keine, das RPM deklariert sie nur als %ghost. bootc
-# erwartet sie unter /usr/lib/modules/$kver/initramfs.img. Kein --no-hostonly
-# nötig, das steht in 20-atomic-nohostonly.conf; 99-nvidia-dracut.conf hält die
-# NVIDIA-Module weiterhin bewusst draußen, nouveau stirbt über die kargs.
+# CachyOS deklariert die initramfs nur als %ghost; bootc erwartet sie unter
+# /usr/lib/modules/$kver/initramfs.img. Erst hier, nach build.sh, damit alles
+# Nachinstallierte drin ist. modules.dep prüfen: ohne die depmod-Scriptlets
+# bootet das Image nicht. /boot leeren, "nonempty-boot" ist fatal.
 #
-# Erst hier, nach build.sh, damit alles Nachinstallierte enthalten ist. Die
-# modules.dep-Prüfung fängt ab, dass die depmod-Scriptlets im Container nicht
-# gelaufen sind – ohne sie bootet das Image nicht. /boot wird geleert, weil
-# kernel-install beim Paketinstall dort ablegt und "nonempty-boot" fatal ist.
+# /var/roothome nur für den dracut-Lauf: /root zeigt dorthin, und dracut nimmt
+# den Symlink ins initramfs auf. Im Container ist /var leer, der tote Link gibt
+# ein rotes "dracut-install: ERROR: installing '/root'". Danach wieder weg,
+# sonst wächst die var-tmpfiles-Warnung des Lints.
 RUN KVER=$(rpm -q kernel-cachyos-rt-core --qf '%{version}-%{release}.%{arch}') \
     && test -f "/usr/lib/modules/${KVER}/modules.dep" \
+    && mkdir -p /var/roothome \
     && dracut --kver "$KVER" --reproducible --add ostree --force \
        "/usr/lib/modules/${KVER}/initramfs.img" \
+    && rmdir /var/roothome \
     && test -s "/usr/lib/modules/${KVER}/initramfs.img" \
     && find /boot -mindepth 1 -maxdepth 1 ! -name efi -exec rm -rf {} +
 
