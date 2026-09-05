@@ -109,6 +109,11 @@ wrapped in `set +e`.
   `overlay.mount_program=fuse-overlayfs` once the binary exists (runner image ≥ 20260810): commit 1.7 → 43 min, lint
   9 s → 12 min, plus rpmdb corruption reports (hence the integrity check). Layers were slow *because of* fuse (37 min
   for a `printf`; #473/#475 timed out); on the kernel overlay they cost ~1 min (#484), so they stay on.
+- **The runner's podman version is not fixed**, so never assume a flag exists. `podman push --retry/--retry-delay`
+  arrived in 5.0; the runner ran podman-static 5.x until early September 2026 and then fell back to Ubuntu 24.04's
+  4.9.3, which aborts the push instantly with `unknown flag: --retry` (exit 125) after a 20-minute build — #508 did it
+  three times. The push retries in a shell loop instead; `--compression-format`/`--compression-level` are fine on 4.9.3.
+  `Build Image` logs `podman version` for the next time.
 - **Do not install the same URL RPM twice under the `/var/cache` cache mount.** The target stage already installs the
   RPM Fusion release packages, so `build.sh` guards its own call with `rpm -q`: a second `dnf5 install <same URL>`
   fails deterministically with `not a rpm` on the `@commandline` entry the first call left in the cache, and the

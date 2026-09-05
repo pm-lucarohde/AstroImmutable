@@ -154,9 +154,12 @@ jobs:
             "${TAG_ARGS[@]}" \
             .
 
-          # Zeigt im Log, welcher Storage-Pfad benutzt wurde: ein mount_program
-          # in den Optionen oder native-diff=false heißt, der Build ist wieder
-          # auf dem langsamen Weg gelandet.
+          # Zeigt im Log, welches podman und welcher Storage-Pfad benutzt
+          # wurden: ein mount_program in den Optionen oder native-diff=false
+          # heißt, der Build ist wieder auf dem langsamen Weg gelandet. Die
+          # Version wechselt mit dem Runner-Image und entscheidet mit, welche
+          # Flags der Push unten kennt.
+          podman version --format 'Podman: {{.Client.Version}}'
           podman info --format \
             'Storage: {{.Store.GraphDriverName}} {{.Store.GraphOptions}} native-diff={{index .Store.GraphStatus "Native Overlay Diff"}}'
 
@@ -187,15 +190,29 @@ jobs:
           # implizit an, sobald --compression-format gesetzt ist; bereits als
           # zstd hochgeladene Blobs werden trotzdem wiederverwendet, die
           # weiteren Tags kosten deshalb nichts.
+          # --retry/--retry-delay gibt es bei "podman push" erst ab 5.0. Der
+          # Runner hatte sie bis Anfang September (podman-static 5.x, siehe
+          # Kommentar beim Build), liegt jetzt aber wieder auf Ubuntus podman
+          # 4.9.3, und das bricht sofort mit "unknown flag: --retry" ab – Lauf
+          # #508 dreimal, nach einem je 20 Minuten langen Build. Die
+          # Wiederholung macht deshalb die Schleife selbst, 3 x 30 s wie _retry
+          # in build.sh. Die Kompressionsflags kennt auch 4.9.3.
           for tag in ${TAGS}; do
-            podman push \
-              --compression-format zstd:chunked \
-              --compression-level 5 \
-              --retry 3 \
-              --retry-delay 30s \
-              --digestfile=/tmp/digestfile \
-              "${IMAGE_NAME}:${tag}" \
-              "${IMAGE_REGISTRY}/${IMAGE_NAME}:${tag}"
+            for attempt in 1 2 3; do
+              if podman push \
+                --compression-format zstd:chunked \
+                --compression-level 5 \
+                --digestfile=/tmp/digestfile \
+                "${IMAGE_NAME}:${tag}" \
+                "${IMAGE_REGISTRY}/${IMAGE_NAME}:${tag}"; then
+                break
+              fi
+              if [ "${attempt}" -eq 3 ]; then
+                echo "Push von ${tag} nach drei Versuchen aufgegeben" >&2
+                exit 1
+              fi
+              sleep 30
+            done
           done
 
           # Alle Tags zeigen auf dasselbe Manifest, der letzte Digest genügt.
