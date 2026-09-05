@@ -1,0 +1,42 @@
+---
+name: Retry failed build
+
+# Dieselbe Idee wie _retry in build.sh, nur eine Ebene höher: die meisten
+# Abbrüche sind Aussetzer der Gegenstellen (kriechende Spiegel, ein halb
+# ausgelieferter Download, ein totes COPR). Die Wiederholung innerhalb des Jobs
+# hilft dagegen nur begrenzt, weil /var/cache als Cache-Mount hängt und alle
+# Versuche dieselbe kaputte Datei wiederfinden – Lauf #91937668064 scheiterte so
+# dreimal am selben "not a rpm". Ein neuer Lauf startet mit leerem Cache.
+on:
+  workflow_run:
+    workflows: ["Build container image"]
+    types:
+      - completed
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  retry:
+    name: Rerun failed build
+    runs-on: ubuntu-24.04
+    # Der Job schläft 15 Minuten; alles darüber hinaus ist ein Hänger.
+    timeout-minutes: 30
+
+    # run_attempt zählt den Lauf selbst, nicht die Wiederholungen: 1 und 2 lösen
+    # eine weitere aus, 3 nicht mehr. Macht drei Versuche insgesamt, wie _retry.
+    if: >-
+      github.event.workflow_run.conclusion == 'failure' &&
+      github.event.workflow_run.run_attempt < 3
+
+    steps:
+      - name: Warten
+        run: sleep 900
+
+      - name: Fehlgeschlagene Jobs erneut starten
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh run rerun ${{ github.event.workflow_run.id }} --failed
