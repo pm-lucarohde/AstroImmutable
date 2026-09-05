@@ -475,8 +475,10 @@ if [ -f "$BRAVE_PREFS" ]; then
     # location_bar_is_wide=true gibt das normale Chromium-Layout; auf false rückt
     # Brave die Adressleiste ein und zentriert sie.
     #
-    # Liberation statt Noto: Braves Fingerprinting-Schutz kennt auf Fedora nur
-    # eine einkompilierte Liste von Fedora 32, in der die Notos fehlen.
+    # Noto, nicht Liberation: Braves Schriftliste gegen Fingerprinting (auf
+    # Fedora die von Fedora 32, ohne die schlichten Notos) filtert nur, was eine
+    # Seite per CSS anfordert – die Standardschrift bleibt davon unberührt,
+    # gemessen über http mit aktiven Shields.
     #
     # Nicht gesetzt wird, was schon per Policy geregelt ist (Safe Browsing,
     # Startseite, Suchmaschine) oder ohnehin dem Auslieferungszustand entspricht.
@@ -507,11 +509,11 @@ if [ -f "$BRAVE_PREFS" ]; then
            | .tab_search.pinned_to_tabstrip = false
            | .intl.accept_languages = "en-US,en"
            | .intl.selected_languages = "en-US,en"
-           | .webkit.webprefs.fonts.standard.Zyyy = "Liberation Sans"
-           | .webkit.webprefs.fonts.serif.Zyyy = "Liberation Serif"
-           | .webkit.webprefs.fonts.sansserif.Zyyy = "Liberation Sans"
-           | .webkit.webprefs.fonts.fixed.Zyyy = "Liberation Mono"
-           | .webkit.webprefs.fonts.math.Zyyy = "Liberation Mono"
+           | .webkit.webprefs.fonts.standard.Zyyy = "Noto Sans"
+           | .webkit.webprefs.fonts.serif.Zyyy = "Noto Serif"
+           | .webkit.webprefs.fonts.sansserif.Zyyy = "Noto Sans"
+           | .webkit.webprefs.fonts.fixed.Zyyy = "Noto Sans Mono"
+           | .webkit.webprefs.fonts.math.Zyyy = "Noto Sans Mono"
            | .brave.widevine_opted_in = true
            | .brave.has_seen_brave_welcome_page = true
            | .extensions.theme.system_theme = 1

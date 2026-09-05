@@ -222,6 +222,31 @@ RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
     --mount=type=tmpfs,dst=/tmp \
     /ctx/build.sh
 
+### FONTCONFIG-CACHE
+# Brave liest nur Cacheformat 11 (eigene fontconfig), Fedoras 2.17 schreibt
+# cache-9 – Brave legt sich deshalb einen eigenen Cache im Home an, und der
+# veraltet unbemerkt: bei mtime 0 des Schriftverzeichnisses hält fontconfig
+# jeden Cache für gültig, und auf ostree ist unter /usr alles mtime 0
+# (06.09.2026: Brave löste keine Familie mehr über den Namen auf). Also beide
+# Formate hier neu bauen, fc-cache für Fedora (der Wrapper nimmt 32 und 64 Bit),
+# ein headless-Brave für cache-11; bei mtime 0 gewinnt der Cache aus dem Image
+# gegen den im Home. Brave schreibt hier von selbst dorthin, /usr ist im Build
+# beschreibbar und ist der erste cachedir. Nach build.sh, dort kommen die
+# letzten Schriften dazu. HOME muss gesetzt sein, /root ist ein totes Symlink.
+# Fehlt Brave, bleibt es beim alten Verhalten.
+RUN --mount=type=tmpfs,dst=/tmp \
+    FCTMP=$(mktemp -d) \
+    && rm -f /usr/lib/fontconfig/cache/*.cache-* \
+    && HOME="$FCTMP" fc-cache -s -f \
+    && BEFORE=$(ls /usr/lib/fontconfig/cache | wc -l) \
+    && printf '<p style="font-family:Liberation Serif">x</p>\n' > "$FCTMP/probe.html" \
+    && HOME="$FCTMP" /opt/brave.com/brave/brave --headless=new --no-sandbox \
+       --disable-gpu --disable-dev-shm-usage --user-data-dir="$FCTMP/profile" \
+       --dump-dom "file://$FCTMP/probe.html" >/dev/null 2>&1 || true \
+    && { [ "$(ls /usr/lib/fontconfig/cache | wc -l)" -gt "$BEFORE" ] \
+         || echo "WARNING: Brave hat keinen fontconfig-Cache erzeugt"; } \
+    && ls /usr/lib/fontconfig/cache | sed 's/^[0-9a-f]*-//' | sort | uniq -c
+
 ### INITRAMFS FÜR DEN CACHYOS-KERNEL
 # CachyOS deklariert die initramfs nur als %ghost; bootc erwartet sie unter
 # /usr/lib/modules/$kver/initramfs.img. Erst hier, nach build.sh, damit alles

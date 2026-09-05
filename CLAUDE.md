@@ -121,6 +121,18 @@ wrapped in `set +e`.
   identical URL had installed fine twice earlier in the same run.
 - **Chromium never picks Fedora's COLRv1 `Noto-COLRv1.ttf`** — Vesktop and Brave show tofu, Qt/GTK colour emoji;
   `@font-face` on the same file works, fontconfig rules don't. Fix: `twitter-twemoji-fonts` (CBDT) in `build.sh`.
+- **Brave reads only fontconfig cache format 11** (its own bundled fontconfig; Fedora's 2.17 writes cache-9), so it
+  builds its own cache under `~/.cache/fontconfig` — which goes stale unnoticed, because `FcCacheTimeValid()` accepts
+  *any* cache once the font directory's mtime is 0, and on ostree everything under `/usr` is mtime 0. Seen 2026-09-06:
+  Brave resolved no family by name at all, `brave://settings/fonts` showed disabled pickers reading "Custom".
+  `### FONTCONFIG-CACHE` therefore rebuilds both formats every build (`fc-cache` covers 32- and 64-bit, a headless
+  Brave run supplies cache-11); with mtime 0 the image's cache beats the user's. Cure on an affected machine:
+  `rm -rf ~/.cache/fontconfig`.
+- **Brave's anti-fingerprinting font list filters only what a page asks for, not the default font prefs.** On Fedora
+  (`kFedora32Prefix` is just `"Fedora"`, so 44 matches too) it uses the compiled-in Fedora 32 list, which has
+  `liberation *` but of the Notos only CJK/script variants: a site requesting `font-family: "Noto Serif"` gets the
+  fallback, while `webkit.webprefs.fonts.*` set to Noto is honoured — measured over http with shields up. A default
+  font that "doesn't apply" is a fontconfig-cache problem, not shields.
 
 ## Local iteration
 
