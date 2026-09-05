@@ -109,6 +109,11 @@ wrapped in `set +e`.
   `overlay.mount_program=fuse-overlayfs` once the binary exists (runner image ≥ 20260810): commit 1.7 → 43 min, lint
   9 s → 12 min, plus rpmdb corruption reports (hence the integrity check). Layers were slow *because of* fuse (37 min
   for a `printf`; #473/#475 timed out); on the kernel overlay they cost ~1 min (#484), so they stay on.
+- **Do not install the same URL RPM twice under the `/var/cache` cache mount.** The target stage already installs the
+  RPM Fusion release packages, so `build.sh` guards its own call with `rpm -q`: a second `dnf5 install <same URL>`
+  fails deterministically with `not a rpm` on the `@commandline` entry the first call left in the cache, and the
+  in-script `_retry` cannot help because every attempt finds it again. Runs #506 and #507 died there after the
+  identical URL had installed fine twice earlier in the same run.
 - **Chromium never picks Fedora's COLRv1 `Noto-COLRv1.ttf`** — Vesktop and Brave show tofu, Qt/GTK colour emoji;
   `@font-face` on the same file works, fontconfig rules don't. Fix: `twitter-twemoji-fonts` (CBDT) in `build.sh`.
 

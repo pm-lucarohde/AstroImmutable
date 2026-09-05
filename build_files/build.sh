@@ -24,11 +24,16 @@ _dnf5_install() {
 # Paketquellen einrichten
 # ---------------------------------------------------------------------------
 
-# RPMFusion (Free + Non-Free) für Codec- und Multimedia-Pakete
-_dnf5_install \
-    https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm
-_dnf5_install \
-    https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
+# RPMFusion (Free + Non-Free) für Codec- und Multimedia-Pakete. Nur falls das
+# Containerfile sie nicht schon gesetzt hat: dieselbe URL ein zweites Mal unter
+# dem /var/cache-Mount zu installieren scheitert reproduzierbar mit "not a rpm"
+# auf dem @commandline-Eintrag, den der erste Aufruf dort hinterlassen hat
+# (Läufe #506 und #507, dieselbe URL im selben Lauf davor zweimal erfolgreich).
+for pkg in free nonfree; do
+    rpm -q "rpmfusion-${pkg}-release" >/dev/null 2>&1 && continue
+    _dnf5_install \
+        "https://download1.rpmfusion.org/${pkg}/fedora/rpmfusion-${pkg}-release-$(rpm -E %fedora).noarch.rpm"
+done
 
 # negativo17 (Multimedia und Steam) – nur hinzufügen, wenn noch nicht vorhanden
 for repo_url in \
