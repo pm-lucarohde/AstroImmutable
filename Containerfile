@@ -234,6 +234,11 @@ RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
 # beschreibbar und ist der erste cachedir. Nach build.sh, dort kommen die
 # letzten Schriften dazu. HOME muss gesetzt sein, /root ist ein totes Symlink.
 # Fehlt Brave, bleibt es beim alten Verhalten.
+#
+# Anwendungen mit noch einer anderen fontconfig (Vesktop, Steams Runtime,
+# gesehen als cache-8) benutzen den Image-Cache nicht. Für die hängt der Pfad
+# des Benutzer-Caches am Schriftbestand: ändert der sich, zeigen sie auf ein
+# leeres Verzeichnis und bauen neu, statt ewig auf einem alten zu sitzen.
 RUN --mount=type=tmpfs,dst=/tmp \
     FCTMP=$(mktemp -d) \
     && rm -f /usr/lib/fontconfig/cache/*.cache-* \
@@ -245,6 +250,12 @@ RUN --mount=type=tmpfs,dst=/tmp \
        --dump-dom "file://$FCTMP/probe.html" >/dev/null 2>&1 || true \
     && { [ "$(ls /usr/lib/fontconfig/cache | wc -l)" -gt "$BEFORE" ] \
          || echo "WARNING: Brave hat keinen fontconfig-Cache erzeugt"; } \
+    && FCKEY=$(rpm -qa --qf '%{NAME}-%{EVR}\n' | grep -i font | sort | sha256sum | cut -c1-12) \
+    && sed -i "s|prefix=\"xdg\">fontconfig<|prefix=\"xdg\">fontconfig-$FCKEY<|" \
+       /etc/fonts/fonts.conf \
+    && { grep -q "fontconfig-$FCKEY" /etc/fonts/fonts.conf \
+         || echo "WARNING: cachedir in /etc/fonts/fonts.conf nicht gepatcht"; } \
+    && grep cachedir /etc/fonts/fonts.conf \
     && ls /usr/lib/fontconfig/cache | sed 's/^[0-9a-f]*-//' | sort | uniq -c
 
 ### INITRAMFS FÜR DEN CACHYOS-KERNEL
