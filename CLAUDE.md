@@ -50,6 +50,11 @@ wrapped in `set +e`.
   per-install `activityId`, so plasmashell discards them. Use `plasma-apply-wallpaperimage` at first login and wait
   until `evaluateScript 'print(desktops().length)'` reports ≥ 1; a `Peer.Ping` is *not* enough, plasmashell registers on
   the bus before its containments exist.
+- **`xwaylandvideobridge` parks an invisible window in the middle of a screen**, and KWin refuses to centre a new
+  window that would cover an existing one completely: `cascadeIfCovering` offsets it by +53,+29 instead. Windows
+  therefore opened below right of centre on that monitor only, and only at sizes that fully covered the bridge — a
+  window 10 px narrower, or too large to be offset without leaving the screen, still landed centred. `build.sh`
+  removes the package; it is only needed to screencast *from* an X11 application.
 - **Brave ships two desktop files.** `com.brave.Browser.desktop` is only an app-id anchor for the XDG portal
   (`NoDisplay=true`; `build.sh` strips its `MimeType=` so it stops appearing twice under Default Applications); the real
   entry is `brave-browser.desktop`, `Exec` being `/usr/bin/brave-browser-stable`.

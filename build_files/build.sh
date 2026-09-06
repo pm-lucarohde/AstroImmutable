@@ -219,6 +219,13 @@ dnf5 remove -y --noautoremove \
 # exiting.." ab, systemd startet ihn fünfmal neu und meldet ihn dann als failed.
 dnf5 remove -y --noautoremove thermald
 
+# xwaylandvideobridge hält ein unsichtbares Fenster mitten auf dem Bildschirm.
+# KWin zentriert ein neues Fenster nicht, wenn es ein vorhandenes vollständig
+# verdecken würde (cascadeIfCovering), sondern versetzt es nach rechts unten –
+# Terminal und Dolphin starten dadurch aus der Mitte. Die Brücke braucht nur,
+# wer den Bildschirm aus einer X11-Anwendung heraus aufnimmt.
+dnf5 remove -y --noautoremove xwaylandvideobridge
+
 # ---------------------------------------------------------------------------
 # Kvantum-Theme (KvKonqiDark)
 # ---------------------------------------------------------------------------
