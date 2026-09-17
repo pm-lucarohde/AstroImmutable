@@ -62,7 +62,10 @@ ARG GHOSTTY_KEY=RWQlAjJC23149WL2sEpT/l0QKy7hMIFhYdQOFy0Z7z7PbneUgvlsnYcV
 # Siehe Builder-Stage: langsame Spiegel abbrechen statt aussitzen.
 RUN printf 'minrate=100000\ntimeout=30\n' >>/etc/dnf/dnf.conf
 
-RUN dnf5 install -y gtk4-devel gtk4-layer-shell-devel libadwaita-devel \
+# libglvnd-devel liefert egl.pc und libEGL.so: Ghostty linkt seit 49b95d8
+# (14.09.2026) direkt gegen EGL, ohne bricht zig build mit "unable to find
+# dynamic system library 'egl'" ab. Zur Laufzeit reicht das libglvnd-egl der Basis.
+RUN dnf5 install -y gtk4-devel gtk4-layer-shell-devel libadwaita-devel libglvnd-devel \
     gettext pkgconf minisign tar xz curl
 
 # Auf der ostree-Basis sind /opt, /usr/local, /root und weitere tote Symlinks ins

@@ -110,6 +110,9 @@ wrapped in `set +e`.
   empty `/var` — hence `rm /opt && mkdir /opt`. `tar -C /opt` fails with *Cannot open*, `HOME=/root` breaks Zig's cache.
 - **Ghostty is built from the tip tarball, not the COPR.** `ARG ZIG_VERSION` must match what tip demands and the docs
   lag behind; a mismatch fails with *does not meet the required build version*. Fedora's `zig` is unused: it moves on.
+  Tip also grows link dependencies without notice: `unable to find dynamic system library 'egl'` (2026-09-16, three
+  failed attempts from an unchanged commit) meant Ghostty had started linking EGL the day before — the cure is the
+  matching `-devel` on the builder's install line (`libglvnd-devel` provides `egl.pc`), never a runtime package.
 - **Built by rootless `podman build --layers=true`, not `redhat-actions/buildah-build`** — that action forces
   `overlay.mount_program=fuse-overlayfs` once the binary exists (runner image ≥ 20260810): commit 1.7 → 43 min, lint
   9 s → 12 min, plus rpmdb corruption reports (hence the integrity check). Layers were slow *because of* fuse (37 min
