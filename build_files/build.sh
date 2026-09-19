@@ -417,6 +417,11 @@ fi
 # Google-Update-URL ist nur die übliche Schreibweise, Brave leitet Updates über
 # extensionupdater.brave.com um. ExtensionSettings hält die drei per
 # "default_unpinned" aus der Symbolleiste; erreichbar bleiben sie.
+# runtime_blocked_hosts/runtime_allowed_hosts sperren sie auf ihre Seite ein:
+# AdGuard Extra und BetterTTV nur twitch.tv, Return YouTube Dislike nur
+# youtube.com – sonst liefe AdGuard Extra auf jeder Seite. Gemessen 19.09.2026:
+# die API-Hosts (returnyoutubedislikeapi.com, api.betterttv.net) bleiben trotz
+# Sperre erreichbar, beide antworten mit CORS-Headern.
 #
 # RestoreOnStartup 4 = "bestimmte Seiten öffnen"; NewTabPageLocation ersetzt
 # zusätzlich Braves eigene Startseite mit Bild und Statistik.
@@ -493,13 +498,19 @@ install -m 644 /dev/stdin /etc/brave/policies/managed/astroimmutable-policies.js
     ],
     "ExtensionSettings": {
         "mglpocjcjbekdckiahfhagndealpkpbj": {
-            "toolbar_pin": "default_unpinned"
+            "toolbar_pin": "default_unpinned",
+            "runtime_blocked_hosts": ["*://*"],
+            "runtime_allowed_hosts": ["*://*.twitch.tv"]
         },
         "gebbhagfogifgggkldgodflihgfeippi": {
-            "toolbar_pin": "default_unpinned"
+            "toolbar_pin": "default_unpinned",
+            "runtime_blocked_hosts": ["*://*"],
+            "runtime_allowed_hosts": ["*://*.youtube.com"]
         },
         "ajopnjidmegmdimjlfnijceegpefgped": {
-            "toolbar_pin": "default_unpinned"
+            "toolbar_pin": "default_unpinned",
+            "runtime_blocked_hosts": ["*://*"],
+            "runtime_allowed_hosts": ["*://*.twitch.tv"]
         }
     },
     "ShowHomeButton": true,

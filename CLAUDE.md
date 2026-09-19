@@ -138,6 +138,12 @@ wrapped in `set +e`.
   fontconfig (Vesktop, Steam's runtime — seen writing cache-8) can't use it, so the same stage rewrites the xdg
   `<cachedir>` in `/etc/fonts/fonts.conf` to `fontconfig-<hash of the font packages>`: change the image's fonts and
   their private cache directory changes with them. Cure on an affected machine: `rm -rf ~/.cache/fontconfig`.
+- **`runtime_blocked_hosts` in `ExtensionSettings` removes host *privileges*, not network access.** An extension
+  origin still fetches any host that answers with CORS headers, so `["*://*"]` plus the one allowed site does not cut
+  RYD or BetterTTV off from their APIs (measured 2026-09-19 via CDP in a headless Brave). It does stop content-script
+  injection elsewhere — which only ever mattered for AdGuard Extra, the other two restrict themselves in their
+  manifests. BetterTTV injects into the MAIN world, so an isolated-world listing does not show it; check
+  `typeof BetterTTV` instead.
 - **Brave's anti-fingerprinting font list filters only what a page asks for, not the default font prefs.** On Fedora
   (`kFedora32Prefix` is just `"Fedora"`, so 44 matches too) it uses the compiled-in Fedora 32 list, which has
   `liberation *` but of the Notos only CJK/script variants: a site requesting `font-family: "Noto Serif"` gets the
