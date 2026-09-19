@@ -64,6 +64,16 @@ wrapped in `set +e`.
   `--force-dark-mode`, because `prefers-color-scheme` comes from Chromium's DarkModeManager: measured live, default,
   `system_theme=1` and `system_theme=1` + `GTK_THEME=Breeze-Dark` all stay light. Under a bare Xvfb the GTK route *does*
   go dark (no portal → toolkit theme), so neither a headless nor a session-less test proves anything here.
+- **Twitch 1440p is HEVC, and Chromium has no software HEVC decoder.** On NVIDIA, VA-API is blocked by default
+  (`VaapiOnNvidiaGPUs`), so `MediaSource.isTypeSupported('hvc1…')` is `false` and the player greys 1440p out with
+  "Device or settings issue". Measured 2026-09-19 one flag at a time in a fresh profile with the same policies:
+  `--enable-features=VaapiOnNvidiaGPUs` *and* `--use-gl=angle --use-angle=gl` together flip it to `true` and an HEVC
+  file decodes (182 frames/6 s, 0 dropped); either alone, `LIBVA_DRIVER_NAME=nvidia`, `--ignore-gpu-blocklist` and
+  `AcceleratedVideoDecodeLinuxGL` change nothing. The flags ride on the same overriding desktop file as
+  `--force-dark-mode`, so an existing install needs its `~/.local/share/applications/brave-browser.desktop` patched
+  by hand — `firstlogin-setup.sh` does not run again. Twitch's own verdict is in the master playlist's
+  `com.amazon.ivs.unavailable-media` session data (base64 JSON with `FILTER_REASONS`/`AUTHORIZATION_REASONS`);
+  the player fetches it from a worker, so it is invisible to the page's Network panel and `performance` entries.
 - **`brave://welcome` is gated on the `First Run` sentinel**, not on `brave.has_seen_brave_welcome_page`. The headless
   run that seeds the profile never writes that empty file (with *or* without `--no-first-run`), so the first GUI start
   still shows the onboarding even with the pref `true`. `firstlogin-setup.sh` creates it itself.

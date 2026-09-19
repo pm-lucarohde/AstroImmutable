@@ -393,6 +393,12 @@ fi
 # weil Chromium dort aufs Toolkit-Theme zurückfällt – ein Test ohne Sitzung
 # beweist hier nichts. Preis von --force-dark-mode: Brave bleibt dunkel, auch
 # wenn Plasma auf ein helles Farbschema wechselt.
+#
+# Die zwei weiteren Flags schalten die Hardware-Videodekodierung über VA-API
+# frei: Chromium sperrt VA-API auf NVIDIA ab Werk (VaapiOnNvidiaGPUs), und ohne
+# Hardware gibt es kein HEVC – Twitch liefert 1440p nur als HEVC. Gemessen
+# 19.09.2026: erst beide Flags zusammen melden HEVC, LIBVA_DRIVER_NAME und
+# --ignore-gpu-blocklist waren nicht nötig. Details in CLAUDE.md.
 
 BRAVE_DESKTOP="/usr/share/applications/brave-browser.desktop"
 BRAVE_LOCAL="$HOME/.local/share/applications/brave-browser.desktop"
@@ -401,7 +407,7 @@ if [ -f "$BRAVE_DESKTOP" ]; then
     cp "$BRAVE_DESKTOP" "$BRAVE_LOCAL"
 
     # Greift auf alle drei Exec-Zeilen (Haupt-, Neues und Inkognito-Fenster).
-    sed -i 's|^Exec=/usr/bin/brave-browser-stable|Exec=env GTK_THEME=Breeze-Dark /usr/bin/brave-browser-stable --force-dark-mode|' \
+    sed -i 's|^Exec=/usr/bin/brave-browser-stable|Exec=env GTK_THEME=Breeze-Dark /usr/bin/brave-browser-stable --force-dark-mode --enable-features=VaapiOnNvidiaGPUs --use-gl=angle --use-angle=gl|' \
         "$BRAVE_LOCAL"
     update-desktop-database ~/.local/share/applications 2>/dev/null || true
 else
