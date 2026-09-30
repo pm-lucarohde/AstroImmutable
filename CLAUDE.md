@@ -11,7 +11,7 @@ Signed with cosign (`cosign.pub`); the key lives in the `SIGNING_SECRET` secret.
 | Path | Role |
 | --- | --- |
 | `Containerfile` | Three stages: `builder` compiles the NVIDIA, xone and VirtualBox akmods against the CachyOS kernel, `ghostty-builder` builds Ghostty from tip, then the target image installs the results and runs `build.sh`. |
-| `build_files/build.sh` | Build time, as root: repos, package add/remove, themes, systemd units, kargs, Brave policies, sysctl/zram, PipeWire. |
+| `build_files/build.sh` | Build time, as root: repos, package add/remove, themes, systemd units, kargs, Brave policies, sysctl/zram, PipeWire, EasyEffects. |
 | `build_files/firstlogin-setup.sh` | Once per user at first graphical login: KDE config, Flatpaks, locale, Brave profile, distrobox, SDKMAN. |
 | `build_files/config/` | KDE dotfiles baked into `/usr/share/astroimmutable/config`, copied to `~/.config` at first login. |
 | `build_files/{wallpaper,avatar,bin}/`, `outputs.ron`, `notepadnext` | Assets embedded into the image. |
@@ -170,6 +170,16 @@ wrapped in `set +e`.
   at 48 kHz by spec, so it only moves the conversion from Spotify to YouTube. Bit depth needs no
   configuration at all — the graph is `float32` and the sink negotiates the best format the device offers
   (M-Track `S24LE`, HDMI/S-PDIF `S32LE`).
+- **EasyEffects 8 stores its config as KConfig INI, and its tray switch lives in `[Window]`.** The GTK/JSON
+  presets of 7.x are gone; v8 writes `~/.config/easyeffects/db/easyeffectsrc` plus one file per plugin
+  (`equalizerrc`), so an APO parametric-EQ file is imported once in the GUI and the resulting `db/` directory
+  is what the image ships. Every key of the `DbMain` class — `showTrayIcon`, `enableServiceMode`,
+  `autostartOnLogin`, `width`, `height` — goes into the `[Window]` group, not `[Main]`: measured 2026-09-30
+  against `org.kde.StatusNotifierWatcher`'s `RegisteredStatusNotifierItems`, where `[Main]` left the item
+  registered and `[Window]` removed it while the process kept running. The plugin chain only becomes active
+  through `[StreamOutputs] plugins=equalizer#0`. Fedora's RPM ships no systemd unit, so `build.sh` writes its
+  own user unit with `--hide-window` and symlinks it into `/etc/systemd/user/default.target.wants`. Do not
+  run the Flatpak alongside it — both would process the same sink and apply the EQ twice.
 - **Brave's anti-fingerprinting font list filters only what a page asks for, not the default font prefs.** On Fedora
   (`kFedora32Prefix` is just `"Fedora"`, so 44 matches too) it uses the compiled-in Fedora 32 list, which has
   `liberation *` but of the Notos only CJK/script variants: a site requesting `font-family: "Noto Serif"` gets the

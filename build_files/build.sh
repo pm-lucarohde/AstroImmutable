@@ -132,6 +132,7 @@ _dnf5_install \
     libavcodec \
     libva-nvidia-driver \
     pipewire-libs-extra \
+    easyeffects \
     kvantum \
     xdg-desktop-portal-kde \
     xdg-desktop-portal-gtk \
@@ -688,6 +689,34 @@ monitor.alsa.rules = [
   }
 ]
 EOF
+
+# ---------------------------------------------------------------------------
+# EasyEffects: Autostart ohne Tray-Icon
+# ---------------------------------------------------------------------------
+# Das RPM bringt keine Unit mit. --hide-window startet ohne Fenster; das
+# Tray-Icon schaltet showTrayIcon=false in der Config aus (Gruppe [Window], die
+# Keys der Klasse DbMain landen alle dort). An graphical-session gehängt wie
+# kunifiedpush-distributor: als Qt-Anwendung braucht es Wayland, und vor
+# pipewire fände es keine Geräte.
+cat <<'EOF' > /usr/lib/systemd/user/easyeffects.service
+[Unit]
+Description=EasyEffects audio effects
+After=graphical-session.target pipewire.service pipewire-pulse.service
+PartOf=graphical-session.target
+
+[Service]
+Type=exec
+ExecStart=/usr/bin/easyeffects --hide-window
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=graphical-session.target
+EOF
+
+mkdir -p /etc/systemd/user/graphical-session.target.wants
+ln -sf /usr/lib/systemd/user/easyeffects.service \
+    /etc/systemd/user/graphical-session.target.wants/easyeffects.service
 
 # ---------------------------------------------------------------------------
 # BTRFS-Mountoptionen (noatime, compress=no)

@@ -1,0 +1,5 @@
+[StreamOutputs]
+plugins=equalizer#0
+
+[Window]
+showTrayIcon=false

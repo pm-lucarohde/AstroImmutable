@@ -76,6 +76,10 @@ if [ -d "$KDE_CFG_SRC" ]; then
     [ -d "$KDE_CFG_SRC/KDE" ]         && cp -r "$KDE_CFG_SRC/KDE/."         ~/.config/KDE/
     [ -d "$KDE_CFG_SRC/kdedefaults" ] && cp -r "$KDE_CFG_SRC/kdedefaults/." ~/.config/kdedefaults/
 
+    # EasyEffects legt seine Config unter db/ ab (KConfig-INI seit v8), darin
+    # der EQ und showTrayIcon=false. Der Autostart kommt aus der User-Unit.
+    [ -d "$KDE_CFG_SRC/easyeffects" ] && cp -r "$KDE_CFG_SRC/easyeffects" ~/.config/
+
     # Dolphin-Panel-Layout liegt in ~/.local/state, nicht ~/.config. Nur die
     # globale State=-Zeile, daher bildschirm-unabhängig.
     if [ -f "$KDE_CFG_SRC/dolphinstaterc" ]; then
