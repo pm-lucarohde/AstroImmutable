@@ -637,6 +637,59 @@ mkdir -p /usr/lib/tmpfiles.d
 echo "w /sys/module/zswap/parameters/enabled - - - - N" > /usr/lib/tmpfiles.d/disable-zswap.conf
 
 # ---------------------------------------------------------------------------
+# PipeWire: Raten, Puffergröße & Suspend
+# ---------------------------------------------------------------------------
+# allowed-rates lässt den Graphen auf 44,1 kHz wechseln, solange nur ein Stream
+# läuft (Spotify); YouTube liefert über Opus ohnehin 48 kHz. Die Puffergröße
+# begrenzt max-quantum, nicht quantum: Clients fordern mehr an und werden
+# gedeckelt. power-of-two-quantum=false, sonst landet 44,1 kHz bei 256 statt
+# 470 Frames. pipewire-pulse ist ein eigener Context und braucht denselben
+# Block. Suspend aus fürs M-Track, das USB-Interface knackt beim Wiederöffnen.
+mkdir -p /usr/share/pipewire/pipewire.conf.d \
+    /usr/share/pipewire/pipewire-pulse.conf.d \
+    /usr/share/wireplumber/wireplumber.conf.d
+
+cat <<'EOF' > /usr/share/pipewire/pipewire.conf.d/99-astroimmutable.conf
+context.properties = {
+    default.clock.allowed-rates = [ 44100 48000 ]
+    default.clock.quantum       = 384
+    default.clock.min-quantum   = 128
+    default.clock.max-quantum   = 512
+    clock.power-of-two-quantum  = false
+}
+EOF
+
+cat <<'EOF' > /usr/share/pipewire/pipewire-pulse.conf.d/99-astroimmutable.conf
+context.properties = {
+    default.clock.allowed-rates = [ 44100 48000 ]
+    default.clock.quantum       = 384
+    default.clock.min-quantum   = 128
+    default.clock.max-quantum   = 512
+    clock.power-of-two-quantum  = false
+}
+
+pulse.properties = {
+    pulse.default.req = 512/48000
+}
+EOF
+
+cat <<'EOF' > /usr/share/wireplumber/wireplumber.conf.d/99-astroimmutable.conf
+monitor.alsa.rules = [
+  {
+    matches = [
+      { node.name = "~alsa_output.usb-M-Audio_M-TRACK.*" }
+      { node.name = "~alsa_input.usb-M-Audio_M-TRACK.*" }
+    ]
+    actions = {
+      update-props = {
+        session.suspend-timeout-seconds = 0
+      }
+    }
+  }
+]
+EOF
+
+# ---------------------------------------------------------------------------
 # BTRFS-Mountoptionen (noatime, compress=no)
 # ---------------------------------------------------------------------------
 # bootc-fstab-edit.service überschreibt die fstab beim ersten Boot, daher setzt

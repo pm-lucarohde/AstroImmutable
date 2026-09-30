@@ -11,7 +11,7 @@ Signed with cosign (`cosign.pub`); the key lives in the `SIGNING_SECRET` secret.
 | Path | Role |
 | --- | --- |
 | `Containerfile` | Three stages: `builder` compiles the NVIDIA, xone and VirtualBox akmods against the CachyOS kernel, `ghostty-builder` builds Ghostty from tip, then the target image installs the results and runs `build.sh`. |
-| `build_files/build.sh` | Build time, as root: repos, package add/remove, themes, systemd units, kargs, Brave policies, sysctl/zram. |
+| `build_files/build.sh` | Build time, as root: repos, package add/remove, themes, systemd units, kargs, Brave policies, sysctl/zram, PipeWire. |
 | `build_files/firstlogin-setup.sh` | Once per user at first graphical login: KDE config, Flatpaks, locale, Brave profile, distrobox, SDKMAN. |
 | `build_files/config/` | KDE dotfiles baked into `/usr/share/astroimmutable/config`, copied to `~/.config` at first login. |
 | `build_files/{wallpaper,avatar,bin}/`, `outputs.ron`, `notepadnext` | Assets embedded into the image. |
@@ -156,6 +156,20 @@ wrapped in `set +e`.
   injection elsewhere — which only ever mattered for AdGuard Extra, the other two restrict themselves in their
   manifests. BetterTTV injects into the MAIN world, so an isolated-world listing does not show it; check
   `typeof BetterTTV` instead.
+- **PipeWire's buffer size is set by `max-quantum`, not `quantum`, and `pipewire-pulse` needs its own copy.**
+  `default.clock.quantum` only applies when no client asks for a buffer; every real client asks for more
+  (measured 2026-09-30: `pw-play` 4800, `paplay` 8192 frames) and is then capped by
+  `default.clock.max-quantum`, which is what actually sets the latency. `pipewire-pulse` is a separate
+  daemon with its own context, so a drop-in under `pipewire.conf.d` leaves *its* `default.clock.*` at the
+  stock values — the same block has to go into `pipewire-pulse.conf.d`. `clock.power-of-two-quantum`
+  defaults to true and rounds the rate-scaled quantum *down* to a power of two, so with
+  `allowed-rates = [ 44100 48000 ]` a 512-frame ceiling collapses to 256 (5,8 ms) at 44,1 kHz instead of
+  470; `false` keeps the buffer time constant at ~10,7 ms on both rates. Rates switch only while the
+  devices are idle, which `session.suspend-timeout-seconds = 0` still permits (the node goes `IDLE`, not
+  `SUSPENDED`). Raising the rate to 44,1 kHz would not remove resampling: YouTube ships Opus, which decodes
+  at 48 kHz by spec, so it only moves the conversion from Spotify to YouTube. Bit depth needs no
+  configuration at all — the graph is `float32` and the sink negotiates the best format the device offers
+  (M-Track `S24LE`, HDMI/S-PDIF `S32LE`).
 - **Brave's anti-fingerprinting font list filters only what a page asks for, not the default font prefs.** On Fedora
   (`kFedora32Prefix` is just `"Fedora"`, so 44 matches too) it uses the compiled-in Fedora 32 list, which has
   `liberation *` but of the Notos only CJK/script variants: a site requesting `font-family: "Noto Serif"` gets the
