@@ -178,8 +178,10 @@ wrapped in `set +e`.
   against `org.kde.StatusNotifierWatcher`'s `RegisteredStatusNotifierItems`, where `[Main]` left the item
   registered and `[Window]` removed it while the process kept running. The plugin chain only becomes active
   through `[StreamOutputs] plugins=equalizer#0`. Fedora's RPM ships no systemd unit, so `build.sh` writes its
-  own user unit with `--hide-window` and symlinks it into `/etc/systemd/user/default.target.wants`. Do not
-  run the Flatpak alongside it — both would process the same sink and apply the EQ twice.
+  own user unit with `--hide-window`, ordered `After=graphical-session.target` and symlinked into
+  `/etc/systemd/user/graphical-session.target.wants` — Plasma 6 runs under systemd here, and the Qt app needs
+  Wayland even when it starts hidden, so `default.target` would be too early. Do not run the Flatpak alongside
+  it — both would process the same sink and apply the EQ twice.
 - **Brave's anti-fingerprinting font list filters only what a page asks for, not the default font prefs.** On Fedora
   (`kFedora32Prefix` is just `"Fedora"`, so 44 matches too) it uses the compiled-in Fedora 32 list, which has
   `liberation *` but of the Notos only CJK/script variants: a site requesting `font-family: "Noto Serif"` gets the
