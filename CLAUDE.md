@@ -76,6 +76,17 @@ wrapped in `set +e`.
   Twitch's own verdict is in the master playlist's `com.amazon.ivs.unavailable-media` session data (base64 JSON with
   `FILTER_REASONS`/`AUTHORIZATION_REASONS`); the player fetches it from a worker, invisible to the page's Network
   panel and `performance` entries.
+- **`nvidia-vaapi-driver` 0.0.18 aborts Chromium's GPU process on video surfaces of ≤ 171 rows.** Luma and chroma get
+  different DRM modifiers there, and Chromium's `CHECK_EQ` — *"The modifier should not change for different planes."* —
+  turns that into SIGTRAP / `exit_code=133`; the player then shows "Error #3000". Twitch's hover previews (284×160),
+  ads and thumbnails hit it, so it fires on any page, not only on a stream. Measured 2026-10-07: of 18 crash dumps 17
+  were the GPU process, every one carrying `last-video-decoder = name=VaapiVideoDecoder:…` with a byte-identical stack
+  and no Xid in the kernel log, and none of them predates the `VaapiOnNvidiaGPUs` flag — the one older dump is the
+  browser process and has no decoder key at all. Codec and resolution vary (h264, av1, 1080p), the VA-API decoder does
+  not. Cure: `NVD_SINGLE_BUFFER=1` on the Brave desktop file *only* — set globally it corrupts chroma in per-plane
+  importers such as `mpv --hwdec=vaapi`. The variable is absent from the project's README but present in
+  `/usr/lib64/dri/nvidia_drv_video.so`. The EGL backend is no alternative, it is broken on driver 525 and later.
+  Upstream had a fix on master 2026-07-06…11, reverted before the 0.0.18 tag, and Fedora ships 0.0.18.
 - **`brave://welcome` is gated on the `First Run` sentinel**, not on `brave.has_seen_brave_welcome_page`. The headless
   run that seeds the profile never writes that empty file (with *or* without `--no-first-run`), so the first GUI start
   still shows the onboarding even with the pref `true`. `firstlogin-setup.sh` creates it itself.

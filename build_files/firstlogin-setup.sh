@@ -403,6 +403,13 @@ fi
 # Twitch liefert 1440p nur als HEVC. Gemessen 19.09.2026 im echten Fenster: das
 # Flag allein reicht, --use-gl/--use-angle, LIBVA_DRIVER_NAME und
 # --ignore-gpu-blocklist aus den Anleitungen ändern nichts. Details in CLAUDE.md.
+#
+# NVD_SINGLE_BUFFER umgeht einen Fehler in nvidia-vaapi-driver 0.0.18: bei
+# Oberflächen bis 171 Zeilen – Vorschaukacheln, Werbung, Thumbnails – bekommen
+# Luma und Chroma verschiedene DRM-Modifier, worauf Chromiums CHECK_EQ den
+# GPU-Prozess per SIGTRAP abbricht und der Player "Error #3000" zeigt. Nur für
+# Brave setzen, nicht global: Programme, die die Ebenen einzeln einlesen
+# (mpv --hwdec=vaapi), bekommen sonst Farbfehler.
 
 BRAVE_DESKTOP="/usr/share/applications/brave-browser.desktop"
 BRAVE_LOCAL="$HOME/.local/share/applications/brave-browser.desktop"
@@ -411,7 +418,7 @@ if [ -f "$BRAVE_DESKTOP" ]; then
     cp "$BRAVE_DESKTOP" "$BRAVE_LOCAL"
 
     # Greift auf alle drei Exec-Zeilen (Haupt-, Neues und Inkognito-Fenster).
-    sed -i 's|^Exec=/usr/bin/brave-browser-stable|Exec=env GTK_THEME=Breeze-Dark /usr/bin/brave-browser-stable --force-dark-mode --enable-features=VaapiOnNvidiaGPUs|' \
+    sed -i 's|^Exec=/usr/bin/brave-browser-stable|Exec=env GTK_THEME=Breeze-Dark NVD_SINGLE_BUFFER=1 /usr/bin/brave-browser-stable --force-dark-mode --enable-features=VaapiOnNvidiaGPUs|' \
         "$BRAVE_LOCAL"
     update-desktop-database ~/.local/share/applications 2>/dev/null || true
 else
