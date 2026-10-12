@@ -68,7 +68,7 @@ sudoif command *args:
     }
     sudoif {{ command }} {{ args }}
 
-# Bei sauberem Arbeitsverzeichnis wandert die kurze HEAD-SHA als Build-Arg mit.
+# With a clean working tree the short HEAD SHA is passed in as a build arg.
 
 # Build the image using the specified parameters
 build $target_image=image_name $tag=default_tag:
@@ -87,8 +87,8 @@ build $target_image=image_name $tag=default_tag:
         --tag "${target_image}:${tag}" \
         .
 
-# Schiebt das Image aus dem User-podman ins rootful podman (bib braucht es dort);
-# ist es dort nicht vorhanden, wird stattdessen gezogen.
+# Pushes the image from the user's podman into rootful podman (bib needs it
+# there); if it is not there, it is pulled instead.
 _rootful_load_image $target_image=image_name $tag=default_tag:
     #!/usr/bin/bash
     set -eoux pipefail
@@ -116,8 +116,8 @@ _rootful_load_image $target_image=image_name $tag=default_tag:
         just sudoif podman pull "${target_image}:${tag}"
     fi
 
-# Container-Image -> bootfähiges Disk-Image via bootc-image-builder.
-# Argumente: target_image tag type(qcow2|raw|iso) config
+# Container image -> bootable disk image via bootc-image-builder.
+# Arguments: target_image tag type(qcow2|raw|iso) config
 _build-bib $target_image $tag $type $config: (_rootful_load_image target_image tag)
     #!/usr/bin/env bash
     set -euo pipefail
@@ -147,7 +147,7 @@ _build-bib $target_image $tag $type $config: (_rootful_load_image target_image t
     sudo rmdir $BUILDTMP
     sudo chown -R $USER:$USER output/
 
-# Wie _build-bib, baut das Container-Image vorher neu.
+# Like _build-bib, but rebuilds the container image first.
 _rebuild-bib $target_image $tag $type $config: (build target_image tag) && (_build-bib target_image tag type config)
 
 # Build a QCOW2 virtual machine image

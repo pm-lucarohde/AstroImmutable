@@ -35,8 +35,8 @@ jobs:
     name: Build and push image
     runs-on: ubuntu-24.04
 
-    # Ohne Angabe gälten GitHubs 6 Stunden; ein Lauf an einem hängenden Spiegel
-    # verbrennt damit einen halben Tag. Langsamster echter Lauf: 1h26 (#469).
+    # Without a limit GitHub's 6 hours would apply, so one run on a stalled mirror
+    # burns half a day. Slowest real run so far: 1h26.
     timeout-minutes: 120
 
     permissions:
@@ -97,16 +97,12 @@ jobs:
       - name: Free disk space before image build
         run: docker system prune -af
 
-      # Rootless podman statt redhat-actions/buildah-build: die Action setzt
-      # STORAGE_OPTS=overlay.mount_program=..., sobald fuse-overlayfs auf dem
-      # Runner liegt. Seit Runner-Image 20260810 liegt es da (podman-static aus
-      # actions/runner-images#14412), und der COMMIT des Images stieg dadurch
-      # von 1,7 auf 43 Minuten, der Lint von 9 Sekunden auf 12 Minuten (#468
-      # gegen #481). Rootless podman erbt das mount_program aus
-      # /etc/containers/storage.conf nicht – containers/storage kopiert in
-      # getRootlessStorageOpts nur ignore_chown_errors – und bleibt damit beim
-      # Kernel-Overlay. image-template (#261) und Bazzite (033a18f) sind im
-      # August aus demselben Grund auf rootless umgestiegen.
+      # Rootless podman instead of redhat-actions/buildah-build: that action sets
+      # STORAGE_OPTS=overlay.mount_program=... as soon as fuse-overlayfs exists on
+      # the runner, which it does since runner image 20260810 — and that pushed the
+      # image COMMIT from 1.7 to 43 minutes and the lint from 9 seconds to 12
+      # minutes. Rootless podman ignores that mount_program and stays on the kernel
+      # overlay.
       - name: Build Image
         id: build_image
         env:
@@ -115,8 +111,8 @@ jobs:
         run: |
           set -euo pipefail
 
-          # sep-tags trennt die Tags per Leerzeichen, die Labels kommen
-          # zeilenweise – sie enthalten selbst welche.
+          # sep-tags separates the tags by space, the labels come line by line
+          # because they contain spaces themselves.
           TAG_ARGS=()
           for tag in ${TAGS}; do
             TAG_ARGS+=("--tag" "${IMAGE_NAME}:${tag}")
@@ -129,20 +125,12 @@ jobs:
             fi
           done <<< "${LABELS}"
 
-          # --layers=true: podman baut anders als "buildah bud" standardmäßig mit
-          # Zwischenschichten. Auf dem Kernel-Overlay kosten sie gemessen rund
-          # eine Minute (#484: 19,5 gegen 18,0 Minuten in #483); der Abschluss-
-          # COMMIT schrumpft dafür von 1,8 Minuten auf 0,06 Sekunden, weil jeder
-          # Schritt schon unterwegs committet. Achtung: die 37 Minuten für ein
-          # einzelnes printf und die Timeouts in #473/#475 lagen an
-          # fuse-overlayfs, nicht an den Schichten – landet der Build je wieder
-          # dort (siehe podman-info-Zeile unten), wird genau das hier teuer.
-          # --format oci ist Voraussetzung für zstd:chunked beim Push (siehe
-          # unten): Docker-Schema-2 kennt nur gzip-Layer, podman schriebe das
-          # Manifest beim Push sonst still selbst auf OCI um. Bisher lag auf
-          # ghcr Schema 2, weil buildah-build mit oci: false lief – der Wechsel
-          # ändert den Digest einmalig, gepinnt wird hier aber nirgends
-          # (build-disk.yml und iso.toml ziehen über Tags).
+          # --layers=true: unlike "buildah bud", podman builds with intermediate
+          # layers by default. On the kernel overlay they cost about a minute,
+          # while the final COMMIT drops from 1.8 minutes to 0.06 seconds. The 37
+          # minutes for a single printf back then were fuse-overlayfs, not the
+          # layers. --format oci is required for zstd:chunked on push, as Docker
+          # schema 2 only knows gzip layers; nothing here is pinned by digest.
           podman build \
             --file ./Containerfile \
             --format oci \
@@ -154,11 +142,10 @@ jobs:
             "${TAG_ARGS[@]}" \
             .
 
-          # Zeigt im Log, welches podman und welcher Storage-Pfad benutzt
-          # wurden: ein mount_program in den Optionen oder native-diff=false
-          # heißt, der Build ist wieder auf dem langsamen Weg gelandet. Die
-          # Version wechselt mit dem Runner-Image und entscheidet mit, welche
-          # Flags der Push unten kennt.
+          # Shows which podman and which storage path were used: a mount_program
+          # in the options or native-diff=false means the build is back on the slow
+          # path. The version changes with the runner image and decides which flags
+          # the push below understands.
           podman version --format 'Podman: {{.Client.Version}}'
           podman info --format \
             'Storage: {{.Store.GraphDriverName}} {{.Store.GraphOptions}} native-diff={{index .Store.GraphStatus "Native Overlay Diff"}}'
@@ -172,8 +159,8 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # podman findet die Anmeldedaten der login-action: containers/image liest
-      # ~/.docker/config.json, wenn es keine eigene auth.json gibt.
+      # podman finds the login action's credentials: containers/image reads
+      # ~/.docker/config.json when there is no auth.json of its own.
       - name: Push To GHCR
         id: push
         if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
@@ -182,21 +169,13 @@ jobs:
         run: |
           set -euo pipefail
 
-          # zstd:chunked statt des Default gzip: kleinere Layer (auf einem
-          # /usr/lib64-Sample 144 MiB gzip gegen 134 MiB zstd-3) und ein
-          # Datei-Index in den Layer-Annotationen, über den Clients beim Update
-          # nur geänderte Teile nachladen können. Level 5 liegt eine Stufe über
-          # dem zstd-Default 3, die Skala geht bis 20. --force-compression ist
-          # implizit an, sobald --compression-format gesetzt ist; bereits als
-          # zstd hochgeladene Blobs werden trotzdem wiederverwendet, die
-          # weiteren Tags kosten deshalb nichts.
-          # --retry/--retry-delay gibt es bei "podman push" erst ab 5.0. Der
-          # Runner hatte sie bis Anfang September (podman-static 5.x, siehe
-          # Kommentar beim Build), liegt jetzt aber wieder auf Ubuntus podman
-          # 4.9.3, und das bricht sofort mit "unknown flag: --retry" ab – Lauf
-          # #508 dreimal, nach einem je 20 Minuten langen Build. Die
-          # Wiederholung macht deshalb die Schleife selbst, 3 x 30 s wie _retry
-          # in build.sh. Die Kompressionsflags kennt auch 4.9.3.
+          # zstd:chunked instead of the default gzip: smaller layers plus a file
+          # index in the annotations, so clients fetch only changed parts on an
+          # update. Level 5 is one step above zstd's default of 3.
+          # --retry/--retry-delay only exist in "podman push" from 5.0 on, and the
+          # runner is back on Ubuntu's podman 4.9.3, which aborts instantly with
+          # "unknown flag: --retry" — hence the shell loop, 3 x 30 s like _retry.
+          # 4.9.3 does know the compression flags.
           for tag in ${TAGS}; do
             for attempt in 1 2 3; do
               if podman push \
@@ -215,7 +194,7 @@ jobs:
             done
           done
 
-          # Alle Tags zeigen auf dasselbe Manifest, der letzte Digest genügt.
+          # All tags point at the same manifest, the last digest is enough.
           echo "digest=$(< /tmp/digestfile)" >> "${GITHUB_OUTPUT}"
 
       # Needs the cosign private key in the SIGNING_SECRET repository secret.
@@ -230,9 +209,9 @@ jobs:
         run: |
           set -euo pipefail
 
-          # Den Digest signieren, nicht die Tags: alle zeigen aufs selbe
-          # Manifest, und die Signatur landet ohnehin unter sha256-<digest>.sig,
-          # wo "cosign verify ...:latest" sie findet. Tags sind deprecated.
+          # Sign the digest, not the tags: they all point at the same manifest,
+          # and the signature ends up under sha256-<digest>.sig anyway, where
+          # "cosign verify ...:latest" finds it. Tags are deprecated.
           cosign sign -y --key env://COSIGN_PRIVATE_KEY \
             "${IMAGE_REGISTRY}/${IMAGE_NAME}@${DIGEST}"
         env:

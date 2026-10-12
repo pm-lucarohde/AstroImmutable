@@ -1,11 +1,11 @@
 [customizations.installer.kickstart]
 contents = """
 
-# Boot Partitionen
+# Boot partitions
 part /boot/efi --fstype=efi --size=256
 part /boot --fstype=ext4 --size=2048
 
-# BTRFS Setup: Base-Partition, Pool und Subvolumes
+# BTRFS setup: base partition, pool and subvolumes
 part btrfs.01 --size=1 --grow
 btrfs none --label=fedora btrfs.01
 btrfs / --subvol --name=root fedora

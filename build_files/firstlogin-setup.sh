@@ -5,17 +5,17 @@ STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/astroimmutable"
 STATE_FILE="${STATE_DIR}/setup_done"
 
 # ---------------------------------------------------------------------------
-# Guard: nur für echte Benutzer, nicht für System-User
+# Guard: real users only, no system users
 # ---------------------------------------------------------------------------
-# Der Service liegt in default.target.wants und liefe sonst auch in der Session
-# des cosmic-greeter-Users (UID < 1000) und würde dessen Home zumüllen.
+# The service sits in default.target.wants and would otherwise also run in the
+# session of the cosmic-greeter user (UID < 1000) and litter its home.
 
 if [ "$(id -u)" -lt 1000 ]; then
     exit 0
 fi
 
 # ---------------------------------------------------------------------------
-# Guard: Setup läuft nur einmal
+# Guard: run the setup only once
 # ---------------------------------------------------------------------------
 
 if [ -f "$STATE_FILE" ]; then
@@ -25,13 +25,12 @@ fi
 mkdir -p "${STATE_DIR}"
 
 # ---------------------------------------------------------------------------
-# Fehlerdiagnose
+# Error diagnostics
 # ---------------------------------------------------------------------------
-# Bei einem Abbruch meldet systemd nur "status=1/FAILURE", und Befehle, die ohne
-# Ausgabe mit 1 enden (grep ohne Treffer), sterben unter set -e spurlos. Der Trap
-# nennt Zeile, Befehl und Exitcode – zusätzlich in eine Logdatei, weil das Skript
-# erst beim nächsten Login erneut läuft und das Journal der abgebrochenen Session
-# dann nicht mehr zur Hand ist.
+# On an abort systemd only reports "status=1/FAILURE", and commands that exit 1
+# without output (grep without a match) die silently under set -e. The trap names
+# line, command and exit code, and also writes to a log file because the script
+# only runs again at the next login, when that session's journal is gone.
 
 LOG_FILE="${STATE_DIR}/firstlogin.log"
 
@@ -40,29 +39,29 @@ _fail() {
         "$(date '+%F %T')" "$2" "$3" "$1" | tee -a "$LOG_FILE" >&2 || true
 }
 
-# Abgesicherte Konstrukte ([ x ] && y, cmd || true) lösen den Trap nicht aus.
-# In den bewusst fehlertoleranten Abschnitten weiter unten wird er trotzdem
-# abgeschaltet, weil er dort auch unter "set +e" noch feuern würde.
+# Guarded constructs ([ x ] && y, cmd || true) do not trigger the trap. In the
+# deliberately fault-tolerant sections below it is switched off anyway, because
+# it would still fire there under "set +e".
 _trap_on() { trap '_fail "$?" "$LINENO" "$BASH_COMMAND"' ERR; }
 _trap_off() { trap - ERR; }
 _trap_on
 
 # ---------------------------------------------------------------------------
-# Profilbild setzen
+# Set the profile picture
 # ---------------------------------------------------------------------------
 
 cp /usr/share/astroimmutable/avatar/katzenhai.png ~/.face.icon
 chmod 644 ~/.face.icon
 
-# Auch in AccountsService setzen – das lesen Systemeinstellungen und
-# Anmeldebildschirm, ~/.face.icon allein reicht nur für Kickoff. Polkit erlaubt
-# dem User sein eigenes Icon.
+# Set it in AccountsService too — that is what System Settings and the login
+# screen read, ~/.face.icon alone only covers Kickoff. Polkit lets the user set
+# their own icon.
 dbus-send --system --print-reply --dest=org.freedesktop.Accounts \
     "/org/freedesktop/Accounts/User$(id -u)" \
     org.freedesktop.Accounts.User.SetIconFile "string:$HOME/.face.icon" &>/dev/null || true
 
 # ---------------------------------------------------------------------------
-# KDE-Konfiguration aus dem Image übernehmen
+# Take the KDE configuration from the image
 # ---------------------------------------------------------------------------
 
 KDE_CFG_SRC="/usr/share/astroimmutable/config"
@@ -76,12 +75,12 @@ if [ -d "$KDE_CFG_SRC" ]; then
     [ -d "$KDE_CFG_SRC/KDE" ]         && cp -r "$KDE_CFG_SRC/KDE/."         ~/.config/KDE/
     [ -d "$KDE_CFG_SRC/kdedefaults" ] && cp -r "$KDE_CFG_SRC/kdedefaults/." ~/.config/kdedefaults/
 
-    # EasyEffects legt seine Config unter db/ ab (KConfig-INI seit v8), darin
-    # der EQ und showTrayIcon=false. Der Autostart kommt aus der User-Unit.
+    # EasyEffects keeps its config under db/ (KConfig INI since v8), including
+    # the EQ and showTrayIcon=false. The autostart comes from the user unit.
     [ -d "$KDE_CFG_SRC/easyeffects" ] && cp -r "$KDE_CFG_SRC/easyeffects" ~/.config/
 
-    # Dolphin-Panel-Layout liegt in ~/.local/state, nicht ~/.config. Nur die
-    # globale State=-Zeile, daher bildschirm-unabhängig.
+    # Dolphin's panel layout lives in ~/.local/state, not ~/.config. Only the
+    # global State= line, so it does not depend on the screen.
     if [ -f "$KDE_CFG_SRC/dolphinstaterc" ]; then
         mkdir -p ~/.local/state
         cp "$KDE_CFG_SRC/dolphinstaterc" ~/.local/state/dolphinstaterc
@@ -89,7 +88,7 @@ if [ -d "$KDE_CFG_SRC" ]; then
 fi
 
 # ---------------------------------------------------------------------------
-# Region erkennen und Locale & Tastaturlayout setzen
+# Detect the region, then set locale and keyboard layout
 # ---------------------------------------------------------------------------
 
 COUNTRY=$(curl -sf --max-time 5 "https://ipapi.co/country/" 2>/dev/null | tr -d '[:space:]' || true)
@@ -134,7 +133,7 @@ if [ -n "$COUNTRY" ]; then
 fi
 
 # ---------------------------------------------------------------------------
-# Ghostty als Standard-Terminal einrichten
+# Make Ghostty the default terminal
 # ---------------------------------------------------------------------------
 
 kwriteconfig6 --file kdeglobals --group General --key TerminalService com.mitchellh.ghostty.desktop
@@ -156,7 +155,7 @@ gtk-single-instance = "false"
 EOF
 
 # ---------------------------------------------------------------------------
-# Kvantum-Theme aktivieren
+# Enable the Kvantum theme
 # ---------------------------------------------------------------------------
 
 mkdir -p ~/.config/Kvantum
@@ -168,7 +167,7 @@ EOF
 kwriteconfig6 --file kdeglobals --group KDE --key widgetStyle kvantum-dark
 
 # ---------------------------------------------------------------------------
-# Desktop: Papierkorb-Verknüpfung erstellen
+# Desktop: create the trash shortcut
 # ---------------------------------------------------------------------------
 
 DESKTOP_DIR="$(xdg-user-dir DESKTOP)"
@@ -183,24 +182,23 @@ URL[$e]=trash:/
 EOF
 
 # ---------------------------------------------------------------------------
-# Hintergrundbild setzen (D-Bus, braucht ein WIRKLICH bereites Plasmashell)
+# Set the wallpaper (D-Bus, needs a REALLY ready plasmashell)
 # ---------------------------------------------------------------------------
-# Das Wallpaper kann NICHT über die ausgelieferte appletsrc kommen: deren
-# Desktop-Container hängen an einer activityId, die jede Installation neu
-# würfelt: plasmashell verwirft sie dann und legt leere an. Daher ID-unabhängig
-# per plasma-apply-wallpaperimage zur Laufzeit.
+# The wallpaper can NOT come from the shipped appletsrc: its desktop containments
+# are keyed to an activityId that every installation rolls anew, so plasmashell
+# discards them and creates empty ones. Hence plasma-apply-wallpaperimage at
+# runtime, which does not care about the ID.
 #
-# Peer.Ping als Bereitschaftscheck reicht NICHT – plasmashell registriert sich am
-# Bus, bevor die Desktop-Container existieren. Stattdessen warten, bis desktops()
-# mindestens einen meldet; genau dann greift plasma-apply.
+# Peer.Ping is NOT enough as a readiness check — plasmashell registers on the bus
+# before the containments exist. Wait until desktops() reports at least one.
 
 QDBUS=$(command -v qdbus6 || command -v qdbus-qt6 || command -v qdbus || true)
 for i in $(seq 1 90); do
     if [ -n "$QDBUS" ]; then
-        # "|| true" ist zwingend: solange plasmashell nicht auf dem Bus ist,
-        # endet qdbus mit Fehler, und eine fehlschlagende Kommandosubstitution
-        # bricht unter set -e das Skript ab – wegen 2>/dev/null lautlos. Genau
-        # daran ist es in der VM gestorben: Papierkorb da, Wallpaper nie.
+        # The "|| true" is mandatory: while plasmashell is not on the bus, qdbus
+        # exits with an error, and a failing command substitution aborts the
+        # script under set -e — silently, because of 2>/dev/null. That is exactly
+        # how it died in the VM: trash there, wallpaper never.
         n=$("$QDBUS" org.kde.plasmashell /PlasmaShell \
             org.kde.PlasmaShell.evaluateScript 'print(desktops().length)' 2>/dev/null || true)
         [ -n "$n" ] && [ "$n" -ge 1 ] 2>/dev/null && break
@@ -214,11 +212,11 @@ done
 plasma-apply-wallpaperimage /usr/share/astroimmutable/wallpaper/mars.jpg || true
 
 # ---------------------------------------------------------------------------
-# cosmic-greeter: Login-Screen-Wallpaper
+# cosmic-greeter: login screen wallpaper
 # ---------------------------------------------------------------------------
-# Der Greeter spiegelt das Wallpaper aus der cosmic-bg-State des Users (RON,
-# Vec<(output_name, Source)>) und matcht den Output-Namen exakt – daher pro
-# verbundenem Output (aus /sys/class/drm) ein Eintrag.
+# The greeter mirrors the wallpaper from the user's cosmic-bg state (RON,
+# Vec<(output_name, Source)>) and matches the output name exactly, so there is
+# one entry per connected output (from /sys/class/drm).
 BG_STATE_DIR="$HOME/.local/state/cosmic/com.system76.CosmicBackground/v1"
 WALL="/usr/share/astroimmutable/wallpaper/mars.jpg"
 mkdir -p "$BG_STATE_DIR"
@@ -226,7 +224,7 @@ mkdir -p "$BG_STATE_DIR"
     echo "["
     for s in /sys/class/drm/card*-*/status; do
         [ "$(cat "$s" 2>/dev/null)" = "connected" ] || continue
-        conn=$(basename "$(dirname "$s")")   # z.B. card1-eDP-1
+        conn=$(basename "$(dirname "$s")")   # e.g. card1-eDP-1
         name=${conn#card*-}                  # -> eDP-1
         printf '    ("%s", Path("%s")),\n' "$name" "$WALL"
     done
@@ -234,7 +232,7 @@ mkdir -p "$BG_STATE_DIR"
 } > "$BG_STATE_DIR/wallpapers"
 
 # ---------------------------------------------------------------------------
-# Flatpak einrichten und Apps installieren
+# Set up Flatpak and install the apps
 # ---------------------------------------------------------------------------
 
 flatpak config --user --set languages "de;en"
@@ -272,11 +270,11 @@ _flatpak_install \
     org.fedoraproject.MediaWriter
 
 # ---------------------------------------------------------------------------
-# App-Anzeigenamen anpassen: ZapZap → WhatsApp
+# App display names: ZapZap -> WhatsApp
 # ---------------------------------------------------------------------------
-# Vesktop fehlt hier bewusst: es kommt als RPM und wird schon in build.sh
-# umbenannt; die frühere Ankerdatei für die Icon-Zuordnung entfällt, weil
-# vesktop.desktop die Wayland-app-id direkt trifft.
+# Vesktop is missing here on purpose: it comes as an RPM and is already renamed
+# in build.sh, and the former anchor file for the icon mapping is gone because
+# vesktop.desktop matches the Wayland app-id directly.
 
 FP_EXPORTS="$HOME/.local/share/flatpak/exports/share/applications"
 mkdir -p ~/.local/share/applications
@@ -290,12 +288,11 @@ fi
 update-desktop-database ~/.local/share/applications 2>/dev/null || true
 
 # ---------------------------------------------------------------------------
-# Standard-Apps festlegen (mimeapps.list)
+# Default applications (mimeapps.list)
 # ---------------------------------------------------------------------------
 
-# geo braucht den Eintrag zwingend: kf6-kguiaddons liefert drei Handler mit
-# (Google Maps, OpenStreetMap, wheelmap.org), und ohne Vorgabe gewinnt Google
-# Maps – im Container gegengeprüft.
+# geo needs the entry: kf6-kguiaddons ships three handlers (Google Maps,
+# OpenStreetMap, wheelmap.org), and without a default Google Maps wins.
 mkdir -p ~/.local/share/applications ~/.config
 cat <<'EOF' > ~/.config/mimeapps.list
 [Default Applications]
@@ -355,12 +352,12 @@ update-desktop-database ~/.local/share/applications 2>/dev/null || true
 update-desktop-database ~/.local/share/flatpak/exports/share/applications 2>/dev/null || true
 
 # ---------------------------------------------------------------------------
-# Kickoff-Favoriten in die KActivityManager-DB seeden
+# Seed the Kickoff favourites into the KActivityManager database
 # ---------------------------------------------------------------------------
-# Steht nach den Flatpak-Installs (Apps existieren also schon), aber vor dem
-# fragilen Distrobox/SDKMAN-Teil, damit ein Abbruch dort die Favoriten nicht
-# verhindert. Die Reihenfolge kommt aus der appletsrc; hier nur die
-# Mitgliedschaft, weil Plasma 6 die Favoriten in KAStats hält.
+# After the Flatpak installs, so the apps already exist, but before the fragile
+# distrobox/SDKMAN part, so an abort there does not cost the favourites. The order
+# comes from the appletsrc; only the membership is set here, because Plasma 6
+# keeps the favourites in KAStats.
 QDBUS=$(command -v qdbus6 || command -v qdbus-qt6 || command -v qdbus || true)
 if [ -n "$QDBUS" ]; then
     for app in \
@@ -375,40 +372,22 @@ if [ -n "$QDBUS" ]; then
 fi
 
 # ---------------------------------------------------------------------------
-# Brave: Dark-Mode im GTK-Design
+# Brave: dark mode in the GTK theme
 # ---------------------------------------------------------------------------
-# Steht in brave://settings/appearance das GTK-Design an, holt Brave seine
-# Oberflächenfarben aus GTK. Als dunkel gilt GTK dort nur bei passendem
-# gtk-theme-name – und genau den schreibt Plasma nicht in
-# ~/.config/gtk-3.0/settings.ini, es färbt dynamisch um. Brave liest daraus
-# "hell". Erzwungen wird das per GTK_THEME in einer eigenen .desktop-Datei unter
-# ~/.local/share/applications, die die gleichnamige aus dem RPM überlagert;
-# settings.ini wäre der falsche Ort, die gehört kde-gtk-config und wird bei jedem
-# Farbschema-Wechsel neu geschrieben. Überlagert wird nur brave-browser.desktop –
-# com.brave.Browser.desktop trägt NoDisplay und ist nur der App-ID-Anker.
+# With the GTK theme selected in brave://settings/appearance, Brave takes its UI
+# colours from GTK — and counts GTK as dark only with a matching gtk-theme-name,
+# which Plasma never writes into ~/.config/gtk-3.0/settings.ini. Hence GTK_THEME
+# in an own .desktop file here that overrides the RPM's; settings.ini belongs to
+# kde-gtk-config and is rewritten on every colour scheme change. The page content
+# needs --force-dark-mode on top, because prefers-color-scheme comes from
+# Chromium's DarkModeManager — at the price of Brave staying dark when Plasma
+# switches to a light scheme.
 #
-# GTK_THEME färbt aber nur die Oberfläche, nicht den Seiteninhalt:
-# prefers-color-scheme kommt unter Linux nicht vom GTK-Theme, sondern vom
-# DarkModeManager, und der meldet in einer echten Plasma-Sitzung "hell". Gemessen
-# in der laufenden Sitzung über --remote-debugging-port: Standard, system_theme=1
-# und system_theme=1 + GTK_THEME=Breeze-Dark alle hell, erst --force-dark-mode
-# dunkel. Unter nacktem Xvfb ohne Portal kommt der GTK-Weg dagegen dunkel heraus,
-# weil Chromium dort aufs Toolkit-Theme zurückfällt – ein Test ohne Sitzung
-# beweist hier nichts. Preis von --force-dark-mode: Brave bleibt dunkel, auch
-# wenn Plasma auf ein helles Farbschema wechselt.
-#
-# VaapiOnNvidiaGPUs schaltet die Hardware-Videodekodierung über VA-API frei:
-# Chromium sperrt sie auf NVIDIA ab Werk, und ohne Hardware gibt es kein HEVC –
-# Twitch liefert 1440p nur als HEVC. Gemessen 19.09.2026 im echten Fenster: das
-# Flag allein reicht, --use-gl/--use-angle, LIBVA_DRIVER_NAME und
-# --ignore-gpu-blocklist aus den Anleitungen ändern nichts. Details in CLAUDE.md.
-#
-# NVD_SINGLE_BUFFER umgeht einen Fehler in nvidia-vaapi-driver 0.0.18: bei
-# Oberflächen bis 171 Zeilen – Vorschaukacheln, Werbung, Thumbnails – bekommen
-# Luma und Chroma verschiedene DRM-Modifier, worauf Chromiums CHECK_EQ den
-# GPU-Prozess per SIGTRAP abbricht und der Player "Error #3000" zeigt. Nur für
-# Brave setzen, nicht global: Programme, die die Ebenen einzeln einlesen
-# (mpv --hwdec=vaapi), bekommen sonst Farbfehler.
+# VaapiOnNvidiaGPUs unlocks hardware video decoding, which Chromium blocks on
+# NVIDIA by default; without it there is no HEVC, and Twitch serves 1440p as HEVC
+# only. NVD_SINGLE_BUFFER works around a crash in nvidia-vaapi-driver 0.0.18 on
+# surfaces up to 171 rows — set it for Brave only, never globally, or players
+# importing the planes separately (mpv --hwdec=vaapi) get colour corruption.
 
 BRAVE_DESKTOP="/usr/share/applications/brave-browser.desktop"
 BRAVE_LOCAL="$HOME/.local/share/applications/brave-browser.desktop"
@@ -416,7 +395,7 @@ BRAVE_LOCAL="$HOME/.local/share/applications/brave-browser.desktop"
 if [ -f "$BRAVE_DESKTOP" ]; then
     cp "$BRAVE_DESKTOP" "$BRAVE_LOCAL"
 
-    # Greift auf alle drei Exec-Zeilen (Haupt-, Neues und Inkognito-Fenster).
+    # Hits all three Exec lines (main, new window and incognito).
     sed -i 's|^Exec=/usr/bin/brave-browser-stable|Exec=env GTK_THEME=Breeze-Dark NVD_SINGLE_BUFFER=1 /usr/bin/brave-browser-stable --force-dark-mode --enable-features=VaapiOnNvidiaGPUs|' \
         "$BRAVE_LOCAL"
     update-desktop-database ~/.local/share/applications 2>/dev/null || true
@@ -425,31 +404,29 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# Brave: Profil-Vorbelegungen (Aggressiv, breite Adressleiste, Seitenleiste)
+# Brave: profile defaults (aggressive shields, wide address bar, sidebar)
 # ---------------------------------------------------------------------------
-# Dinge, die sich nicht per Policy setzen lassen und ins Profil müssen. Die Stufe
-# "Aggressiv" ist kein Pref, sondern ein Content-Setting: cosmeticFilteringV2 mit
-# ControlType::BLOCK (1), "Standard" wäre BLOCK_THIRD_PARTY (2).
-# DefaultBraveAdblockSetting aus den Policies setzt nur den Ads-Teil.
+# Things that cannot be set by policy and have to go into the profile. The
+# "aggressive" level is not a pref but a content setting: cosmeticFilteringV2 with
+# ControlType::BLOCK (1), "standard" would be BLOCK_THIRD_PARTY (2).
+# DefaultBraveAdblockSetting from the policies only covers the ads part.
 #
-# Im Container geprüft: eine vorab hingelegte Minimal-Preferences verwirft Brave
-# und überschreibt den Eintrag mit {}, und initial_preferences trägt
-# Content-Settings gar nicht erst ein (auch nicht als master_preferences). Nur
-# das Patchen einer von Brave selbst erzeugten Preferences hält.
+# Brave discards a minimal Preferences file put there beforehand and overwrites
+# the entry with {}, and initial_preferences does not carry content settings at
+# all. Only patching a Preferences file Brave created itself sticks.
 #
-# Alles hier ist Vorbelegung, keine Sperre – in Shields jederzeit änderbar.
+# All of this is a default, not a lock — changeable in shields at any time.
 
 BRAVE_DIR="$HOME/.config/BraveSoftware/Brave-Browser"
 BRAVE_PREFS="$BRAVE_DIR/Default/Preferences"
 
 if [ ! -f "$BRAVE_PREFS" ]; then
-    # Zwei Fallstricke, im Container nachgestellt: --user-data-dir ist zwingend,
-    # sonst benutzt --headless=new ein eigenes "Brave-Browser-headless" und legt
-    # das echte Profil nie an. Und der Prozess beendet sich nicht von selbst
-    # (auch nicht mit --dump-dom oder --disable-extensions, beides gemessen).
-    # Daher eigene Prozessgruppe, auf die Datei warten, Gruppe abräumen – ein
-    # kill auf die PID allein lässt die Kinder laufen, die das Profil gesperrt
-    # halten und den Patch beim Beenden überschreiben. Dauert so ~12 s statt 60.
+    # Two traps: --user-data-dir is mandatory, or --headless=new uses its own
+    # "Brave-Browser-headless" and never creates the real profile. And the process
+    # does not exit by itself, not even with --dump-dom or --disable-extensions.
+    # Hence an own process group, wait for the file, then tear the group down — a
+    # kill on the PID alone leaves children running that hold the profile locked
+    # and overwrite the patch on exit. Takes ~12 s instead of 60.
     setsid brave-browser-stable --headless=new --no-first-run --disable-gpu \
         --user-data-dir="$BRAVE_DIR" about:blank >/dev/null 2>&1 &
     BRAVE_PG=$!
@@ -468,40 +445,39 @@ if [ ! -f "$BRAVE_PREFS" ]; then
     done
 fi
 
-# An der leeren Datei "First Run" erkennt Chromium ein schon benutztes Profil.
-# Der Headless-Lauf oben legt sie nicht an (im Container geprüft, mit und ohne
-# --no-first-run), also hielte der erste echte Start das Profil für neu und
-# zeigte brave://welcome samt Standardbrowser-Abfrage – trotz
-# brave.has_seen_brave_welcome_page. Anlegen ist idempotent.
+# Chromium recognises an already used profile by the empty "First Run" file. The
+# headless run above does not create it (with or without --no-first-run), so the
+# first real start would treat the profile as new and show brave://welcome plus
+# the default-browser prompt, despite brave.has_seen_brave_welcome_page. Creating
+# it is idempotent.
 if [ -d "$BRAVE_DIR" ] && [ ! -e "$BRAVE_DIR/First Run" ]; then
     : >"$BRAVE_DIR/First Run"
 fi
 
 if [ -f "$BRAVE_PREFS" ]; then
-    # Die Werte stammen aus einem von Hand eingerichteten Profil, gediffed gegen
-    # ein unberührtes – Enums wie hover_mode=2 ("Karte mit Vorschau") und
-    # sidebar_show_option=3 (nie) sind damit belegt, nicht geraten.
+    # The values come from a hand-configured profile diffed against an untouched
+    # one, so enums like hover_mode=2 ("card with preview") and
+    # sidebar_show_option=3 (never) are evidence, not guesses.
     #
-    # extensions.theme.system_theme=1 wählt das GTK-Design (SystemTheme: DEFAULT
-    # 0, GTK 1, QT 2) – die fehlende Hälfte zum GTK_THEME-Fix oben, der den
-    # GTK-Modus nur dunkel aussehen lässt, ihn aber nicht auswählt.
+    # extensions.theme.system_theme=1 picks the GTK theme (SystemTheme: DEFAULT 0,
+    # GTK 1, QT 2) — the missing half of the GTK_THEME fix above, which only makes
+    # the GTK mode look dark without selecting it.
     #
-    # Die Seitenleiste braucht zwei Schalter: sidebar_show_option=3 schaltet sie
-    # ab, show_side_panel_button nimmt zusätzlich den Knopf aus der Symbolleiste.
-    # location_bar_is_wide=true gibt das normale Chromium-Layout; auf false rückt
-    # Brave die Adressleiste ein und zentriert sie.
+    # The sidebar needs two switches: sidebar_show_option=3 turns it off,
+    # show_side_panel_button also takes the button out of the toolbar.
+    # location_bar_is_wide=true gives the normal Chromium layout; false indents
+    # and centres Brave's address bar.
     #
-    # Noto, nicht Liberation: Braves Schriftliste gegen Fingerprinting (auf
-    # Fedora die von Fedora 32, ohne die schlichten Notos) filtert nur, was eine
-    # Seite per CSS anfordert – die Standardschrift bleibt davon unberührt,
-    # gemessen über http mit aktiven Shields.
+    # Noto, not Liberation: Brave's anti-fingerprinting font list filters only
+    # what a page asks for per CSS, the default font is untouched by it.
     #
-    # Nicht gesetzt wird, was schon per Policy geregelt ist (Safe Browsing,
-    # Startseite, Suchmaschine) oder ohnehin dem Auslieferungszustand entspricht.
-    # Die private Suchmaschine führt Brave getrennt und unabhängig von den
-    # DefaultSearchProvider-Policies; die GUID ist aus prepopulate_id 510
-    # (Startpage) abgeleitet und damit überall dieselbe.
-    BRAVE_PSP='{"alternate_urls": [],"contextual_search_url": "","created_from_play_api": false,"date_created": "0","doodle_url": "","enforced_by_policy": false,"favicon_url": "https://www.startpage.com/favicon.ico","featured_by_policy": false,"id": "7","image_search_branding_label": "","image_translate_source_language_param_key": "","image_translate_target_language_param_key": "","image_translate_url": "","image_url": "","image_url_post_params": "","input_encodings": ["UTF-8"],"is_active": 0,"keyword": ":sp","last_modified": "0","last_visited": "0","logo_url": "","new_tab_url": "","originating_url": "","policy_origin": 0,"preconnect_to_search_url": false,"prefetch_likely_navigations": false,"prepopulate_id": 510,"safe_for_autoreplace": true,"search_intent_params": [],"search_url_post_params": "","send_x_geo_header": false,"short_name": "Startpage","starter_pack_id": 0,"suggestions_url": "https://www.startpage.com/cgi-bin/csuggest?query={searchTerms}&limit=10&format=json","suggestions_url_post_params": "","synced_guid": "485bf7d3-0215-45af-87dc-538868000510","url": "https://www.startpage.com/do/search?q={searchTerms}&segment=startpage.brave","usage_count": 0}'
+    # Not set here is anything already handled by policy (safe browsing, start
+    # page, search engine) or matching the shipped state. Brave keeps the private
+    # search engine separately from the DefaultSearchProvider policies; its GUID is
+    # derived from prepopulate_id 515 (DuckDuckGo). kn=1 opens results in a new
+    # tab — in a private window only the URL can do that, the switch in
+    # DuckDuckGo's settings lives in the normal profile.
+    BRAVE_PSP='{"alternate_urls": [],"contextual_search_url": "","created_from_play_api": false,"date_created": "0","doodle_url": "","enforced_by_policy": false,"favicon_url": "https://duckduckgo.com/favicon.ico","featured_by_policy": false,"id": "3","image_search_branding_label": "","image_translate_source_language_param_key": "","image_translate_target_language_param_key": "","image_translate_url": "","image_url": "","image_url_post_params": "","input_encodings": ["UTF-8"],"is_active": 0,"keyword": ":d","last_modified": "0","last_visited": "0","logo_url": "","new_tab_url": "","originating_url": "","policy_origin": 0,"preconnect_to_search_url": false,"prefetch_likely_navigations": false,"prepopulate_id": 515,"safe_for_autoreplace": true,"search_intent_params": [],"search_url_post_params": "","send_x_geo_header": false,"short_name": "DuckDuckGo","starter_pack_id": 0,"suggestions_url": "https://ac.duckduckgo.com/ac/?q={searchTerms}&type=list","suggestions_url_post_params": "","synced_guid": "485bf7d3-0215-45af-87dc-538868000515","url": "https://duckduckgo.com/?q={searchTerms}&kn=1","usage_count": 0}'
 
     BRAVE_TMP=$(mktemp)
     if jq --argjson psp "$BRAVE_PSP" \
@@ -534,7 +510,7 @@ if [ -f "$BRAVE_PREFS" ]; then
            | .brave.has_seen_brave_welcome_page = true
            | .extensions.theme.system_theme = 1
            | .brave.default_private_search_provider_guid =
-             "485bf7d3-0215-45af-87dc-538868000510"
+             "485bf7d3-0215-45af-87dc-538868000515"
            | .brave.default_private_search_provider_data = $psp' \
            "$BRAVE_PREFS" > "$BRAVE_TMP" \
        && [ -s "$BRAVE_TMP" ]; then
@@ -547,14 +523,12 @@ else
     echo "WARNING: Brave hat kein Profil angelegt, Aggressiv-Vorgabe übersprungen"
 fi
 
-# Filterlisten und Kompakt-Modus liegen nicht im Profil, sondern in "Local State"
-# daneben. Die Listen führt Brave über UUIDs, eingetragen wird nur, was vom
-# Standard abweicht; aufgelöst über github.com/brave/adblock-resources
-# (filter_lists/list_catalog.json):
-#   67E792D4-… Annoying distractions blocker (Fanboy's Annoyances + uBO)  an
-#   E2FA7D98-… Tracking URL blocker (AdGuard URL Tracking Protection)     an
-#   E71426E7-… German website ad blocker (EasyList Germany)               aus
-# Cookie-Notice- und Mobile-App-Promo-Blocker fehlen, weil ohnehin aktiv.
+# Filter lists and compact mode are not in the profile but in "Local State" next
+# to it. Brave tracks the lists by UUID and only the deviations from the default
+# are set; resolved through github.com/brave/adblock-resources:
+#   67E792D4-... Annoying distractions blocker (Fanboy's Annoyances + uBO)  on
+#   E2FA7D98-... Tracking URL blocker (AdGuard URL Tracking Protection)     on
+#   E71426E7-... German website ad blocker (EasyList Germany)               off
 
 BRAVE_LOCALSTATE="$BRAVE_DIR/Local State"
 
@@ -576,7 +550,7 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# Hytale-Launcher installieren (nur wenn noch nicht vorhanden)
+# Install the Hytale launcher (only if it is missing)
 # ---------------------------------------------------------------------------
 
 if ! flatpak info --user com.hypixel.HytaleLauncher &>/dev/null; then
@@ -588,13 +562,13 @@ if ! flatpak info --user com.hypixel.HytaleLauncher &>/dev/null; then
 fi
 
 # ---------------------------------------------------------------------------
-# GE-Proton installieren
+# Install GE-Proton
 # ---------------------------------------------------------------------------
 
-# Immer das aktuelle Release über die GitHub-API. Das Tarball entpackt in ein
-# Verzeichnis mit dem Tag im Namen, dessen Existenz ist die Versionsprüfung.
-# Die .sha512sum daneben fängt einen Abbruch ab, der sonst als halb entpacktes
-# Proton in Steams Liste landete.
+# Always the latest release through the GitHub API. The tarball extracts into a
+# directory carrying the tag, and that directory's existence is the version check.
+# The .sha512sum next to it catches an aborted download that would otherwise land
+# in Steam's list as a half-extracted Proton.
 PROTON_DIR="$HOME/.local/share/Steam/compatibilitytools.d"
 mkdir -p "$PROTON_DIR"
 PROTON_URL=$(curl -s --retry 3 --retry-delay 30 \
@@ -616,15 +590,15 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# Distrobox: Ubuntu-Container mit CurseForge
+# Distrobox: Ubuntu container with CurseForge
 # ---------------------------------------------------------------------------
 
-# Non-fatal: Fehler im Container dürfen das restliche Setup nicht abbrechen.
+# Non-fatal: errors in the container must not abort the rest of the setup.
 set +e
 _trap_off
 
 distrobox create --yes --image ubuntu:26.04 --name ubuntu --nvidia
-# dpkg reparieren, falls eine apt-Operation unterbrochen wurde
+# Repair dpkg in case an apt operation was interrupted
 distrobox enter ubuntu -- bash -c 'sudo dpkg --configure -a; sudo apt update && sudo apt upgrade -y && sudo apt install -y libasound2t64'
 distrobox enter ubuntu -- bash -c '
     curl -fL --retry 3 --retry-delay 30 --speed-limit 10000 --speed-time 30 "https://curseforge.overwolf.com/downloads/curseforge-latest-linux.deb" -o ~/curseforge.deb \
@@ -638,9 +612,9 @@ _trap_on
 set -e
 
 # ---------------------------------------------------------------------------
-# SDKMAN und Java (GraalVM Community Edition)
+# SDKMAN and Java (GraalVM Community Edition)
 # ---------------------------------------------------------------------------
-# sdkman-init.sh ist nicht POSIX-konform und wirft unter strict mode Fehler.
+# sdkman-init.sh is not POSIX-compliant and throws errors under strict mode.
 
 if [ ! -d "$HOME/.sdkman" ]; then
     curl -s --retry 3 --retry-delay 30 "https://get.sdkman.io" | bash
@@ -655,7 +629,7 @@ set -euo pipefail
 _trap_on
 
 # ---------------------------------------------------------------------------
-# Setup abgeschlossen – beim nächsten Login wird dieses Skript übersprungen
+# Setup finished - the next login skips this script
 # ---------------------------------------------------------------------------
 
 touch "$STATE_FILE"

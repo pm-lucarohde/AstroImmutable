@@ -35,7 +35,8 @@ wrapped in `set +e`.
 
 ## Conventions
 
-- Comments in the shell scripts are **German**; commit messages and this file are English.
+- Comments are **English** everywhere, kept to at most five lines per block; the long version of a
+  measurement belongs in this file, not next to the code.
 - Use the retry wrappers (`_retry`, `_dnf5_install`, `_flatpak_install`; 3 × 30 s) for new network calls, plus
   `--speed-limit 10000 --speed-time 30` on `curl`.
 - Sections are separated by the `# ----` banner style. Keep it.
@@ -90,6 +91,17 @@ wrapped in `set +e`.
 - **`brave://welcome` is gated on the `First Run` sentinel**, not on `brave.has_seen_brave_welcome_page`. The headless
   run that seeds the profile never writes that empty file (with *or* without `--no-first-run`), so the first GUI start
   still shows the onboarding even with the pref `true`. `firstlogin-setup.sh` creates it itself.
+- **DuckDuckGo opens results in a new tab only through the URL parameter `kn=1`** — its "New window" switch, with no
+  policy equivalent. Settings handed to DDG in the URL are *not* saved, so the parameter has to sit on every entry
+  point: the policy covers the start page, `NewTabPageLocation` and the omnibox via `DefaultSearchProviderSearchURL`,
+  private windows only through `brave.default_private_search_provider_data` in `firstlogin-setup.sh`. Measured
+  2026-10-12: `?q=…&kn=1` comes back carrying `settings_url_params={"kn":"1"}`, and DDG passes the parameter into a
+  follow-up search typed into its own box (`we_feature_name=search-from-homepage…&kn=1&q=…`); paging needs nothing,
+  further results arrive by XHR in the same page. Do not try to prove the effect headless — DDG serves a headless Brave
+  the page shell and *zero* result articles — and `html.duckduckgo.com/html` ignores `kn` outright. The private search
+  engine is stored separately from the policy; its GUID is Brave's `prepopulate_id` in
+  `485bf7d3-0215-45af-87dc-538868%06d` (DuckDuckGo 515, Startpage 510), and Brave does not merge its own `t=bravened`
+  back into the stored record.
 - **Do not add a NetworkManager `[global-dns-domain-*]` block** in `conf.d` — it killed name resolution. DNS belongs to
   the router; the only DoH is the opportunistic `DnsOverHttpsMode: "automatic"` policy.
 - **`bootc-fstab-edit.service` rewrites `/etc/fstab` on first boot**, so BTRFS mount options are applied afterwards by
