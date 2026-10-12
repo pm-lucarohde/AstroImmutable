@@ -11,7 +11,9 @@ FROM quay.io/fedora-ostree-desktops/kinoite:44 AS builder
 # nur bei Repos mit Metalink, die den Spiegel wechseln können; Quellen mit einer
 # einzigen baseurl bekommen minrate=0 zurück, dort machte ein Abbruch aus
 # "langsam" nur "fehlgeschlagen".
-RUN printf 'minrate=100000\ntimeout=30\n' >>/etc/dnf/dnf.conf
+RUN printf 'minrate=100000\ntimeout=30\n' >>/etc/dnf/dnf.conf \
+    && dnf5 config-manager setopt updates-archive.enabled=0 \
+    && dnf5 config-manager setopt fedora-cisco-openh264.enabled=0
 
 RUN dnf5 install -y https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-44.noarch.rpm \
                      https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-44.noarch.rpm \
@@ -60,7 +62,9 @@ ARG ZIG_VERSION=0.16.0
 ARG GHOSTTY_KEY=RWQlAjJC23149WL2sEpT/l0QKy7hMIFhYdQOFy0Z7z7PbneUgvlsnYcV
 
 # Siehe Builder-Stage: langsame Spiegel abbrechen statt aussitzen.
-RUN printf 'minrate=100000\ntimeout=30\n' >>/etc/dnf/dnf.conf
+RUN printf 'minrate=100000\ntimeout=30\n' >>/etc/dnf/dnf.conf \
+    && dnf5 config-manager setopt updates-archive.enabled=0 \
+    && dnf5 config-manager setopt fedora-cisco-openh264.enabled=0
 
 # libglvnd-devel liefert egl.pc und libEGL.so: Ghostty linkt seit 49b95d8
 # (14.09.2026) direkt gegen EGL, ohne bricht zig build mit "unable to find
@@ -140,6 +144,12 @@ FROM quay.io/fedora-ostree-desktops/kinoite:44
 
 # Siehe Builder-Stage; gilt auch für alle dnf5-Aufrufe in build.sh.
 RUN printf 'minrate=100000\ntimeout=30\n' >>/etc/dnf/dnf.conf
+
+# Zwei Quellen ohne Nutzen: openh264 liefert nichts, was installiert wird
+# (noopenh264 deckt libopenh264.so.8 ab), updates-archive nur alte Versionen –
+# 60 MB Metadaten. Muss vor den ersten dnf5-Aufruf, sonst sind sie schon geladen.
+RUN dnf5 remove -y --noautoremove fedora-repos-archive \
+    && dnf5 config-manager setopt fedora-cisco-openh264.enabled=0
 
 RUN --mount=type=cache,dst=/var/cache \
     dnf5 install -y https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-44.noarch.rpm \

@@ -126,6 +126,19 @@ wrapped in `set +e`.
 - **RPM Fusion and negativo17 ship the same NVIDIA package names at the same version**, and a kmod from one need not
   match the other's userspace. Both stages pin NVIDIA to RPM Fusion via `excludepkgs='*nvidia*'` on `fedora-multimedia`,
   which runs at `priority=1`.
+- **Two of the enabled repos contribute nothing, and two that look empty are load-bearing.** Measured 2026-10-12:
+  `fedora-cisco-openh264` carries three packages and none is installed — `noopenh264` from plain `fedora` holds the
+  slot, a stub that provides only `libopenh264.so.8` so `libavcodec`, `qt6-qtwebengine`, `libheif` and
+  `freerdp-libs` resolve; H.264 comes from negativo17's `ffmpeg` plus `x264-libs`, and Firefox, the usual consumer of
+  Cisco's build, is not installed. `updates-archive` costs 60 MB of metadata, more than `updates` itself, and only
+  holds older builds of what `updates` already has; it is enabled solely by `fedora-repos-archive` out of the base
+  image, which nothing requires and which owns exactly one file. Both are switched off at the top of the target stage,
+  **before the first `dnf5` call fetches metadata** — `build.sh` would be too late, it runs after every large
+  install. `dnf5 remove` needs no metadata, so the order inside that layer does not matter, and
+  `config-manager setopt` writes to `/etc/dnf/repos.override.d/`, not into the `fedora-repos`-owned `.repo` file.
+  The trap: `rpmfusion-free` and `rpmfusion-nonfree` show **zero** installed packages at the exact installed version,
+  because the current builds come from their `-updates` counterparts. By name it is 11 and 10 packages — the base
+  repos are the actual source and must stay.
 - **The NVIDIA VA-API driver is called `libva-nvidia-driver` in Fedora**, not `nvidia-vaapi-driver` as upstream names
   it, so searching for the upstream name looks like "not packaged". Plain `fedora` repo, no env vars, no extra kargs;
   without it there is no hardware video decoding at all.
