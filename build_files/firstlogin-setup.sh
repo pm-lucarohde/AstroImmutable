@@ -259,7 +259,6 @@ _flatpak_install \
     net.blockbench.Blockbench \
     org.azahar_emu.Azahar \
     org.gimp.GIMP \
-    com.heroicgameslauncher.hgl \
     com.spotify.Client \
     org.onlyoffice.desktopeditors \
     com.pokemmo.PokeMMO \
