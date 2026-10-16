@@ -58,7 +58,7 @@ jobs:
 
       - name: Build anaconda-iso
         id: build
-        uses: osbuild/bootc-image-builder-action@main
+        uses: osbuild/image-builder-action@main
         with:
           builder-image: ${{ env.BIB_IMAGE }}
           config-file: ./disk_config/iso.toml
