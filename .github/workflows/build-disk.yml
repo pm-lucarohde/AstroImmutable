@@ -1,3 +1,4 @@
+---
 name: Build disk images
 
 on:
@@ -29,6 +30,7 @@ jobs:
   build:
     name: Build disk images
     runs-on: ubuntu-24.04
+    # See build.yml; the ISO runs have been taking 17-20 minutes.
     timeout-minutes: 60
     if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     permissions:
@@ -54,20 +56,49 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-- name: Build anaconda-iso
-        id: build
-        uses: osbuild/image-builder-action@main
-        with:
-          bootc_ref: ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.DEFAULT_TAG }}
-          image_type: anaconda-iso
-          image_builder_ref: ${{ env.BIB_IMAGE }}
+      - name: Configure Podman storage
+        # bootc-image-builder runs as root and reads the image out of the host's
+        # container storage; the runner ships a rootless setup that leaves
+        # root's graphroot unusable (bootc-image-builder issue 446).
+        run: |
+          sudo rm -rf /var/lib/containers/storage
+          sudo mkdir -p /etc/containers
+          sudo tee /etc/containers/storage.conf > /dev/null <<'EOF'
+          [storage]
+          driver = "overlay"
+          runroot = "/run/containers/storage"
+          graphroot = "/var/lib/containers/storage"
+          EOF
+
+      - name: Build anaconda-iso
+        # Inlined on purpose: osbuild/bootc-image-builder-action is archived,
+        # and its successor osbuild/image-builder-action drives
+        # image-builder-cli, which the action gives no way to hand iso.toml.
+        # The builder image itself is still maintained.
+        run: |
+          sudo podman pull "${BIB_IMAGE}"
+          sudo podman pull "${IMAGE_REGISTRY}/${IMAGE_NAME}:${DEFAULT_TAG}"
+          mkdir -p output
+          sudo podman run --rm --privileged \
+            --security-opt label=type:unconfined_t \
+            --volume /var/lib/containers/storage:/var/lib/containers/storage \
+            --volume "${PWD}/output":/output \
+            --volume "${PWD}/disk_config/iso.toml":/config.toml:ro \
+            "${BIB_IMAGE}" \
+            build \
+            --type anaconda-iso \
+            --output /output \
+            --chown "${USER_UID}:${USER_GID}" \
+            --rootfs btrfs \
+            --use-librepo=True \
+            "${IMAGE_REGISTRY}/${IMAGE_NAME}:${DEFAULT_TAG}"
 
       - name: Upload ISO to Job Artifacts
         if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: anaconda-iso
-          path: ${{ steps.build.outputs.output-directory }}
+          path: output
           if-no-files-found: error
           retention-days: 5
           compression-level: 0
