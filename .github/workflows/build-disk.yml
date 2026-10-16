@@ -30,7 +30,7 @@ jobs:
   build:
     name: Build disk images
     runs-on: ubuntu-24.04
-    # See build.yml; the ISO runs have been taking 17-20 minutes.
+    # See build.yml; the ISO runs have been taking 17-20 minutes.[cite: 2]
     timeout-minutes: 60
     if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     permissions:
@@ -49,31 +49,31 @@ jobs:
           echo "USER_GID=${USER_GID}" >> ${GITHUB_ENV}
 
       - name: Maximize build space
-        uses: ublue-os/remove-unwanted-software@cc0becac701cf642c8f0a6613bbdaf5dc36b259e # v9
+        uses: ublue-os/remove-unwanted-software@cc0becac701cf642c8f0a6613bbdaf5dc36b259e # v9[cite: 2]
         with:
           remove-codeql: true
 
       - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1[cite: 2]
 
       - name: Build anaconda-iso
         id: build
-        uses: osbuild/image-builder-action@main
+        uses: osbuild/image-builder-action@main[cite: 2]
         with:
-          builder-image: ${{ env.BIB_IMAGE }}
-          config-file: ./disk_config/iso.toml
-          image: ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.DEFAULT_TAG }}
-          chown: ${{ env.USER_UID }}:${{ env.USER_GID }}
-          types: anaconda-iso
-          additional-args: --use-librepo=True --rootfs btrfs
+          builder-image: ${{ env.BIB_IMAGE }}[cite: 2]
+          config-file: ./disk_config/iso.toml[cite: 2]
+          container-image: ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.DEFAULT_TAG }}
+          chown: ${{ env.USER_UID }}:${{ env.USER_GID }}[cite: 2]
+          image-types: anaconda-iso
+          additional-args: --use-librepo=True --rootfs btrfs[cite: 2]
 
       - name: Upload ISO to Job Artifacts
         if: github.event_name != 'pull_request'
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2[cite: 2]
         with:
-          name: anaconda-iso
-          path: ${{ steps.build.outputs.output-directory }}
-          if-no-files-found: error
-          retention-days: 5
-          compression-level: 0
-          overwrite: true
+          name: anaconda-iso[cite: 2]
+          path: ${{ steps.build.outputs.output-directory }}[cite: 2]
+          if-no-files-found: error[cite: 2]
+          retention-days: 5[cite: 2]
+          compression-level: 0[cite: 2]
+          overwrite: true[cite: 2]
