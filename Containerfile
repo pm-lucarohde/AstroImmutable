@@ -55,7 +55,7 @@ FROM quay.io/fedora-ostree-desktops/kinoite:44 AS ghostty-builder
 # Ghostty pins a Zig version hard and the docs lag behind tip (said 0.15.2 when
 # tip already wanted 0.16.0). A mismatch fails below with "does not meet the
 # required build version of vX" — raise it here then.
-ARG ZIG_VERSION=0.16.0
+ARG ZIG_VERSION=0.17.0
 # Public minisign key of the Ghostty project
 ARG GHOSTTY_KEY=RWQlAjJC23149WL2sEpT/l0QKy7hMIFhYdQOFy0Z7z7PbneUgvlsnYcV
 
