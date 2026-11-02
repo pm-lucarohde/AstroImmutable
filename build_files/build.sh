@@ -591,7 +591,7 @@ systemctl mask iscsi.service
 
 # 1. Swappiness
 mkdir -p /usr/lib/sysctl.d
-echo "vm.swappiness=16" > /usr/lib/sysctl.d/99-swappiness.conf
+echo "vm.swappiness=26" > /usr/lib/sysctl.d/99-swappiness.conf
 
 # 2. ZRAM config
 mkdir -p /usr/lib/systemd
