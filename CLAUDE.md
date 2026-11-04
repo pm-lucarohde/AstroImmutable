@@ -2,7 +2,7 @@
 
 ## What this is
 
-AstroImmutable is a custom Fedora **bootc/OSTree** KDE Plasma 6 image built from `quay.io/fedora-ostree-desktops/kinoite:44`
+AstroImmutable is a custom Fedora **bootc/OSTree** KDE Plasma 6 image built from `quay.io/fedora-ostree-desktops/kinoite:45`
 and published to `ghcr.io/pm-lucarohde/astroimmutable`. There is no application code — the repo *is* the OS definition.
 Signed with cosign (`cosign.pub`); the key lives in the `SIGNING_SECRET` secret.
 
@@ -151,6 +151,16 @@ wrapped in `set +e`.
   The trap: `rpmfusion-free` and `rpmfusion-nonfree` show **zero** installed packages at the exact installed version,
   because the current builds come from their `-updates` counterparts. By name it is 11 and 10 packages — the base
   repos are the actual source and must stay.
+- **Fedora 45 moved the packaged `.repo` files to `/usr/share/dnf5/repos.d`**, and `/etc/yum.repos.d` is empty in
+  the base image. Everything the build adds still lands in `/etc/yum.repos.d` — measured 2026-11-04: both
+  `dnf5 copr enable` and `config-manager addrepo --from-repofile` write there, so the `sed` on the CachyOS COPR file
+  and the two "is this repo already here" checks in `build.sh` keep working. `config-manager setopt` writes
+  `/etc/dnf/repos.override.d/99-config_manager.repo` even for a repo whose file now sits in `/usr`.
+- **Fedora 45 enforces package signatures (`%_pkgverify_level all`), but `dnf5` still exempts `@commandline`.**
+  An unsigned local RPM and a URL RPM whose key is not in the rpmdb both install with exit 0 and only
+  `Warning: skipped OpenPGP checks for N packages from repository: @commandline` — measured 2026-11-04 with a
+  deliberately `rpmsign --delsign`ed package. That is what keeps the akmod RPMs, the RPM Fusion release packages,
+  Vesktop and the Apple emoji font installable. `rpm -i` on the same file *does* fail, so do not switch to it.
 - **The NVIDIA VA-API driver is called `libva-nvidia-driver` in Fedora**, not `nvidia-vaapi-driver` as upstream names
   it, so searching for the upstream name looks like "not packaged". Plain `fedora` repo, no env vars, no extra kargs;
   without it there is no hardware video decoding at all.

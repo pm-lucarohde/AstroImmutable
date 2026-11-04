@@ -2,7 +2,7 @@ FROM scratch AS ctx
 COPY build_files /
 
 # ---- Builder stage: compile the kernel drivers ----
-FROM quay.io/fedora-ostree-desktops/kinoite:44 AS builder
+FROM quay.io/fedora-ostree-desktops/kinoite:45 AS builder
 
 # Abort crawling mirrors instead of waiting them out: dnf5 only gives up once
 # the rate stays below 1 kB/s for 30 s, so a mirror at 2 kB/s stalls the build
@@ -13,8 +13,8 @@ RUN printf 'minrate=100000\ntimeout=30\n' >>/etc/dnf/dnf.conf \
     && dnf5 config-manager setopt updates-archive.enabled=0 \
     && dnf5 config-manager setopt fedora-cisco-openh264.enabled=0
 
-RUN dnf5 install -y https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-44.noarch.rpm \
-                     https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-44.noarch.rpm \
+RUN dnf5 install -y https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-45.noarch.rpm \
+                     https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-45.noarch.rpm \
     && dnf5 config-manager addrepo --from-repofile=https://negativo17.org/repos/fedora-multimedia.repo
 
 # NVIDIA from RPM Fusion only: negativo17 ships the same package names at the
@@ -50,7 +50,7 @@ RUN ls /var/cache/akmods/nvidia/*.rpm /var/cache/akmods/xone/*.rpm \
 # while KWin 6.7 dropped the old org_kde_kwin_blur — background-blur would do
 # nothing. The fix lives only in tip until 1.4. Same base as the target image
 # because of GTK and glibc.
-FROM quay.io/fedora-ostree-desktops/kinoite:44 AS ghostty-builder
+FROM quay.io/fedora-ostree-desktops/kinoite:45 AS ghostty-builder
 
 # Ghostty pins a Zig version hard and the docs lag behind tip (said 0.15.2 when
 # tip already wanted 0.16.0). A mismatch fails below with "does not meet the
@@ -134,7 +134,7 @@ RUN if ! grep -q ext_background_effect /out/usr/bin/ghostty; then \
     fi
 
 # ---- Target image ----
-FROM quay.io/fedora-ostree-desktops/kinoite:44
+FROM quay.io/fedora-ostree-desktops/kinoite:45
 
 # See the builder stage; applies to every dnf5 call in build.sh as well.
 RUN printf 'minrate=100000\ntimeout=30\n' >>/etc/dnf/dnf.conf
@@ -146,8 +146,8 @@ RUN dnf5 remove -y --noautoremove fedora-repos-archive \
     && dnf5 config-manager setopt fedora-cisco-openh264.enabled=0
 
 RUN --mount=type=cache,dst=/var/cache \
-    dnf5 install -y https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-44.noarch.rpm \
-                     https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-44.noarch.rpm \
+    dnf5 install -y https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-45.noarch.rpm \
+                     https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-45.noarch.rpm \
     && dnf5 config-manager addrepo --from-repofile=https://negativo17.org/repos/fedora-multimedia.repo
 
 # See the builder stage: NVIDIA comes from RPM Fusion only.

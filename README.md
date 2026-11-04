@@ -1,7 +1,7 @@
 # AstroImmutable
 
 A custom Fedora [bootc](https://bootc-dev.github.io/bootc/)/OSTree image with KDE Plasma 6, built from
-`quay.io/fedora-ostree-desktops/kinoite:44` and published to `ghcr.io/pm-lucarohde/astroimmutable`.
+`quay.io/fedora-ostree-desktops/kinoite:45` and published to `ghcr.io/pm-lucarohde/astroimmutable`.
 There is no application code here — the repository *is* the OS definition.
 
 On top of the base image it ships the CachyOS kernel, the NVIDIA, xone and VirtualBox kmods built against it,
