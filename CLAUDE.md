@@ -156,6 +156,13 @@ wrapped in `set +e`.
   `dnf5 copr enable` and `config-manager addrepo --from-repofile` write there, so the `sed` on the CachyOS COPR file
   and the two "is this repo already here" checks in `build.sh` keep working. `config-manager setopt` writes
   `/etc/dnf/repos.override.d/99-config_manager.repo` even for a repo whose file now sits in `/usr`.
+  It does break the Anaconda ISO: bootc-image-builder (image-builder 85) runs the image as a container and
+  depsolves the installer root with dnf4 against `<rootfs>/etc/yum.repos.d` alone, so with only the build's own
+  extra repos in there all 22 installer packages come back "missing" — measured 2026-11-04 by feeding the same
+  request to the builder's `osbuild-depsolve-dnf`: the error is identical to run #41850701535, and with
+  `fedora.repo` plus `fedora-updates.repo` copied in it resolves 241 packages. Hence
+  `### REPO FILES FOR THE ISO BUILD`. image-builder's main branch takes the ISO repos from its own built-in
+  definitions, so the copies can go once that lands in the `:latest` builder image.
 - **Fedora 45 enforces package signatures (`%_pkgverify_level all`), but `dnf5` still exempts `@commandline`.**
   An unsigned local RPM and a URL RPM whose key is not in the rpmdb both install with exit 0 and only
   `Warning: skipped OpenPGP checks for N packages from repository: @commandline` — measured 2026-11-04 with a

@@ -264,6 +264,15 @@ RUN KVER=$(rpm -q kernel-cachyos-core --qf '%{version}-%{release}.%{arch}') \
     && test -s "/usr/lib/modules/${KVER}/initramfs.img" \
     && find /boot -mindepth 1 -maxdepth 1 ! -name efi -exec rm -rf {} +
 
+### REPO FILES FOR THE ISO BUILD
+# bootc-image-builder depsolves the Anaconda ISO's installer root against the
+# image's /etc/yum.repos.d only, and Fedora 45 moved the packaged repo files to
+# /usr/share/dnf5/repos.d, which it does not read. Without these copies every
+# installer package comes back "missing". Here, after the last dnf5 transaction.
+RUN cp /usr/share/dnf5/repos.d/fedora.repo \
+       /usr/share/dnf5/repos.d/fedora-updates.repo \
+       /etc/yum.repos.d/
+
 ### LOG CLEANUP
 # dnf5.log is a build artefact, not a system log ("var-log"). It cannot be
 # deleted in build.sh, whose --mount=type=cache,dst=/var/log hides the real
