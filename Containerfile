@@ -230,22 +230,17 @@ RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
     /ctx/build.sh
 
 ### FONTCONFIG-CACHE
-# Brave reads cache format 11 only, Fedora's fontconfig writes cache-9, so Brave
-# builds its own cache in the home and that goes stale unseen under ostree's
-# mtime 0. Rebuild both here: fc-cache for Fedora, a headless Brave for cache-11.
-# Apps carrying a third fontconfig (Vesktop, Steam's runtime) instead get a
+# Brave reads cache format 11 only. Fedora 45's fontconfig writes 9 through 12 in
+# one run, so fc-cache covers it; without a cache-11 under /usr Brave builds its
+# own in the home, which goes stale unseen under ostree's mtime 0 — hence the
+# hard check. Apps carrying their own fontconfig (Vesktop, Steam's runtime) get a
 # cachedir named after the font set, so it changes when the fonts do.
 RUN --mount=type=tmpfs,dst=/tmp \
     FCTMP=$(mktemp -d) \
     && rm -f /usr/lib/fontconfig/cache/*.cache-* \
     && HOME="$FCTMP" fc-cache -s -f \
-    && BEFORE=$(ls /usr/lib/fontconfig/cache | wc -l) \
-    && printf '<p style="font-family:Liberation Serif">x</p>\n' > "$FCTMP/probe.html" \
-    && HOME="$FCTMP" /opt/brave.com/brave/brave --headless=new --no-sandbox \
-       --disable-gpu --disable-dev-shm-usage --user-data-dir="$FCTMP/profile" \
-       --dump-dom "file://$FCTMP/probe.html" >/dev/null 2>&1 || true \
-    && { [ "$(ls /usr/lib/fontconfig/cache | wc -l)" -gt "$BEFORE" ] \
-         || echo "WARNING: Brave hat keinen fontconfig-Cache erzeugt"; } \
+    && { ls /usr/lib/fontconfig/cache/*.cache-11 >/dev/null 2>&1 \
+         || { echo "FEHLER: kein fontconfig-Cache im Format 11"; exit 1; }; } \
     && FCKEY=$(rpm -qa --qf '%{NAME}-%{EVR}\n' | grep -i font | sort | sha256sum | cut -c1-12) \
     && sed -i "s|prefix=\"xdg\">fontconfig<|prefix=\"xdg\">fontconfig-$FCKEY<|" \
        /etc/fonts/fonts.conf \
