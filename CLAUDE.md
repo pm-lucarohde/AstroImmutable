@@ -171,6 +171,12 @@ wrapped in `set +e`.
 - **The NVIDIA VA-API driver is called `libva-nvidia-driver` in Fedora**, not `nvidia-vaapi-driver` as upstream names
   it, so searching for the upstream name looks like "not packaged". Plain `fedora` repo, no env vars, no extra kargs;
   without it there is no hardware video decoding at all.
+- **NVIDIA has no VA-API *encode* at all, so OBS's `*_vaapi` encoders cannot work here.** `vainfo` lists
+  `VAEntrypointVLD` and nothing else, and `vp9_vaapi` dies with *No usable encoding entrypoint found for profile
+  VAProfileVP9Profile0*; NVENC covers H.264 and HEVC only (AV1 wants Ada, the 3070 is Ampere) and VP9 never.
+  VP9 recording is therefore software `libvpx-vp9`, which the OBS Flatpak does carry: measured 2026-11-11 at
+  2560x1440p60 it reaches 113 fps with `deadline=realtime cpu-used=8 row-mt=1 tile-columns=3 threads=16` and
+  85 fps at `cpu-used=5` on the 5900X. The WebM container takes Opus, not AAC.
 - **In a builder stage, `/opt`, `/root`, `/usr/local`, `/home`, `/srv`, `/mnt` and `/media` are dead symlinks** into the
   empty `/var` — hence `rm /opt && mkdir /opt`. `tar -C /opt` fails with *Cannot open*, `HOME=/root` breaks Zig's cache.
 - **Ghostty is built from the tip tarball, not the COPR.** `ARG ZIG_VERSION` must match what tip demands and the docs
