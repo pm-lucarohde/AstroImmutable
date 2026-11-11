@@ -175,8 +175,16 @@ wrapped in `set +e`.
   `VAEntrypointVLD` and nothing else, and `vp9_vaapi` dies with *No usable encoding entrypoint found for profile
   VAProfileVP9Profile0*; NVENC covers H.264 and HEVC only (AV1 wants Ada, the 3070 is Ampere) and VP9 never.
   VP9 recording is therefore software `libvpx-vp9`, which the OBS Flatpak does carry: measured 2026-11-11 at
-  2560x1440p60 it reaches 113 fps with `deadline=realtime cpu-used=8 row-mt=1 tile-columns=3 threads=16` and
-  85 fps at `cpu-used=5` on the 5900X. The WebM container takes Opus, not AAC.
+  2560x1440p60 it reaches 113 fps at `deadline=realtime cpu-used=8 tile-columns=3 threads=16` and 85 fps at
+  `cpu-used=5` on the 5900X, both with `row-mt=1`, which must nevertheless stay off — see below. The WebM
+  container takes Opus, not AAC.
+  Do not set `row-mt=1`: stopping the recording then kills OBS. Measured 2026-11-11 from two coredumps of
+  consecutive sessions, both on a `vpx enc worker` thread at the exact second of `Recording Stop`, both in
+  `vp9_row_mt_sync_write` under `enc_row_mt_worker_hook` — it divides by `row_mt_sync->sync_range`, which libvpx only
+  ever sets to 1/2/8/16 by frame width, and the worker reads 0 (SIGFPE) or the struct is already unmapped (SIGSEGV):
+  a use-after-free, the row-mt workers still encoding a row after OBS has torn the encoder down. The same parameters
+  through ffmpeg exit 0, its drain does not hit the race. `row-mt=0` keeps that worker hook out of the codepath and
+  costs 145 → 115 fps at 1440p60, still 1,9× realtime.
 - **In a builder stage, `/opt`, `/root`, `/usr/local`, `/home`, `/srv`, `/mnt` and `/media` are dead symlinks** into the
   empty `/var` — hence `rm /opt && mkdir /opt`. `tar -C /opt` fails with *Cannot open*, `HOME=/root` breaks Zig's cache.
 - **Ghostty is built from the tip tarball, not the COPR.** `ARG ZIG_VERSION` must match what tip demands and the docs
