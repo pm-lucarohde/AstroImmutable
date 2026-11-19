@@ -195,8 +195,13 @@ wrapped in `set +e`.
   upstream's `virtual-guest` profile overrides the very same key the very same way.
 - **In a builder stage, `/opt`, `/root`, `/usr/local`, `/home`, `/srv`, `/mnt` and `/media` are dead symlinks** into the
   empty `/var` — hence `rm /opt && mkdir /opt`. `tar -C /opt` fails with *Cannot open*, `HOME=/root` breaks Zig's cache.
-- **Ghostty is built from the tip tarball, not the COPR.** `ARG ZIG_VERSION` must match what tip demands and the docs
-  lag behind; a mismatch fails with *does not meet the required build version*. Fedora's `zig` is unused: it moves on.
+- **Ghostty is built from the tip tarball, not the COPR, and Zig is resolved at build time.** `build.zig.zon` names
+  only a `minimum_zig_version` — a floor, not a pin (0.17.1 on 2026-11-19) — so the stage installs the newest *full
+  release*, taking both the version and the tarball URL out of Zig's `download/index.json`: `master` is the only
+  non-release key there and is skipped, and the file name has already changed once (`zig-linux-x86_64` →
+  `zig-x86_64-linux` in 0.14.1), so assembling the URL by hand would break silently. Too old a compiler fails with
+  *does not meet the required build version*; `ARG ZIG_VERSION` pins a release again, and a dev version cannot be
+  pinned that way by design. Fedora's `zig` is unused: it moves on.
   Tip also grows link dependencies without notice: `unable to find dynamic system library 'egl'` (2026-09-16, three
   failed attempts from an unchanged commit) meant Ghostty had started linking EGL the day before — the cure is the
   matching `-devel` on the builder's install line (`libglvnd-devel` provides `egl.pc`), never a runtime package.

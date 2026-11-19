@@ -52,10 +52,10 @@ RUN ls /var/cache/akmods/nvidia/*.rpm /var/cache/akmods/xone/*.rpm \
 # because of GTK and glibc.
 FROM quay.io/fedora-ostree-desktops/kinoite:45 AS ghostty-builder
 
-# Ghostty pins a Zig version hard and the docs lag behind tip (said 0.15.2 when
-# tip already wanted 0.16.0). A mismatch fails below with "does not meet the
-# required build version of vX" — raise it here then.
-ARG ZIG_VERSION=0.17.1
+# Zig is resolved at build time to the newest full release, see below. Ghostty's
+# build.zig.zon only states a floor, so any release at or above it qualifies and
+# the hand-maintained pin is gone. Set ZIG_VERSION to pin one by hand again.
+ARG ZIG_VERSION=
 # Public minisign key of the Ghostty project
 ARG GHOSTTY_KEY=RWQlAjJC23149WL2sEpT/l0QKy7hMIFhYdQOFy0Z7z7PbneUgvlsnYcV
 
@@ -76,13 +76,25 @@ RUN dnf5 install -y gtk4-devel gtk4-layer-shell-devel libadwaita-devel libglvnd-
 RUN mkdir -p /var/roothome
 
 # Zig as a static binary from ziglang.org rather than Fedora's package, which
-# would drift away from the pinned version on the next update. Own directory
-# instead of /opt or /usr/local (dead symlinks, see above), hence PATH rather
-# than a symlink. --strip-components=1 makes the tarball's folder name moot.
-RUN mkdir -p /zig \
-    && curl -fL --retry 3 --retry-delay 30 --speed-limit 10000 --speed-time 30 \
-    "https://ziglang.org/download/${ZIG_VERSION}/zig-x86_64-linux-${ZIG_VERSION}.tar.xz" \
-    | tar -xJ -C /zig --strip-components=1
+# drifts on its own schedule. Own directory instead of /opt or /usr/local (dead
+# symlinks, see above), hence PATH rather than a symlink. Version and URL both
+# come out of Zig's index.json: its only non-release key is "master", which the
+# version pattern skips, and an empty result stops the build instead of guessing.
+RUN curl -fL --retry 3 --retry-delay 30 --speed-limit 10000 --speed-time 30 \
+    -o /tmp/zig-index.json "https://ziglang.org/download/index.json" \
+    && ZIG="$(grep -oE '"[0-9]+\.[0-9]+\.[0-9]+"[[:space:]]*:' /tmp/zig-index.json \
+    | tr -d '": ' | sort -V | tail -1)" \
+    && ZIG="${ZIG_VERSION:-$ZIG}" \
+    && test -n "$ZIG" \
+    && URL="$(grep -oE "https://ziglang\.org/[^[:space:]]*zig-x86_64-linux-$ZIG\.tar\.xz" \
+    /tmp/zig-index.json | head -1)" \
+    && test -n "$URL" \
+    && echo "Zig $ZIG from $URL" \
+    && mkdir -p /zig \
+    && curl -fL --retry 3 --retry-delay 30 --speed-limit 10000 --speed-time 30 "$URL" \
+    | tar -xJ -C /zig --strip-components=1 \
+    && rm -f /tmp/zig-index.json \
+    && /zig/zig version
 ENV PATH="/zig:${PATH}"
 
 # Source tarball instead of a git checkout: it carries pre-generated files and
