@@ -185,6 +185,14 @@ wrapped in `set +e`.
   a use-after-free, the row-mt workers still encoding a row after OBS has torn the encoder down. The same parameters
   through ffmpeg exit 0, its drain does not hit the race. `row-mt=0` keeps that worker hook out of the codepath and
   costs 145 → 115 fps at 1440p60, still 1,9× realtime.
+- **`tuned` overrides `/usr/lib/sysctl.d`, and Plasma's power profile decides which values win.**
+  `tuned-main.conf` ships `reapply_sysctl = 1`, and `tuned-ppd` maps the "Performance" power profile to
+  `throughput-performance`, whose `vm.swappiness=10` therefore beats `99-swappiness.conf` — measured 2026-11-19, the
+  image shipped 26 and the running kernel reported 10, so the swappiness commit had no runtime effect at all. Masking
+  `tuned` is not the cure: `tuned-ppd` is what Plasma's profile switcher talks to, and it would lose the switcher. The
+  image ships `/usr/lib/tuned/profiles/astroimmutable-performance` instead, which `include=`s
+  `throughput-performance` and overrides that one key, with `performance=` in `/etc/tuned/ppd.conf` pointed at it;
+  upstream's `virtual-guest` profile overrides the very same key the very same way.
 - **In a builder stage, `/opt`, `/root`, `/usr/local`, `/home`, `/srv`, `/mnt` and `/media` are dead symlinks** into the
   empty `/var` — hence `rm /opt && mkdir /opt`. `tar -C /opt` fails with *Cannot open*, `HOME=/root` breaks Zig's cache.
 - **Ghostty is built from the tip tarball, not the COPR.** `ARG ZIG_VERSION` must match what tip demands and the docs

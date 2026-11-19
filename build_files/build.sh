@@ -590,8 +590,10 @@ systemctl mask iscsi.service
 # ---------------------------------------------------------------------------
 
 # 1. Swappiness
+# tuned runs with reapply_sysctl=1 and overrides this file, so item 4 carries the
+# same value into the profile that tuned-ppd selects for "performance".
 mkdir -p /usr/lib/sysctl.d
-echo "vm.swappiness=26" > /usr/lib/sysctl.d/99-swappiness.conf
+echo "vm.swappiness=18" > /usr/lib/sysctl.d/99-swappiness.conf
 
 # 2. ZRAM config
 mkdir -p /usr/lib/systemd
@@ -604,6 +606,23 @@ EOF
 # 3. Disable ZSWAP through sysfs
 mkdir -p /usr/lib/tmpfiles.d
 echo "w /sys/module/zswap/parameters/enabled - - - - N" > /usr/lib/tmpfiles.d/disable-zswap.conf
+
+# 4. Swappiness under the Performance power profile
+# tuned-ppd maps PPD "performance" to throughput-performance, which sets
+# vm.swappiness=10. An own profile including it keeps Plasma's profile switcher
+# working; masking tuned would break it. The grep fails the build if the mapping
+# line ever moves, instead of silently shipping 10 again.
+mkdir -p /usr/lib/tuned/profiles/astroimmutable-performance
+cat <<EOF > /usr/lib/tuned/profiles/astroimmutable-performance/tuned.conf
+[main]
+summary = throughput-performance with the image's swappiness
+include = throughput-performance
+
+[sysctl]
+vm.swappiness = 18
+EOF
+grep -q '^performance=throughput-performance$' /etc/tuned/ppd.conf
+sed -i 's/^performance=throughput-performance$/performance=astroimmutable-performance/' /etc/tuned/ppd.conf
 
 # ---------------------------------------------------------------------------
 # PipeWire: rates, buffer size and suspend
