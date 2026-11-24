@@ -300,8 +300,18 @@ fi
 # NotepadNext
 # ---------------------------------------------------------------------------
 
-install -m755 /ctx/notepadnext /usr/bin/notepadnext
-chmod +x /usr/bin/notepadnext
+# Newest release's AppImage, the tag read from the /releases/latest redirect
+# instead of api.github.com (rate limit, see KvKonqi). Fails the build on purpose:
+# it is the text/plain default and Kate/KWrite are removed above.
+NN_TAG="$(curl -fsI --retry 3 --retry-delay 30 --speed-limit 10000 --speed-time 30 \
+    -o /dev/null -w '%{redirect_url}' "https://github.com/dail8859/NotepadNext/releases/latest" \
+    | sed -n 's|.*/releases/tag/\(v[0-9][0-9.]*\)$|\1|p')"
+test -n "$NN_TAG"
+echo "NotepadNext $NN_TAG"
+curl -fL --retry 3 --retry-delay 30 --speed-limit 10000 --speed-time 30 \
+    "https://github.com/dail8859/NotepadNext/releases/download/${NN_TAG}/NotepadNext-${NN_TAG}-x86_64.AppImage" \
+    -o /usr/bin/notepadnext
+chmod 755 /usr/bin/notepadnext
 
 mkdir -p /usr/share/icons/hicolor/512x512/apps
 curl -fL --retry 3 --retry-delay 30 --speed-limit 10000 --speed-time 30 \

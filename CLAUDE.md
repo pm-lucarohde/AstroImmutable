@@ -14,7 +14,7 @@ Signed with cosign (`cosign.pub`); the key lives in the `SIGNING_SECRET` secret.
 | `build_files/build.sh` | Build time, as root: repos, package add/remove, themes, systemd units, kargs, Brave policies, sysctl/zram, PipeWire, EasyEffects. |
 | `build_files/firstlogin-setup.sh` | Once per user at first graphical login: KDE config, Flatpaks, locale, Brave profile, distrobox, SDKMAN. |
 | `build_files/config/` | KDE dotfiles baked into `/usr/share/astroimmutable/config`, copied to `~/.config` at first login. |
-| `build_files/{wallpaper,avatar,bin}/`, `outputs.ron`, `notepadnext` | Assets embedded into the image. |
+| `build_files/{wallpaper,avatar,bin}/`, `outputs.ron` | Assets embedded into the image. |
 | `Justfile`, `disk_config/*.toml` | Local build / VM / lint helpers (upstream ublue template) and bootc-image-builder configs for qcow2/raw/ISO. |
 | `.github/workflows/build.yml` | Build + push + sign on push to `main`, on PRs, and at 19:57 UTC every 3rd day of the month. `build-disk.yml` then builds an Anaconda ISO, `retry.yml` re-runs a failed build after 15 min, up to three attempts. |
 
@@ -275,4 +275,4 @@ wrapped in `set +e`.
 
 `just build` (podman → `localhost/astroimmutable:latest`), `just build-qcow2` (via bootc-image-builder, needs rootful
 podman), `just run-vm-qcow2`, `just lint` (shellcheck), `just format` (shfmt). A full build compiles the NVIDIA module
-and is slow. `lint`/`format` only match `*.sh` — `build_files/notepadnext` is a binary, not a script.
+and is slow. `lint`/`format` only match `*.sh`.
