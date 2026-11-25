@@ -156,6 +156,19 @@ scrollbar = "system"
 EOF
 
 # ---------------------------------------------------------------------------
+# Change NotepadNext config
+# ---------------------------------------------------------------------------
+
+mkdir -p ~/.config/NotepadNext
+cat <<EOF > ~/.config/NotepadNext/NotepadNext.ini
+[Editor]
+AutoCompletion=false
+DefaultEOLMode=
+FontName=Noto Sans Mono
+ZoomLevel=0
+EOF
+
+# ---------------------------------------------------------------------------
 # Enable the Kvantum theme
 # ---------------------------------------------------------------------------
 
